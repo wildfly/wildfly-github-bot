@@ -1,19 +1,48 @@
 package io.xstefank.wildlfy.bot.config.util;
 
+import com.hrakaroo.glob.GlobPattern;
+import com.hrakaroo.glob.MatchingEngine;
 import io.xstefank.wildlfy.bot.config.WildFlyConfigFile.WildFlyRule;
+import org.jboss.logging.Logger;
+import org.kohsuke.github.GHPullRequest;
+import org.kohsuke.github.GHPullRequestFileDetail;
+
 
 public class Matcher {
 
-    public static boolean matches(String title, String body, WildFlyRule rule) {
+    private static final Logger LOG = Logger.getLogger(Matcher.class);
+
+    public static boolean matches(GHPullRequest pullRequest, WildFlyRule rule) {
         if (Strings.isNotBlank(rule.title)) {
-            if (Patterns.find(rule.title, title)) {
+            if (Patterns.find(rule.title, pullRequest.getTitle())) {
                 return true;
             }
         }
 
         if (Strings.isNotBlank(rule.body)) {
-            if (Patterns.find(rule.body, body)) {
+            if (Patterns.find(rule.body, pullRequest.getBody())) {
                 return true;
+            }
+        }
+
+        if (!rule.directories.isEmpty()) {
+            for (GHPullRequestFileDetail changedFile : pullRequest.listFiles()) {
+                for (String directory : rule.directories) {
+                    if (!directory.contains("*")) {
+                        if (changedFile.getFilename().startsWith(directory)) {
+                            return true;
+                        }
+                    } else {
+                        try {
+                            MatchingEngine matchingEngine = GlobPattern.compile(directory);
+                            if (matchingEngine.matches(changedFile.getFilename())) {
+                                return true;
+                            }
+                        } catch (Exception e) {
+                            LOG.error("Error evaluating glob expression: " + directory, e);
+                        }
+                    }
+                }
             }
         }
 

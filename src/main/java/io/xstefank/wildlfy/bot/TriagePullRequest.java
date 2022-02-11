@@ -29,7 +29,7 @@ public class TriagePullRequest {
         Set<String> mentions = new TreeSet<>();
 
         for (WildFlyRule rule : wildflyBotConfigFile.wildfly.rules) {
-            if (Matcher.matches(pullRequest.getTitle(), pullRequest.getBody(), rule)) {
+            if (Matcher.matches(pullRequest, rule)) {
                 for (String nick : rule.notify) {
                     if (!nick.equals(pullRequest.getUser().getLogin())) {
                         mentions.add(nick);
