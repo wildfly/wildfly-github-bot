@@ -8,10 +8,13 @@ import io.xstefank.wildlfy.bot.config.util.Matcher;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHPullRequest;
+import org.kohsuke.github.GitHub;
+import org.kohsuke.github.GitHubBuilder;
 
 import java.io.IOException;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 public class TriagePullRequest {
 
@@ -38,8 +41,18 @@ public class TriagePullRequest {
             }
         }
 
+        GitHub gitHub = GitHubBuilder.fromEnvironment().build();
+
         if (!mentions.isEmpty()) {
             pullRequest.comment("/cc @" + String.join(", @", mentions));
+            pullRequest.requestReviewers(mentions.stream().map(nick -> {
+                try {
+                    return gitHub.getUser(nick);
+                } catch (IOException e) {
+                    LOG.error("Could find user " + nick);
+                    return null;
+                }
+            }).collect(Collectors.toList()));
         }
 
     }
