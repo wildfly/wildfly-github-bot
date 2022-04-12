@@ -4,6 +4,7 @@ import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.PullRequest;
 import io.xstefank.wildlfy.bot.config.WildFlyConfigFile;
 import io.xstefank.wildlfy.bot.format.checks.Check;
+import io.xstefank.wildlfy.bot.format.checks.CommitsQuantityCheck;
 import io.xstefank.wildlfy.bot.format.checks.DescriptionCheck;
 import io.xstefank.wildlfy.bot.format.checks.TitleCheck;
 import org.jboss.logging.Logger;
@@ -50,6 +51,7 @@ public class PullRequestFormatVerifier {
     private void initialize(WildFlyConfigFile wildflyConfigFile) {
         checks.add(new TitleCheck(wildflyConfigFile.wildfly.format.titleCheck));
         checks.add(new DescriptionCheck(wildflyConfigFile.wildfly.format.description));
+        checks.add(new CommitsQuantityCheck(wildflyConfigFile.wildfly.format.commitsQuantity));
 
         initialized = true;
     }

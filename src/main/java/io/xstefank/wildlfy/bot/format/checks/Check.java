@@ -2,6 +2,8 @@ package io.xstefank.wildlfy.bot.format.checks;
 
 import org.kohsuke.github.GHPullRequest;
 
+import java.io.IOException;
+
 /**
  * Validates pull request payload with a specified check
  */
@@ -16,7 +18,7 @@ public interface Check {
      * @return null if check passed, error message otherwise (error message
      * is limited by GitHub status to 140 characters)
      */
-    String check(GHPullRequest pullRequest);
+    String check(GHPullRequest pullRequest) throws IOException;
 
 
     String getName();
