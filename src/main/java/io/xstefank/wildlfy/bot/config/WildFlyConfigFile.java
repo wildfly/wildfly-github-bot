@@ -1,12 +1,10 @@
 package io.xstefank.wildlfy.bot.config;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import io.quarkus.runtime.annotations.ConfigItem;
 
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.regex.Pattern;
 
 public class WildFlyConfigFile {
 

@@ -4,7 +4,6 @@ import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
-import org.mockito.Mockito;
 
 import java.io.IOException;
 

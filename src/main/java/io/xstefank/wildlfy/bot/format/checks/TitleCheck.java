@@ -19,9 +19,6 @@ public class TitleCheck implements Check {
         }
         pattern = title.pattern;
         message = (title.message != null) ? title.message : DEFAULT_MESSAGE;
-
-        System.out.println(pattern);
-        System.out.println(message);
     }
 
     @Override
