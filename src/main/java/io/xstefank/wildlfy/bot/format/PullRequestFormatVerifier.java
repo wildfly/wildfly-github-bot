@@ -49,9 +49,19 @@ public class PullRequestFormatVerifier {
     }
 
     private void initialize(WildFlyConfigFile wildflyConfigFile) {
-        checks.add(new TitleCheck(wildflyConfigFile.wildfly.format.titleCheck));
-        checks.add(new DescriptionCheck(wildflyConfigFile.wildfly.format.description));
-        checks.add(new CommitsQuantityCheck(wildflyConfigFile.wildfly.format.commitsQuantity));
+        if (wildflyConfigFile.wildfly.format.titleCheck != null) {
+            checks.add(new TitleCheck(wildflyConfigFile.wildfly.format.titleCheck));
+
+        }
+
+        if (wildflyConfigFile.wildfly.format.description != null) {
+            checks.add(new DescriptionCheck(wildflyConfigFile.wildfly.format.description));
+
+        }
+
+        if (wildflyConfigFile.wildfly.format.commitsQuantity != null) {
+            checks.add(new CommitsQuantityCheck(wildflyConfigFile.wildfly.format.commitsQuantity));
+        }
 
         initialized = true;
     }
