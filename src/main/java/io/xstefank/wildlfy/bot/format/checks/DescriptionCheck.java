@@ -13,7 +13,7 @@ public class DescriptionCheck implements Check {
     private String message;
 
     public DescriptionCheck(RegexDefinition description) {
-        if (description == null || description.pattern == null) {
+        if (description.pattern == null) {
             throw new IllegalArgumentException("Input argument cannot be null");
         }
         pattern = description.pattern;
