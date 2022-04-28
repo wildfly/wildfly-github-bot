@@ -8,4 +8,7 @@ public final class Format {
     public RegexDefinition titleCheck;
 
     public RegexDefinition description;
+
+    @JsonProperty("commits-quantity")
+    public CommitsQuantity commitsQuantity;
 }

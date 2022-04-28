@@ -14,14 +14,11 @@ public class TitleCheck implements Check {
     private String message;
 
     public TitleCheck(RegexDefinition title) {
-        if (title == null || title.pattern == null) {
+        if (title.pattern == null) {
             throw new IllegalArgumentException("Input argument cannot be null");
         }
         pattern = title.pattern;
         message = (title.message != null) ? title.message : DEFAULT_MESSAGE;
-
-        System.out.println(pattern);
-        System.out.println(message);
     }
 
     @Override
