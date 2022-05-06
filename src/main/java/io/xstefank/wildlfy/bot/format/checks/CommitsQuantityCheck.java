@@ -17,7 +17,7 @@ public class CommitsQuantityCheck implements Check {
     private String message;
 
     public CommitsQuantityCheck(CommitsQuantity commitsQuantity) {
-        if (commitsQuantity == null || commitsQuantity.quantity == null) {
+        if (commitsQuantity.quantity == null) {
             throw new IllegalArgumentException("Quantity was not set");
         }
 

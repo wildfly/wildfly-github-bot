@@ -14,7 +14,7 @@ public class TitleCheck implements Check {
     private String message;
 
     public TitleCheck(RegexDefinition title) {
-        if (title == null || title.pattern == null) {
+        if (title.pattern == null) {
             throw new IllegalArgumentException("Input argument cannot be null");
         }
         pattern = title.pattern;
