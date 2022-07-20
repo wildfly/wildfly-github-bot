@@ -12,6 +12,8 @@ public class WildFlyConfigFile {
 
     public static final class WildFlyConfig {
 
+        public boolean fullWorkflowReport;
+
         public List<WildFlyRule> rules;
 
         public Format format;
