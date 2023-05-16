@@ -4,7 +4,8 @@ wildfly-github-bot helps you to keep your pull requests in the correct format.
 This project is build with usage of Quarkus GitHub App: https://quarkiverse.github.io/quarkiverse-docs/quarkus-github-app/dev/index.html
 
 ## Development
-###Step 1 - Register the application
+### Step 1 - Register the application
+
 After forking the project we need to register wildfly-github-bot on GitHub for your account. Go to [GitHub Apps](https://github.com/settings/apps) and click on `New GitHub Apps`
 
 Also, you can access this page by clicking on your profile picture on gitHub and go to `Settings > Developer Settings > GitHub Apps > New GitHub App`.
@@ -27,9 +28,10 @@ Fields to fill in:
 
    After creating the app scroll down and press `Generate a private key`
 
-   You will be asked to download the key, keep it around, we will need it for the next stet.
+   You will be asked to download the key, keep it around, we will need it for the next step.
 
-###Step 2 - Set up the app
+### Step 2 - Set up the app
+
 As the configuration is environment-specific, and you probably don’t want to commit it in your repository, the best is to create in the root a `.env` file.
 
 The content of your .env file should be as follows:
@@ -55,7 +57,8 @@ The URL you obtained when you created your Smee.io channel.
 **QUARKUS_GITHUB_APP_PRIVATE_KEY**
 The content of the private key you generated and downloaded. Open the key file with a text editor as key viewers usually only show fingerprints.
 
-###Step 3 - Set up the app
+### Step 3 - Set up the app
+
 1. Create a new repo or use an already created one in which you want to track PRs.
 2. Go to the settings of your GitHub App and go to `Install App > Install > Only select repositories > Select the one you need > Install`
 3. In your repo in the main branch create a folder `.github` and a file `wildfly-bot.yml` with xml code in it:
@@ -70,7 +73,7 @@ wildfly:
      pattern: "\\[WFLY-\\d+\\]\\s+.*|WFLY-\\d+\\s+.*"
      message: "Wrong content of the title!"
    description:
-     pattern: "JIRA:\\s+https://issues.jboss.org/browse/WFLY-\\d+|https://issues.jboss.org/browse/WFLY-\\d+"
+     pattern: "JIRA:\\s+https://issues.redhat.com/browse/WFLY-\\d+|https://issues.redhat.com/browse/WFLY-\\d+"
      message: "The PR description must contain a link to the JIRA issue"
    commits-quantity:
      quantity: "1-3"
@@ -109,17 +112,18 @@ Run your application in dev mode that enables live coding using:
 
 > **_NOTE:_**  Dev UI available in dev mode only at http://localhost:8080/q/dev/.
 
-**DONE**
+Try to create a PR and update it a few times. The format check sends commit statuses that you will see in the PR.
 
-### DEPLOY ON OPENSHIFT
+## Deployment on OpenShift
 
-**REQUIREMENTS**
+### Requirements
+
  - JDK 17+ with **JAVA_HOME** configured appropriately
- - OpenShift
- - [OpenShift CLI](https://docs.openshift.com/container-platform/4.7/cli_reference/openshift_cli/getting-started-cli.html) 
+ - OpenShift (e.g, https://developers.redhat.com/developer-sandbox)
+ - [OpenShift CLI](https://docs.openshift.com/container-platform/4.7/cli_reference/openshift_cli/getting-started-cli.html)
  - Apache Maven 3.8.6
 
-**STEP 1 - Register new GitHub App**
+### Step 1 - Register new GitHub App
 
 Fill in the following information.
 1. Application name
@@ -140,38 +144,41 @@ Fill in the following information.
    - `Pull requests`
    - `Pull request review comment`
 
-**STEP 2 - Generate a private key**
+### Step 2 - Generate a private key
+
  - Scroll down to generate a private key
  - Download it as you will need it later
 
-**STEP 3 - Install the application on the desired repository**
- - You can find this in the Install App tab of your GitHub application
+### Step 3 - Install the application in the desired repository
 
-**STEP 4 - Log into the OpenShift cluster**
+ - You can find this in the "Install App" tab of your GitHub application
+
+### Step 4 - Log into the OpenShift cluster
  - `oc login -u <username>`
    - You will need to fill required information in prompt
  - `oc login --token=<token> --server=<serverUrl>`
    - You can request the token via the `Copy Login Command` link in the OpenShift web console.
 
-
-
-**STEP 5 - Create OpenShift secret with webhook secret and private key**
-
+### Step 5 - Create OpenShift secret with webhook secret and private key
 
       `oc create secret generic <secret-name> --from-literal=QUARKUS_GITHUB_APP_WEBHOOK_SECRET=<your-webhook-secret> --from-file=QUARKUS_GITHUB_APP_PRIVATE_KEY=<path-to-your-private-key>`
 
-**STEP 6 - Deploy the application**
+### Step 6 - Deploy the application
+
    - Go to the application home directory and run:
 
-
       `./mvnw clean install -Dquarkus.kubernetes.deploy=true -Dquarkus.openshift.env.vars.quarkus-github-app-app-id=<your-github-app-id> -Dquarkus.openshift.env.secrets=<secret-name>`
+
    - You can also put the config properties to the `application.properties`
 
-**STEP 7 - Edit the WebHook URL in your GitHub application**
+### Step 7 - Edit the WebHook URL in your GitHub application
+
 1. Get the list of exposed routes:
 
    `oc get routes`
+
 2. Edit the WebHook URL using the retrieved `HOST/PORT` value:
 
    `http://<HOST/PORT>`
-### DONE
+
+And that's it. Again, try to create a PR to verify the format of the PR.
