@@ -25,6 +25,12 @@ public class Matcher {
             }
         }
 
+        if (Strings.isNotBlank(rule.titleBody)) {
+            if (Patterns.find(rule.titleBody, pullRequest.getTitle()) || Patterns.find(rule.titleBody, pullRequest.getBody())) {
+                return true;
+            }
+        }
+
         if (!rule.directories.isEmpty()) {
             for (GHPullRequestFileDetail changedFile : pullRequest.listFiles()) {
                 for (String directory : rule.directories) {
