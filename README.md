@@ -110,3 +110,68 @@ Run your application in dev mode that enables live coding using:
 > **_NOTE:_**  Dev UI available in dev mode only at http://localhost:8080/q/dev/.
 
 **DONE**
+
+### DEPLOY ON OPENSHIFT
+
+**REQUIREMENTS**
+ - JDK 17+ with **JAVA_HOME** configured appropriately
+ - OpenShift
+ - [OpenShift CLI](https://docs.openshift.com/container-platform/4.7/cli_reference/openshift_cli/getting-started-cli.html) 
+ - Apache Maven 3.8.6
+
+**STEP 1 - Register new GitHub App**
+
+Fill in the following information.
+1. Application name
+2. Homepage URL
+3. Webhook URL
+   - put any placeholder URL here, as you will get the URL after the deployment
+4. Webhook secret
+   - You can generate a secret by using GitHub's recommended method:
+     > ruby -rsecurerandom -e 'puts SecureRandom.hex(20)'
+   - or use `pwgen`:
+     > pwgen -N 1 -s 40
+   - save it as you will need it later
+5. Permissions
+   - `Commit statuses` - `Access: Read and write`
+   - `Metadata` - `Access: Read-only`
+   - `Pull requests` - `Access: Read and write`
+6. Subscribe to events
+   - `Pull requests`
+   - `Pull request review comment`
+
+**STEP 2 - Generate a private key**
+ - Scroll down to generate a private key
+ - Download it as you will need it later
+
+**STEP 3 - Install the application on the desired repository**
+ - You can find this in the Install App tab of your GitHub application
+
+**STEP 4 - Log into the OpenShift cluster**
+ - `oc login -u <username>`
+   - You will need to fill required information in prompt
+ - `oc login --token=<token> --server=<serverUrl>`
+   - You can request the token via the `Copy Login Command` link in the OpenShift web console.
+
+
+
+**STEP 5 - Create OpenShift secret with webhook secret and private key**
+
+
+      `oc create secret generic <secret-name> --from-literal=QUARKUS_GITHUB_APP_WEBHOOK_SECRET=<your-webhook-secret> --from-file=QUARKUS_GITHUB_APP_PRIVATE_KEY=<path-to-your-private-key>`
+
+**STEP 6 - Deploy the application**
+   - Go to the application home directory and run:
+
+
+      `./mvnw clean install -Dquarkus.kubernetes.deploy=true -Dquarkus.openshift.env.vars.quarkus-github-app-app-id=<your-github-app-id> -Dquarkus.openshift.env.secrets=<secret-name>`
+   - You can also put the config properties to the `application.properties`
+
+**STEP 7 - Edit the WebHook URL in your GitHub application**
+1. Get the list of exposed routes:
+
+   `oc get routes`
+2. Edit the WebHook URL using the retrieved `HOST/PORT` value:
+
+   `http://<HOST/PORT>`
+### DONE
