@@ -9,6 +9,9 @@ public final class Format {
 
     public RegexDefinition description;
 
+    @JsonProperty("commits-message")
+    public RegexDefinition commitsMessage;
+
     @JsonProperty("commits-quantity")
     public CommitsQuantity commitsQuantity;
 }
