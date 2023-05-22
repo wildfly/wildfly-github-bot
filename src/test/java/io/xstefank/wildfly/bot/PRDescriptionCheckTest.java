@@ -29,7 +29,7 @@ public class PRDescriptionCheckTest {
                 "wildfly:\n" +
                 "  format:\n" +
                 "    description:\n" +
-                "      pattern: \"JIRA:\\\\s+https://issues.jboss.org/browse/WFLY-\\\\d+|https://issues.jboss.org/browse/WFLY-\\\\d+\"\n" +
+                "      pattern: \"JIRA:\\\\s+https://issues.redhat.com/browse/WFLY-\\\\d+|https://issues.redhat.com/browse/WFLY-\\\\d+\"\n" +
                 "      message: \"The PR description must contain a link to the JIRA issue\"";
     }
 
@@ -49,8 +49,8 @@ public class PRDescriptionCheckTest {
                 .when().payloadFromClasspath("/pr-fail-checks.json")
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    GHRepository repo = mocks.repository("tutorial-quarkus-github-app");
-                    Mockito.verify(repo).createCommitStatus("3de181159483ae3f2103e258cd2a6e7f9bafb3b8",
+                    GHRepository repo = mocks.repository("xstefank/wildfly");
+                    Mockito.verify(repo).createCommitStatus("860035425072e50c290561191e90edc90254f900",
                             GHCommitState.ERROR, "", "\u274C description: The PR description must contain a link to the JIRA issue", "Format");
                 });
     }
@@ -62,8 +62,8 @@ public class PRDescriptionCheckTest {
                 .when().payloadFromClasspath("/pr-success-checks.json")
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    GHRepository repo = mocks.repository("tutorial-quarkus-github-app");
-                    Mockito.verify(repo).createCommitStatus("e97a94bcedda66f652c196c2b0e6b01db4f1c0ce",
+                    GHRepository repo = mocks.repository("xstefank/wildfly");
+                    Mockito.verify(repo).createCommitStatus("40dbbdde147294cd8b29df16d79fe874247d8053",
                             GHCommitState.SUCCESS, "", "\u2705 Correct", "Format");
                 });
     }
