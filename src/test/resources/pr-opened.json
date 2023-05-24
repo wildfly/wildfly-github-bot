@@ -33,7 +33,7 @@
       "type": "User",
       "site_admin": false
     },
-    "body": null,
+    "body": "foobar",
     "created_at": "2022-02-14T09:52:41Z",
     "updated_at": "2022-02-14T09:52:41Z",
     "closed_at": null,
