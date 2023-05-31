@@ -3,7 +3,7 @@ package io.xstefank.wildfly.bot;
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkiverse.githubapp.testing.GitHubAppTesting;
 import io.quarkus.test.junit.QuarkusTest;
-import io.xstefank.wildlfy.bot.config.RegexDefinition;
+import io.xstefank.wildlfy.bot.config.Description;
 import io.xstefank.wildlfy.bot.format.DescriptionCheck;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,17 +29,20 @@ public class PRDescriptionCheckTest {
                 wildfly:
                   format:
                     description:
-                      pattern: "JIRA:\\\\s+https://issues.redhat.com/browse/WFLY-\\\\d+|https://issues.redhat.com/browse/WFLY-\\\\d+"
-                      message: "The PR description must contain a link to the JIRA issue"
-            """;
+                      message: Default fail message
+                      regexes:
+                        - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
+                          message: "The PR description must contain a link to the JIRA issue"
+                        - pattern: "JIRA:\\\\s+https://issues.redhat.com/browse/WFLY-\\\\d+"
+                """;
     }
 
     @Test
     void configFileNullTest() {
-        RegexDefinition regexDefinition = new RegexDefinition();
+        Description description = new Description();
 
         IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
-            () -> new DescriptionCheck(regexDefinition));
+            () -> new DescriptionCheck(description));
         Assertions.assertEquals("Input argument cannot be null", thrown.getMessage());
     }
 
@@ -67,5 +70,18 @@ public class PRDescriptionCheckTest {
                 Mockito.verify(repo).createCommitStatus("40dbbdde147294cd8b29df16d79fe874247d8053",
                     GHCommitState.SUCCESS, "", "\u2705 Correct", "Format");
             });
+    }
+
+    @Test
+    void multipleLineDescription() throws IOException {
+        GitHubAppTesting.given()
+                .github(mocks -> mocks.configFileFromString("wildfly-bot.yml", wildflyConfigFile))
+                .when().payloadFromClasspath("/pr-success-checks-multiline-description.json")
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHRepository repo = mocks.repository("xstefank/wildfly");
+                    Mockito.verify(repo).createCommitStatus("65fdbdde133f94cy6b29df16d79fe874247d513",
+                            GHCommitState.SUCCESS, "", "\u2705 Correct", "Format");
+                });
     }
 }
