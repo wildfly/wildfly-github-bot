@@ -3,10 +3,11 @@ package io.xstefank.wildlfy.bot.format;
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.PullRequest;
 import io.xstefank.wildlfy.bot.config.WildFlyConfigFile;
-import io.xstefank.wildlfy.bot.format.checks.Check;
-import io.xstefank.wildlfy.bot.format.checks.CommitsQuantityCheck;
 import io.xstefank.wildlfy.bot.format.checks.DescriptionCheck;
 import io.xstefank.wildlfy.bot.format.checks.TitleCheck;
+import io.xstefank.wildlfy.bot.format.checks.CommitMessagesCheck;
+import io.xstefank.wildlfy.bot.format.checks.CommitsQuantityCheck;
+import io.xstefank.wildlfy.bot.format.checks.Check;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHEventPayload;
@@ -61,8 +62,13 @@ public class PullRequestFormatVerifier {
             checks.add(new DescriptionCheck(wildflyConfigFile.wildfly.format.description));
         }
 
+
         if (wildflyConfigFile.wildfly.format.commitsQuantity != null) {
             checks.add(new CommitsQuantityCheck(wildflyConfigFile.wildfly.format.commitsQuantity));
+        }
+
+        if (wildflyConfigFile.wildfly.format.commitsMessage != null) {
+            checks.add(new CommitMessagesCheck(wildflyConfigFile.wildfly.format.commitsMessage));
         }
 
         initialized = true;

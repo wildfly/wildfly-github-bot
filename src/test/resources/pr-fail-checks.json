@@ -195,7 +195,7 @@
     },
     "base": {
       "label": "xstefank:main",
-      "ref": "main",
+      "ref": "br2",
       "sha": "a6bdb7dcc0e85281a7c699efea03c1ddfba6391b",
       "user": {
         "login": "xstefank",
