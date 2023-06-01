@@ -1,15 +1,15 @@
 {
   "action": "opened",
-  "number": 15,
+  "number": 23,
   "pull_request": {
-    "url": "https://api.github.com/repos/xstefank/wildfly/pulls/15",
-    "id": 851821439,
-    "node_id": "PR_kwDOAncoKs4yxcN_",
-    "html_url": "https://github.com/xstefank/wildfly/pull/15",
-    "diff_url": "https://github.com/xstefank/wildfly/pull/15.diff",
-    "patch_url": "https://github.com/xstefank/wildfly/pull/15.patch",
-    "issue_url": "https://api.github.com/repos/xstefank/wildfly/issues/15",
-    "number": 15,
+    "url": "https://api.github.com/repos/xstefank/wildfly/pulls/23",
+    "id": 1371642823,
+    "node_id": "PR_kwDOAncoKs5RwZvH",
+    "html_url": "https://github.com/xstefank/wildfly/pull/23",
+    "diff_url": "https://github.com/xstefank/wildfly/pull/23.diff",
+    "patch_url": "https://github.com/xstefank/wildfly/pull/23.patch",
+    "issue_url": "https://api.github.com/repos/xstefank/wildfly/issues/23",
+    "number": 23,
     "state": "open",
     "locked": false,
     "title": "Test commit",
@@ -34,8 +34,8 @@
       "site_admin": false
     },
     "body": "foobar",
-    "created_at": "2022-02-14T09:52:41Z",
-    "updated_at": "2022-02-14T09:52:41Z",
+    "created_at": "2023-05-31T07:51:01Z",
+    "updated_at": "2023-05-31T07:51:01Z",
     "closed_at": null,
     "merged_at": null,
     "merge_commit_sha": null,
@@ -46,15 +46,15 @@
     "labels": [],
     "milestone": null,
     "draft": false,
-    "commits_url": "https://api.github.com/repos/xstefank/wildfly/pulls/15/commits",
-    "review_comments_url": "https://api.github.com/repos/xstefank/wildfly/pulls/15/comments",
+    "commits_url": "https://api.github.com/repos/xstefank/wildfly/pulls/23/commits",
+    "review_comments_url": "https://api.github.com/repos/xstefank/wildfly/pulls/23/comments",
     "review_comment_url": "https://api.github.com/repos/xstefank/wildfly/pulls/comments{/number}",
-    "comments_url": "https://api.github.com/repos/xstefank/wildfly/issues/15/comments",
-    "statuses_url": "https://api.github.com/repos/xstefank/wildfly/statuses/36e0508f7af19a495505cecab3b7471db210a997",
+    "comments_url": "https://api.github.com/repos/xstefank/wildfly/issues/23/comments",
+    "statuses_url": "https://api.github.com/repos/xstefank/wildfly/statuses/5db0f8e923d84fe05a60658ed5bb95f7aa23b66f",
     "head": {
-      "label": "xstefank:pr-test",
-      "ref": "pr-test",
-      "sha": "36e0508f7af19a495505cecab3b7471db210a997",
+      "label": "xstefank:test-pr-1",
+      "ref": "test-pr-1",
+      "sha": "5db0f8e923d84fe05a60658ed5bb95f7aa23b66f",
       "user": {
         "login": "xstefank",
         "id": 9353101,
@@ -143,13 +143,13 @@
         "deployments_url": "https://api.github.com/repos/xstefank/wildfly/deployments",
         "created_at": "2015-08-25T13:00:10Z",
         "updated_at": "2022-02-10T12:39:03Z",
-        "pushed_at": "2022-02-14T09:52:42Z",
+        "pushed_at": "2023-05-31T07:51:01Z",
         "git_url": "git://github.com/xstefank/wildfly.git",
         "ssh_url": "git@github.com:xstefank/wildfly.git",
         "clone_url": "https://github.com/xstefank/wildfly.git",
         "svn_url": "https://github.com/xstefank/wildfly",
         "homepage": "http://wildfly.org",
-        "size": 233254,
+        "size": 259745,
         "stargazers_count": 0,
         "watchers_count": 0,
         "language": "Java",
@@ -158,6 +158,7 @@
         "has_downloads": true,
         "has_wiki": false,
         "has_pages": false,
+        "has_discussions": false,
         "forks_count": 0,
         "mirror_url": null,
         "archived": false,
@@ -172,6 +173,7 @@
         },
         "allow_forking": true,
         "is_template": false,
+        "web_commit_signoff_required": false,
         "topics": [],
         "visibility": "public",
         "forks": 0,
@@ -183,13 +185,18 @@
         "allow_rebase_merge": true,
         "allow_auto_merge": false,
         "delete_branch_on_merge": false,
-        "allow_update_branch": false
+        "allow_update_branch": false,
+        "use_squash_pr_title_as_default": false,
+        "squash_merge_commit_message": "COMMIT_MESSAGES",
+        "squash_merge_commit_title": "COMMIT_OR_PR_TITLE",
+        "merge_commit_message": "PR_TITLE",
+        "merge_commit_title": "MERGE_MESSAGE"
       }
     },
     "base": {
       "label": "xstefank:main",
       "ref": "main",
-      "sha": "4d2c180579ebd91bdc831ad65118180f296b46ba",
+      "sha": "a6bdb7dcc0e85281a7c699efea03c1ddfba6391b",
       "user": {
         "login": "xstefank",
         "id": 9353101,
@@ -278,13 +285,13 @@
         "deployments_url": "https://api.github.com/repos/xstefank/wildfly/deployments",
         "created_at": "2015-08-25T13:00:10Z",
         "updated_at": "2022-02-10T12:39:03Z",
-        "pushed_at": "2022-02-14T09:52:42Z",
+        "pushed_at": "2023-05-31T07:51:01Z",
         "git_url": "git://github.com/xstefank/wildfly.git",
         "ssh_url": "git@github.com:xstefank/wildfly.git",
         "clone_url": "https://github.com/xstefank/wildfly.git",
         "svn_url": "https://github.com/xstefank/wildfly",
         "homepage": "http://wildfly.org",
-        "size": 233254,
+        "size": 259745,
         "stargazers_count": 0,
         "watchers_count": 0,
         "language": "Java",
@@ -293,6 +300,7 @@
         "has_downloads": true,
         "has_wiki": false,
         "has_pages": false,
+        "has_discussions": false,
         "forks_count": 0,
         "mirror_url": null,
         "archived": false,
@@ -307,6 +315,7 @@
         },
         "allow_forking": true,
         "is_template": false,
+        "web_commit_signoff_required": false,
         "topics": [],
         "visibility": "public",
         "forks": 0,
@@ -318,33 +327,38 @@
         "allow_rebase_merge": true,
         "allow_auto_merge": false,
         "delete_branch_on_merge": false,
-        "allow_update_branch": false
+        "allow_update_branch": false,
+        "use_squash_pr_title_as_default": false,
+        "squash_merge_commit_message": "COMMIT_MESSAGES",
+        "squash_merge_commit_title": "COMMIT_OR_PR_TITLE",
+        "merge_commit_message": "PR_TITLE",
+        "merge_commit_title": "MERGE_MESSAGE"
       }
     },
     "_links": {
       "self": {
-        "href": "https://api.github.com/repos/xstefank/wildfly/pulls/15"
+        "href": "https://api.github.com/repos/xstefank/wildfly/pulls/23"
       },
       "html": {
-        "href": "https://github.com/xstefank/wildfly/pull/15"
+        "href": "https://github.com/xstefank/wildfly/pull/23"
       },
       "issue": {
-        "href": "https://api.github.com/repos/xstefank/wildfly/issues/15"
+        "href": "https://api.github.com/repos/xstefank/wildfly/issues/23"
       },
       "comments": {
-        "href": "https://api.github.com/repos/xstefank/wildfly/issues/15/comments"
+        "href": "https://api.github.com/repos/xstefank/wildfly/issues/23/comments"
       },
       "review_comments": {
-        "href": "https://api.github.com/repos/xstefank/wildfly/pulls/15/comments"
+        "href": "https://api.github.com/repos/xstefank/wildfly/pulls/23/comments"
       },
       "review_comment": {
         "href": "https://api.github.com/repos/xstefank/wildfly/pulls/comments{/number}"
       },
       "commits": {
-        "href": "https://api.github.com/repos/xstefank/wildfly/pulls/15/commits"
+        "href": "https://api.github.com/repos/xstefank/wildfly/pulls/23/commits"
       },
       "statuses": {
-        "href": "https://api.github.com/repos/xstefank/wildfly/statuses/36e0508f7af19a495505cecab3b7471db210a997"
+        "href": "https://api.github.com/repos/xstefank/wildfly/statuses/5db0f8e923d84fe05a60658ed5bb95f7aa23b66f"
       }
     },
     "author_association": "OWNER",
@@ -359,9 +373,9 @@
     "review_comments": 0,
     "maintainer_can_modify": false,
     "commits": 1,
-    "additions": 3,
+    "additions": 6,
     "deletions": 0,
-    "changed_files": 2
+    "changed_files": 3
   },
   "repository": {
     "id": 41363498,
@@ -431,13 +445,13 @@
     "deployments_url": "https://api.github.com/repos/xstefank/wildfly/deployments",
     "created_at": "2015-08-25T13:00:10Z",
     "updated_at": "2022-02-10T12:39:03Z",
-    "pushed_at": "2022-02-14T09:52:42Z",
+    "pushed_at": "2023-05-31T07:51:01Z",
     "git_url": "git://github.com/xstefank/wildfly.git",
     "ssh_url": "git@github.com:xstefank/wildfly.git",
     "clone_url": "https://github.com/xstefank/wildfly.git",
     "svn_url": "https://github.com/xstefank/wildfly",
     "homepage": "http://wildfly.org",
-    "size": 233254,
+    "size": 259745,
     "stargazers_count": 0,
     "watchers_count": 0,
     "language": "Java",
@@ -446,6 +460,7 @@
     "has_downloads": true,
     "has_wiki": false,
     "has_pages": false,
+    "has_discussions": false,
     "forks_count": 0,
     "mirror_url": null,
     "archived": false,
@@ -460,6 +475,7 @@
     },
     "allow_forking": true,
     "is_template": false,
+    "web_commit_signoff_required": false,
     "topics": [],
     "visibility": "public",
     "forks": 0,
