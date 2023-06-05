@@ -4,7 +4,7 @@ import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkiverse.githubapp.testing.GitHubAppTesting;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildlfy.bot.config.CommitsQuantity;
-import io.xstefank.wildlfy.bot.format.checks.CommitsQuantityCheck;
+import io.xstefank.wildlfy.bot.format.CommitsQuantityCheck;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

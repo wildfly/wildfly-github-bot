@@ -13,8 +13,8 @@ import java.io.IOException;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class TriagePullRequest {
-    private static final Logger LOG = Logger.getLogger(TriagePullRequest.class);
+public class TriagePullRequestProcessor {
+    private static final Logger LOG = Logger.getLogger(TriagePullRequestProcessor.class);
 
     void onPullRequestOpened(@PullRequest.Opened GHEventPayload.PullRequest pullRequestPayload,
                              @ConfigFile("wildfly-bot.yml") WildFlyConfigFile wildflyBotConfigFile) throws IOException {
