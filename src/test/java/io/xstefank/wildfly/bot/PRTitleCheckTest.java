@@ -25,12 +25,13 @@ public class PRTitleCheckTest {
 
     @BeforeEach
     void setUp() {
-        wildflyConfigFile =
-                "wildfly:\n" +
-                "  format:\n" +
-                "    title-check:\n" +
-                "      pattern: \"\\\\[WFLY-\\\\d+\\\\]\\\\s+.*|WFLY-\\\\d+\\\\s+.*\"\n" +
-                "      message: \"Wrong content of the title!\"";
+        wildflyConfigFile = """
+                wildfly:
+                  format:
+                    title-check:
+                      pattern: "\\\\[WFLY-\\\\d+\\\\]\\\\s+.*|WFLY-\\\\d+\\\\s+.*"
+                      message: "Wrong content of the title!"
+                """;
     }
 
     @Test
