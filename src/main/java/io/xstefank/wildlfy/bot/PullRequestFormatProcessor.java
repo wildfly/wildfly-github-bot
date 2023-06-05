@@ -1,13 +1,13 @@
-package io.xstefank.wildlfy.bot.format;
+package io.xstefank.wildlfy.bot;
 
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.PullRequest;
 import io.xstefank.wildlfy.bot.config.WildFlyConfigFile;
-import io.xstefank.wildlfy.bot.format.checks.DescriptionCheck;
-import io.xstefank.wildlfy.bot.format.checks.TitleCheck;
-import io.xstefank.wildlfy.bot.format.checks.CommitMessagesCheck;
-import io.xstefank.wildlfy.bot.format.checks.CommitsQuantityCheck;
-import io.xstefank.wildlfy.bot.format.checks.Check;
+import io.xstefank.wildlfy.bot.format.DescriptionCheck;
+import io.xstefank.wildlfy.bot.format.TitleCheck;
+import io.xstefank.wildlfy.bot.format.CommitMessagesCheck;
+import io.xstefank.wildlfy.bot.format.CommitsQuantityCheck;
+import io.xstefank.wildlfy.bot.format.Check;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHEventPayload;
@@ -19,9 +19,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @ApplicationScoped
-public class PullRequestFormatVerifier {
+public class PullRequestFormatProcessor {
 
-    private static final Logger LOG = Logger.getLogger(PullRequestFormatVerifier.class);
+    private static final Logger LOG = Logger.getLogger(PullRequestFormatProcessor.class);
 
     private boolean initialized = false;
     private final List<Check> checks = new ArrayList<>();
