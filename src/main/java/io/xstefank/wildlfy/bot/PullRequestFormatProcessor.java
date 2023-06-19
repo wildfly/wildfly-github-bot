@@ -26,7 +26,7 @@ public class PullRequestFormatProcessor {
     private boolean initialized = false;
     private final List<Check> checks = new ArrayList<>();
 
-    void onPullRequestEdited(@PullRequest.Edited GHEventPayload.PullRequest pullRequestPayload,
+    void checkPullRequestFormat(@PullRequest.Edited @PullRequest.Opened GHEventPayload.PullRequest pullRequestPayload,
                              @ConfigFile("wildfly-bot.yml") WildFlyConfigFile wildflyConfigFile) throws IOException {
 
         if (wildflyConfigFile == null) {
