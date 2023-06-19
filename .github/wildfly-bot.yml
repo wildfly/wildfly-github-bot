@@ -1,15 +1,15 @@
 wildfly:
- rules:
-   - title: "test"
-   - body: "test"
-     notify: [The-Huginn]
- format:
-   title-check:
-     pattern: "\\[TITLE-\\d+\\]\\s+.*|TITLE-\\d+\\s+.*"
-     message: "Wrong content of the title!"
-   description:
-     pattern: "\\d+"
-     message: "The PR description must contain a digit"
-   commits-quantity:
-     quantity: "1-3"
-     message: "Too many commits in PR!"
+  rules:
+    - title: "test"
+    - body: "test"
+      notify: [The-Huginn]
+  format:
+    title-check:
+      pattern: "\\[TITLE-\\d+\\]\\s+.*|TITLE-\\d+\\s+.*"
+      message: "Wrong content of the title!"
+    description:
+      pattern: "\\d+"
+      message: "The PR description must contain a digit"
+    commits-quantity:
+      quantity: "1-3"
+      message: "Too many commits in PR!"
