@@ -19,6 +19,8 @@ public class WildFlyConfigFile {
 
     public static final class WildFlyRule {
 
+        public String id;
+
         public String title;
 
         public String body;
@@ -30,5 +32,14 @@ public class WildFlyConfigFile {
 
         @JsonDeserialize(as = TreeSet.class)
         public Set<String> notify = new TreeSet<>();
+
+        @Override
+        public String toString() {
+            return "id=" + stringify(id) + " title=" + stringify(title) + " body=" + stringify(body) + " titleBody=" + stringify(titleBody);
+        }
+
+        private String stringify(String value) {
+            return value == null ? "null" : value;
+        }
     }
 }
