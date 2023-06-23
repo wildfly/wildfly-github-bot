@@ -29,7 +29,8 @@ public class PROpenedTest {
                 "wildfly-bot.yml", """
                     wildfly:
                       rules:
-                        - title: "Test"
+                        - id: "Test"
+                          title: "Test"
                           notify: [7125767235,0979986727]
                     """))
             .when().payloadFromClasspath("/pr-opened.json")
@@ -50,9 +51,10 @@ public class PROpenedTest {
                 "wildfly-bot.yml", """
                     wildfly:
                       rules:
-                        - title: "Hello"
-                        - body: "there"
-                        - titleBody: "test"
+                        - id: "Hello Test"
+                          title: "Hello"
+                          body: "there"
+                          titleBody: "test"
                           notify: [7125767235]
                     """))
             .when().payloadFromClasspath("/pr-opened.json")
@@ -73,9 +75,10 @@ public class PROpenedTest {
                 "wildfly-bot.yml", """
                     wildfly:
                       rules:
-                        - title: "Hello"
-                        - body: "there"
-                        - titleBody: "foobar"
+                        - id: "Hello Test"
+                          title: "Hello"
+                          body: "there"
+                          titleBody: "foobar"
                           notify: [7125767235]
                     """))
             .when().payloadFromClasspath("/pr-opened.json")
@@ -96,9 +99,10 @@ public class PROpenedTest {
                 "wildfly-bot.yml", """
                     wildfly:
                       rules:
-                        - title: "Hello"
-                        - body: "there"
-                        - titleBody: "General Kenobi"
+                        - id: "Hello Test"
+                          title: "Hello"
+                          body: "there"
+                          titleBody: "General Kenobi"
                           notify: [7125767235]
                     """))
             .when().payloadFromClasspath("/pr-opened.json")
@@ -119,7 +123,8 @@ public class PROpenedTest {
                     "wildfly-bot.yml", """
                         wildfly:
                           rules:
-                            - directories:
+                            - id: "Directory Test"
+                              directories:
                                - appclient
                               notify: [7125767235]
                         """);
@@ -144,7 +149,8 @@ public class PROpenedTest {
                     "wildfly-bot.yml", """
                         wildfly:
                           rules:
-                            - directories:
+                            - id: "Directory Test"
+                              directories:
                                - microprofile/health-smallrye
                               notify: [7125767235]
                         """);
@@ -169,7 +175,8 @@ public class PROpenedTest {
                     "wildfly-bot.yml", """
                         wildfly:
                           rules:
-                            - directories:
+                            - id: "Directory Test"
+                              directories:
                                - testsuite/integration
                               notify: [7125767235]
                         """);
@@ -194,7 +201,8 @@ public class PROpenedTest {
                     "wildfly-bot.yml", """
                         wildfly:
                           rules:
-                            - directories:
+                            - id: "Directory Test"
+                              directories:
                                - transactions
                               notify: [7125767235]
                         """);

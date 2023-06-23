@@ -2,6 +2,7 @@ package io.xstefank.wildlfy.bot;
 
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.PullRequest;
+import io.xstefank.wildlfy.bot.config.RuntimeConstants;
 import io.xstefank.wildlfy.bot.config.WildFlyConfigFile;
 import io.xstefank.wildlfy.bot.format.DescriptionCheck;
 import io.xstefank.wildlfy.bot.format.TitleCheck;
@@ -26,8 +27,8 @@ public class PullRequestFormatProcessor {
     private boolean initialized = false;
     private final List<Check> checks = new ArrayList<>();
 
-    void checkPullRequestFormat(@PullRequest.Edited @PullRequest.Opened GHEventPayload.PullRequest pullRequestPayload,
-                             @ConfigFile("wildfly-bot.yml") WildFlyConfigFile wildflyConfigFile) throws IOException {
+    void onPullRequestEdited(@PullRequest.Edited  @PullRequest.Opened GHEventPayload.PullRequest pullRequestPayload,
+                             @ConfigFile(RuntimeConstants.CONFIG_FILE_NAME) WildFlyConfigFile wildflyConfigFile) throws IOException {
 
         if (wildflyConfigFile == null) {
             LOG.error("No configuration file available. ");

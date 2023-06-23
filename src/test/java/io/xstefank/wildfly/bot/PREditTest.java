@@ -40,8 +40,9 @@ public class PREditTest {
         wildflyConfigFile =
             "wildfly:\n" +
                 "  rules:\n" +
-                "    - title: \"test\"\n" +
-                "    - body: \"test\"\n" +
+                "    - id: \"test\"\n" +
+                "      title: \"test\"\n" +
+                "      body: \"test\"\n" +
                 "      notify: [xstefank,petrberan]\n" +
                 "  format:";
 
