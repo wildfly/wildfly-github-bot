@@ -1,4 +1,4 @@
-package io.xstefank.wildlfy.bot.format;
+package io.xstefank.wildfly.bot.format;
 
 import org.kohsuke.github.GHPullRequest;
 

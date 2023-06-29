@@ -40,7 +40,7 @@ public class StartupEventTest {
     @Inject
     Event<StartupEvent> startupEvent;
 
-    private static final java.util.logging.Logger rootLogger = LogManager.getLogManager().getLogger("io.xstefank.wildlfy.bot");
+    private static final java.util.logging.Logger rootLogger = LogManager.getLogManager().getLogger("io.xstefank.wildfly.bot");
     private static final InMemoryLogHandler inMemoryLogHandler = new InMemoryLogHandler(
             record -> record.getLevel().intValue() >= Level.ERROR.intValue());
 

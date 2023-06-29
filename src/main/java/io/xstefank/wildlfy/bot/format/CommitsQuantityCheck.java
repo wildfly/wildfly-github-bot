@@ -1,6 +1,6 @@
-package io.xstefank.wildlfy.bot.format;
+package io.xstefank.wildfly.bot.format;
 
-import io.xstefank.wildlfy.bot.config.CommitsQuantity;
+import io.xstefank.wildfly.bot.config.CommitsQuantity;
 import org.kohsuke.github.GHPullRequest;
 
 import java.io.IOException;
