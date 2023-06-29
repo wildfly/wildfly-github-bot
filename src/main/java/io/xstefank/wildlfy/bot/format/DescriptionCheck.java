@@ -1,7 +1,7 @@
-package io.xstefank.wildlfy.bot.format;
+package io.xstefank.wildfly.bot.format;
 
-import io.xstefank.wildlfy.bot.config.Description;
-import io.xstefank.wildlfy.bot.config.RegexDefinition;
+import io.xstefank.wildfly.bot.config.Description;
+import io.xstefank.wildfly.bot.config.RegexDefinition;
 import org.kohsuke.github.GHPullRequest;
 
 import java.util.regex.Matcher;

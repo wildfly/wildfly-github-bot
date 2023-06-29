@@ -1,11 +1,11 @@
-package io.xstefank.wildlfy.bot;
+package io.xstefank.wildfly.bot;
 
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.GitHubClientProvider;
 import io.quarkiverse.githubapp.GitHubConfigFileProvider;
 import io.quarkus.runtime.StartupEvent;
-import io.xstefank.wildlfy.bot.config.RuntimeConstants;
-import io.xstefank.wildlfy.bot.config.WildFlyConfigFile;
+import io.xstefank.wildfly.bot.config.RuntimeConstants;
+import io.xstefank.wildfly.bot.config.WildFlyConfigFile;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;

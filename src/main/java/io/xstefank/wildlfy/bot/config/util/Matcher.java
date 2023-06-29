@@ -1,8 +1,8 @@
-package io.xstefank.wildlfy.bot.config.util;
+package io.xstefank.wildfly.bot.config.util;
 
 import com.hrakaroo.glob.GlobPattern;
 import com.hrakaroo.glob.MatchingEngine;
-import io.xstefank.wildlfy.bot.config.WildFlyConfigFile.WildFlyRule;
+import io.xstefank.wildfly.bot.config.WildFlyConfigFile.WildFlyRule;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHPullRequestFileDetail;
