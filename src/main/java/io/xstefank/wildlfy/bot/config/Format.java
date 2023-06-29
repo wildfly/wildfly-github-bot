@@ -7,7 +7,8 @@ public final class Format {
     @JsonProperty("title-check")
     public RegexDefinition titleCheck;
 
-    public RegexDefinition description;
+    @JsonProperty("description")
+    public Description description;
 
     @JsonProperty("commits-message")
     public RegexDefinition commitsMessage;

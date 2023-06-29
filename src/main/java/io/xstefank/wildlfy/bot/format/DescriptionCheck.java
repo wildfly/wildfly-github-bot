@@ -1,5 +1,6 @@
 package io.xstefank.wildlfy.bot.format;
 
+import io.xstefank.wildlfy.bot.config.Description;
 import io.xstefank.wildlfy.bot.config.RegexDefinition;
 import org.kohsuke.github.GHPullRequest;
 
@@ -9,24 +10,47 @@ import java.util.regex.Pattern;
 public class DescriptionCheck implements Check {
     static final String DEFAULT_MESSAGE = "Invalid description content";
 
-    private Pattern pattern;
-    private String message;
+    private Description description;
+    private String message = DEFAULT_MESSAGE;
 
-    public DescriptionCheck(RegexDefinition description) {
-        if (description.pattern == null) {
+    public DescriptionCheck(Description description) {
+        if (description == null) {
+            throw new IllegalArgumentException("At least one regex definition must be provided");
+        }
+        this.description = description;
+
+        if (description.regexes == null || description.regexes.isEmpty()) {
             throw new IllegalArgumentException("Input argument cannot be null");
         }
-        pattern = description.pattern;
-        message = (description.message != null) ? description.message : DEFAULT_MESSAGE;
+
+        if (description.message != null) {
+            message = description.message;
+        }
+
     }
+
 
     @Override
     public String check(GHPullRequest pullRequest) {
         try {
-            Matcher matcher = pattern.matcher(pullRequest.getBody());
+            String body = pullRequest.getBody();
+            String[] lines = body.split("\\r?\\n");
 
-            if (!matcher.matches()) {
-                return message;
+            for (RegexDefinition regexDefinition : description.regexes) {
+                Pattern pattern = regexDefinition.pattern;
+
+                boolean regexMatched = false;
+                for (String line : lines) {
+                    Matcher matcher = pattern.matcher(line);
+                    if (matcher.find()) {
+                        regexMatched = true;
+                        break;
+                    }
+                }
+
+                if (!regexMatched) {
+                    return regexDefinition.message != null ? regexDefinition.message : message;
+                }
             }
         } catch (NullPointerException e) {
             return message;

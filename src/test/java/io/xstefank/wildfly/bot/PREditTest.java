@@ -27,8 +27,9 @@ public class PREditTest {
                   pattern: "\\\\[WFLY-\\\\d+\\\\]\\\\s+.*|WFLY-\\\\d+\\\\s+.*"
                   message: "Wrong content of the title!"
                 description:
-                  pattern: "JIRA:\\\\s+https://issues.redhat.com/browse/WFLY-\\\\d+|https://issues.redhat.com/browse/WFLY-\\\\d+"
-                  message: "The PR description must contain a link to the JIRA issue"
+                  regexes:
+                    - pattern: "JIRA:\\\\s+https://issues.redhat.com/browse/WFLY-\\\\d+|https://issues.redhat.com/browse/WFLY-\\\\d+"
+                      message: "The PR description must contain a link to the JIRA issue"
                 commits-quantity:
                   quantity: "1-2"
                   message: "Too many commits in PR!"
