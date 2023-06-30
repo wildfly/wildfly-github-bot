@@ -73,8 +73,9 @@ wildfly:
      pattern: "\\[WFLY-\\d+\\]\\s+.*|WFLY-\\d+\\s+.*"
      message: "Wrong content of the title!"
    description:
-     pattern: "JIRA:\\s+https://issues.redhat.com/browse/WFLY-\\d+|https://issues.redhat.com/browse/WFLY-\\d+"
-     message: "The PR description must contain a link to the JIRA issue"
+     regexes:
+       - pattern: "JIRA:\\s+https://issues.redhat.com/browse/WFLY-\\d+|https://issues.redhat.com/browse/WFLY-\\d+"
+         message: "The PR description must contain a link to the JIRA issue"
    commits-quantity:
      quantity: "1-3"
      message: "Too many commits in PR!"
@@ -82,7 +83,7 @@ wildfly:
 
 1. `title-check`- Checks the title of a PR by using a regular expression in the `pattern` field.
 > The correct format in example is "[WFLY-11] Name"
-2. `description`- Checks comments of a PR by using regular expressions in the `pattern` field.
+2. `description`- Checks comments of a PR by using individual regular expressions in the `pattern` fields under `regexes`.
 > The correct format in example is "https://issues.jboss.org/browse/WFLY-11"
 3. `commits-quantity`- Checks the amount of commits in PR with the amount in the `quantity` field.
 > In the field you can use the exact values '1', '2' or range '1-2', '2-4' up to 100.
