@@ -14,6 +14,8 @@ public class WildFlyConfigFile {
         public List<WildFlyRule> rules;
 
         public Format format;
+
+        public List<String> emails;
     }
 
     public static final class WildFlyRule {

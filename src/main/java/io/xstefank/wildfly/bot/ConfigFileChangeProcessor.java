@@ -1,6 +1,6 @@
 package io.xstefank.wildfly.bot;
 
-import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkiverse.githubapp.event.PullRequest;
 import io.quarkiverse.githubapp.runtime.UtilsProducer;
@@ -18,7 +18,11 @@ import org.kohsuke.github.GHPullRequestFileDetail;
 import org.kohsuke.github.GitHub;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @ApplicationScoped
 public class ConfigFileChangeProcessor {
@@ -46,14 +50,21 @@ public class ConfigFileChangeProcessor {
                     Optional<WildFlyConfigFile> file = Optional.ofNullable(yamlObjectMapper.readValue(updatedFileContent, WildFlyConfigFile.class));
 
                     if (file.isPresent()) {
-                        githubCommitProcessor.commitStatusSuccess(pullRequest, CHECK_NAME, "Valid");
-                        Log.debug("Configuration File check successful");
+                        List<String> problems = validateFile(file.get());
+                        if (problems.isEmpty()) {
+                            githubCommitProcessor.commitStatusSuccess(pullRequest, CHECK_NAME, "Valid");
+                            Log.debug("Configuration File check successful");
+                        } else {
+                            String message = String.join(",", problems);
+                            githubCommitProcessor.commitStatusError(pullRequest, CHECK_NAME, message);
+                            Log.warnf("Configuration File check unsuccessful. %s", message);
+                        }
                     } else {
                         String message = "Configuration File check unsuccessful. Unable to correctly map loaded file to YAML.";
                         githubCommitProcessor.commitStatusError(pullRequest, CHECK_NAME, message);
                         Log.debugf(message);
                     }
-                } catch (JsonMappingException e) {
+                } catch (JsonProcessingException e) {
                     Log.errorf(e, "Unable to parse the configuration file from the repository %s on the following Pull Request [%s]: %s",
                         pullRequest.getHead().getRepository().getFullName(), pullRequest.getId(), pullRequest.getTitle());
                     githubCommitProcessor.commitStatusError(pullRequest, CHECK_NAME, "Unable to parse the configuration file. " +
@@ -63,5 +74,21 @@ public class ConfigFileChangeProcessor {
                 }
             }
         }
+    }
+
+    List<String> validateFile(WildFlyConfigFile file) {
+        List<String> problems = new ArrayList<>();
+        Set<WildFlyConfigFile.WildFlyRule> rules = new HashSet<>();
+        for (WildFlyConfigFile.WildFlyRule rule : file.wildfly.rules) {
+            rules.stream()
+                    .filter(wildFlyRule -> wildFlyRule.id.equals(rule.id))
+                    .forEach(wildFlyRule -> problems.add("Rule [" + wildFlyRule + "] and [" + rule + "] have the same id"));
+            if (rule.id == null) {
+                problems.add("Rule [" + rule + "] is missing an id");
+            } else {
+                rules.add(rule);
+            }
+        }
+        return problems;
     }
 }
