@@ -4,11 +4,13 @@ import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.PullRequest;
 import io.xstefank.wildfly.bot.config.RuntimeConstants;
 import io.xstefank.wildfly.bot.config.WildFlyConfigFile;
+import io.xstefank.wildfly.bot.config.util.GithubCommitProcessor;
 import io.xstefank.wildfly.bot.format.DescriptionCheck;
 import io.xstefank.wildfly.bot.format.TitleCheck;
 import io.xstefank.wildfly.bot.format.CommitMessagesCheck;
 import io.xstefank.wildfly.bot.format.CommitsQuantityCheck;
 import io.xstefank.wildfly.bot.format.Check;
+import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHEventPayload;
@@ -24,8 +26,13 @@ public class PullRequestFormatProcessor {
 
     private static final Logger LOG = Logger.getLogger(PullRequestFormatProcessor.class);
 
+    private static final String CHECK_NAME = "Format";
+
     private boolean initialized = false;
     private final List<Check> checks = new ArrayList<>();
+
+    @Inject
+    GithubCommitProcessor githubCommitProcessor;
 
     void onPullRequestEdited(@PullRequest.Edited  @PullRequest.Opened GHEventPayload.PullRequest pullRequestPayload,
                              @ConfigFile(RuntimeConstants.CONFIG_FILE_NAME) WildFlyConfigFile wildflyConfigFile) throws IOException {
@@ -42,12 +49,12 @@ public class PullRequestFormatProcessor {
         for (Check check : checks) {
             String result = check.check(pullRequest);
             if (result != null) {
-                updateFormatCommitStatus(pullRequest, GHCommitState.ERROR, "\u274C " + check.getName() + ": " + result);
+                githubCommitProcessor.updateFormatCommitStatus(pullRequest, GHCommitState.ERROR, CHECK_NAME, "\u274C " + check.getName() + ": " + result);
                 return;
             }
         }
 
-        updateFormatCommitStatus(pullRequest, GHCommitState.SUCCESS, "\u2705 Correct");
+        githubCommitProcessor.updateFormatCommitStatus(pullRequest, GHCommitState.SUCCESS, CHECK_NAME, "\u2705 Correct");
     }
 
     private void initialize(WildFlyConfigFile wildflyConfigFile) {
@@ -73,11 +80,5 @@ public class PullRequestFormatProcessor {
         }
 
         initialized = true;
-    }
-
-    private void updateFormatCommitStatus(GHPullRequest pullRequest, GHCommitState commitState, String description) throws IOException {
-        String sha = pullRequest.getHead().getSha();
-
-        pullRequest.getRepository().createCommitStatus(sha, commitState, "", description, "Format");
     }
 }
