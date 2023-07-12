@@ -28,7 +28,7 @@ import static org.mockito.Mockito.when;
 public class PRConfigFileChangeTest {
 
     @Test
-    void testUpdateToIncorrectFile() throws IOException {
+    void testUpdateIncorrectlyIndentedFile() throws IOException {
         given().github(mocks -> {
             GHRepository repo = mocks.repository("The-Huginn/wildfly-github-bot");
             GHContent mockGHContent = mock(GHContent.class);
@@ -37,7 +37,7 @@ public class PRConfigFileChangeTest {
                     "  rules:\n" +
                     "    - title: \"test\"\n" +
                     "    - body: \"test\"\n" +
-                    "      notify: [The-non-existing-user]\n" +
+                    "       notify: [The-non-existing-user]\n" +
                     "  format:\n" +
                     "    title-check:\n" +
                     "      pattern: \"\\\\[TITLE-\\\\d+\\\\]\\\\s+.*|TITLE-\\\\d+\\\\s+.*\"\n" +
@@ -75,7 +75,7 @@ public class PRConfigFileChangeTest {
                     GHRepository repo = mocks.repository("The-Huginn/wildfly-github-bot");
                     verify(repo).getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, "d4cb8c40c8d1d568bd12126c6eb1f541e06fee4b");
                     Mockito.verify(repo).createCommitStatus("d4cb8c40c8d1d568bd12126c6eb1f541e06fee4b",
-                            GHCommitState.ERROR, "", "\u274C Invalid rule: id=null title=test body=null titleBody=null, Invalid rule: id=null title=null body=test titleBody=null", "Configuration File");
+                            GHCommitState.ERROR, "", "\u274C Unable to parse the configuration file.", "Configuration File");
 
                     verifyNoMoreInteractions(mocks.pullRequest(1407732498));
                 });

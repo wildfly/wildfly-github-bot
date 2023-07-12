@@ -1,5 +1,6 @@
 package io.xstefank.wildfly.bot;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkiverse.githubapp.event.PullRequest;
 import io.quarkiverse.githubapp.runtime.UtilsProducer;
@@ -19,15 +20,10 @@ import org.kohsuke.github.GHPullRequestFileDetail;
 import org.kohsuke.github.GitHub;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 @ApplicationScoped
 public class ConfigFileChangeProcessor {
-
-    private static final Pattern DIFF_REGEX = Pattern.compile("^@@\\s+-(?:(\\d+)(?:,(\\d+))?)\\s+\\+(?:(\\d+)(?:,(\\d+))?)\\s+@@", Pattern.MULTILINE);
 
     private static final String CHECK_NAME = "Configuration File";
 
@@ -49,29 +45,21 @@ public class ConfigFileChangeProcessor {
                     GHContent updatedFile = gitHub.getRepository(pullRequest.getHead().getRepository().getFullName()).getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, pullRequest.getHead().getSha());
                     String updatedFileContent = new String( updatedFile.read().readAllBytes() );
                     Optional<WildFlyConfigFile> file = Optional.ofNullable(yamlObjectMapper.readValue(updatedFileContent, WildFlyConfigFile.class));
-                    List<String> invalidRules = validateFile(file.get());
 
-                    if (invalidRules.isEmpty()) {
+                    if (file.isPresent()) {
                         githubCommitProcessor.updateFormatCommitStatus(pullRequest, GHCommitState.SUCCESS, CHECK_NAME, "\u2705");
                         Log.debug("Configuration File check successful");
                     } else {
-                        githubCommitProcessor.updateFormatCommitStatus(pullRequest, GHCommitState.ERROR, CHECK_NAME, "\u274C " + String.join(", ", invalidRules));
-                        Log.debugf("Configuration File check unsuccessful [%s]", String.join(",", invalidRules));
+                        githubCommitProcessor.updateFormatCommitStatus(pullRequest, GHCommitState.ERROR, CHECK_NAME, "\u274C");
+                        Log.debugf("Configuration File check unsuccessful. Unable to map loaded file.");
                     }
+                } catch (JsonMappingException e) {
+                    Log.errorf(e, "Unable to parse the configuration file from the repository %s on the following Pull Request [%s]: %s", pullRequest.getHead().getRepository().getFullName(), pullRequest.getId(), pullRequest.getTitle());
+                    githubCommitProcessor.updateFormatCommitStatus(pullRequest, GHCommitState.ERROR, CHECK_NAME, "\u274C Unable to parse the configuration file.");
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             }
         }
-    }
-
-    List<String> validateFile(WildFlyConfigFile wildflyConfigFile) {
-        List<String> invalidRules = new ArrayList<>();
-        for (WildFlyConfigFile.WildFlyRule rule : wildflyConfigFile.wildfly.rules) {
-            if (rule.id == null) {
-                invalidRules.add("Invalid rule: " + rule);
-            }
-        }
-        return invalidRules;
     }
 }
