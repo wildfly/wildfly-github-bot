@@ -45,7 +45,8 @@ public class LifecycleProcessor {
                 }
             }
         } catch (IOException e) {
-            LOG.error("Unable to verify rules in repository.", e);
+            LOG.warn("Unable to verify rules in repository. Use debug log level for more details.");
+            LOG.debug("Unable to verify rules in repository.", e);
         }
     }
 }
