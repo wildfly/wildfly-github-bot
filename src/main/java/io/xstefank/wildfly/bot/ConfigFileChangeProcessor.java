@@ -42,7 +42,8 @@ public class ConfigFileChangeProcessor {
         for (GHPullRequestFileDetail changedFile : pullRequest.listFiles()) {
             if (changedFile.getFilename().equals(fileProvider.getFilePath(RuntimeConstants.CONFIG_FILE_NAME))) {
                 try {
-                    GHContent updatedFile = gitHub.getRepository(pullRequest.getHead().getRepository().getFullName()).getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, pullRequest.getHead().getSha());
+                    GHContent updatedFile = gitHub.getRepository(pullRequest.getHead().getRepository().getFullName()).getFileContent(".github/"
+                        + RuntimeConstants.CONFIG_FILE_NAME, pullRequest.getHead().getSha());
                     String updatedFileContent = new String( updatedFile.read().readAllBytes() );
                     Optional<WildFlyConfigFile> file = Optional.ofNullable(yamlObjectMapper.readValue(updatedFileContent, WildFlyConfigFile.class));
 
@@ -54,8 +55,10 @@ public class ConfigFileChangeProcessor {
                         Log.debugf("Configuration File check unsuccessful. Unable to map loaded file.");
                     }
                 } catch (JsonMappingException e) {
-                    Log.errorf(e, "Unable to parse the configuration file from the repository %s on the following Pull Request [%s]: %s", pullRequest.getHead().getRepository().getFullName(), pullRequest.getId(), pullRequest.getTitle());
-                    githubCommitProcessor.updateFormatCommitStatus(pullRequest, GHCommitState.ERROR, CHECK_NAME, "\u274C Unable to parse the configuration file.");
+                    Log.errorf(e, "Unable to parse the configuration file from the repository %s on the following Pull Request [%s]: %s",
+                        pullRequest.getHead().getRepository().getFullName(), pullRequest.getId(), pullRequest.getTitle());
+                    githubCommitProcessor.updateFormatCommitStatus(pullRequest, GHCommitState.ERROR, CHECK_NAME,
+                        "\u274C Unable to parse the configuration file.");
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
