@@ -29,13 +29,11 @@ public class TriagePullRequestProcessor {
         Set<String> mentions = new TreeSet<>();
 
         for (WildFlyRule rule : wildflyBotConfigFile.wildfly.rules) {
-            if (rule.id != null) {
-                if (Matcher.matches(pullRequest, rule)) {
-                    LOG.debugf("Matched rule with id: %s.", rule.id);
-                    for (String nick : rule.notify) {
-                        if (!nick.equals(pullRequest.getUser().getLogin())) {
-                            mentions.add(nick);
-                        }
+            if (Matcher.matches(pullRequest, rule)) {
+                 LOG.debugf("Pull Request %s was matched with a rule with the id: %s.", pullRequest.getTitle(), rule.id != null ? rule.id : "N/A");
+                for (String nick : rule.notify) {
+                    if (!nick.equals(pullRequest.getUser().getLogin())) {
+                        mentions.add(nick);
                     }
                 }
             }

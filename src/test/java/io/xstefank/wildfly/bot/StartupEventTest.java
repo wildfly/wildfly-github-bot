@@ -42,7 +42,7 @@ public class StartupEventTest {
 
     private static final java.util.logging.Logger rootLogger = LogManager.getLogManager().getLogger("io.xstefank.wildfly.bot");
     private static final InMemoryLogHandler inMemoryLogHandler = new InMemoryLogHandler(
-            record -> record.getLevel().intValue() >= Level.ERROR.intValue());
+            record -> record.getLevel().intValue() >= Level.INFO.intValue());
 
     static {
         rootLogger.addHandler(inMemoryLogHandler);
@@ -55,7 +55,7 @@ public class StartupEventTest {
     GitHubClientProvider clientProvider;
 
     @Test
-    public void testMissingRuleId() throws IOException {
+    public void testLoadingFileOnStartup() throws IOException {
         given().github(mocks -> {
                     GitHub mockGitHub = mock(GitHub.class);
                     GHApp mockGHApp = mock(GHApp.class);
@@ -90,6 +90,6 @@ public class StartupEventTest {
                 })
                 .when().payloadFromClasspath("/pr-opened.json")
                 .event(GHEvent.STAR)
-                .then().github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(logRecord -> logRecord.getMessage().equals("In repository %s the following rules are missing ids. [%s]"))));
+                .then().github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(logRecord -> logRecord.getMessage().equals("The configuration file from the repository %s was parsed successfully."))));
     }
 }

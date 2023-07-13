@@ -8,6 +8,7 @@ import io.xstefank.wildfly.bot.config.RuntimeConstants;
 import io.xstefank.wildfly.bot.config.WildFlyConfigFile;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.inject.Any;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHAppInstallation;
@@ -15,8 +16,6 @@ import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 @ApplicationScoped
 public class LifecycleProcessor {
@@ -29,19 +28,20 @@ public class LifecycleProcessor {
     @Inject
     GitHubConfigFileProvider fileProvider;
 
+    @Inject @Any
+    ConfigFileChangeProcessor configFileChangeProcessor;
+
     void onStart(@Observes StartupEvent event) {
         try {
             for (GHAppInstallation installation : clientProvider.getApplicationClient().getApp().listInstallations()) {
                 GitHub app = clientProvider.getInstallationClient(installation.getId());
                 for (GHRepository repository : app.getInstallation().listRepositories()) {
-                    List<String> invalidRules = new ArrayList<>();
-                    WildFlyConfigFile wildflyBotConfigFile = fileProvider.fetchConfigFile(repository, RuntimeConstants.CONFIG_FILE_NAME, ConfigFile.Source.DEFAULT, WildFlyConfigFile.class).get();
-                    for (WildFlyConfigFile.WildFlyRule rule : wildflyBotConfigFile.wildfly.rules) {
-                        if (rule.id == null) {
-                            invalidRules.add(rule.toString());
-                        }
+                    try {
+                        fileProvider.fetchConfigFile(repository, RuntimeConstants.CONFIG_FILE_NAME, ConfigFile.Source.DEFAULT, WildFlyConfigFile.class).get();
+                        LOG.infof("The configuration file from the repository %s was parsed successfully.", repository.getFullName());
+                    } catch (IllegalStateException e) {
+                        LOG.errorf(e, "Unable to retrieve or parse the configuration file from the repository %s", repository.getFullName());
                     }
-                    LOG.errorf("In repository %s the following rules are missing ids. [%s]", repository.getFullName(), String.join(", ", invalidRules));
                 }
             }
         } catch (IOException e) {
