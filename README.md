@@ -162,13 +162,13 @@ Fill in the following information.
 
 ### Step 5 - Create OpenShift secret with webhook secret and private key
 
-      `oc create secret generic <secret-name> --from-literal=QUARKUS_GITHUB_APP_WEBHOOK_SECRET=<your-webhook-secret> --from-file=QUARKUS_GITHUB_APP_PRIVATE_KEY=<path-to-your-private-key>`
+      `oc create secret generic wildfly-bot --from-literal=QUARKUS_GITHUB_APP_WEBHOOK_SECRET=<your-webhook-secret> --from-file=QUARKUS_GITHUB_APP_PRIVATE_KEY=<path-to-your-private-key>`
 
 ### Step 6 - Deploy the application
 
    - Go to the application home directory and run:
 
-      `./mvnw clean install -Dquarkus.kubernetes.deploy=true -Dquarkus.openshift.env.vars.quarkus-github-app-app-id=<your-github-app-id> -Dquarkus.openshift.env.secrets=<secret-name>`
+      `./mvnw clean install -Dquarkus.kubernetes.deploy=true -Dquarkus.openshift.env.vars.quarkus-github-app-app-id=<your-github-app-id>
 
    - You can also put the config properties to the `application.properties`
 
