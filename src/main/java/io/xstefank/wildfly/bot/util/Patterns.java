@@ -1,4 +1,4 @@
-package io.xstefank.wildfly.bot.config.util;
+package io.xstefank.wildfly.bot.util;
 
 import java.util.regex.Pattern;
 

@@ -3,9 +3,11 @@ package io.xstefank.wildfly.bot;
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.GitHubClientProvider;
 import io.quarkiverse.githubapp.GitHubConfigFileProvider;
+import io.quarkus.logging.Log;
 import io.quarkus.runtime.StartupEvent;
-import io.xstefank.wildfly.bot.config.RuntimeConstants;
-import io.xstefank.wildfly.bot.config.WildFlyConfigFile;
+import io.xstefank.wildfly.bot.config.WildFlyBotConfig;
+import io.xstefank.wildfly.bot.model.RuntimeConstants;
+import io.xstefank.wildfly.bot.model.WildFlyConfigFile;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.Any;
@@ -23,6 +25,9 @@ public class LifecycleProcessor {
     private static final Logger LOG = Logger.getLogger(LifecycleProcessor.class);
 
     @Inject
+    WildFlyBotConfig wildFlyBotConfig;
+
+    @Inject
     GitHubClientProvider clientProvider;
 
     @Inject
@@ -32,6 +37,10 @@ public class LifecycleProcessor {
     ConfigFileChangeProcessor configFileChangeProcessor;
 
     void onStart(@Observes StartupEvent event) {
+        if (wildFlyBotConfig.isDryRun()) {
+            Log.info("Dry Run enabled. GitHub requests will only log statements and not send actual requests to GitHub.");
+        }
+
         try {
             for (GHAppInstallation installation : clientProvider.getApplicationClient().getApp().listInstallations()) {
                 GitHub app = clientProvider.getInstallationClient(installation.getId());

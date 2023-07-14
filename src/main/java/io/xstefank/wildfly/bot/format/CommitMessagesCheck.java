@@ -1,6 +1,6 @@
 package io.xstefank.wildfly.bot.format;
 
-import io.xstefank.wildfly.bot.config.RegexDefinition;
+import io.xstefank.wildfly.bot.model.RegexDefinition;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHPullRequestCommitDetail;
 import org.kohsuke.github.PagedIterable;

@@ -1,6 +1,6 @@
-package io.xstefank.wildfly.bot.config.util;
+package io.xstefank.wildfly.bot.util;
 
-import io.xstefank.wildfly.bot.config.WildFlyConfigFile.WildFlyRule;
+import io.xstefank.wildfly.bot.model.WildFlyConfigFile.WildFlyRule;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHPullRequestFileDetail;

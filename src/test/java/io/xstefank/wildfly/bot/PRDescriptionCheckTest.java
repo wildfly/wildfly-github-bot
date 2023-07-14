@@ -4,8 +4,8 @@ import io.quarkiverse.githubapp.testing.GitHubAppMockito;
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkiverse.githubapp.testing.GitHubAppTesting;
 import io.quarkus.test.junit.QuarkusTest;
-import io.xstefank.wildfly.bot.config.Description;
 import io.xstefank.wildfly.bot.format.DescriptionCheck;
+import io.xstefank.wildfly.bot.model.Description;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -64,7 +64,7 @@ public class PRDescriptionCheckTest {
             .then().github(mocks -> {
                 GHRepository repo = mocks.repository("xstefank/wildfly");
                 Mockito.verify(repo).createCommitStatus("860035425072e50c290561191e90edc90254f900",
-                    GHCommitState.ERROR, "", "\u274C description: The PR description must contain a link to the JIRA issue", "Format");
+                    GHCommitState.ERROR, "", "description: The PR description must contain a link to the JIRA issue", "Format");
             });
     }
 
@@ -82,7 +82,7 @@ public class PRDescriptionCheckTest {
             .then().github(mocks -> {
                 GHRepository repo = mocks.repository("xstefank/wildfly");
                 Mockito.verify(repo).createCommitStatus("40dbbdde147294cd8b29df16d79fe874247d8053",
-                    GHCommitState.SUCCESS, "", "\u2705 Correct", "Format");
+                    GHCommitState.SUCCESS, "", "Valid", "Format");
             });
     }
 
@@ -100,7 +100,7 @@ public class PRDescriptionCheckTest {
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository("xstefank/wildfly");
                     Mockito.verify(repo).createCommitStatus("65fdbdde133f94cy6b29df16d79fe874247d513",
-                            GHCommitState.SUCCESS, "", "\u2705 Correct", "Format");
+                            GHCommitState.SUCCESS, "", "Valid", "Format");
                 });
     }
 }
