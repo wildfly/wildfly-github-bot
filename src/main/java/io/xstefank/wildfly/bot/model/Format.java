@@ -1,4 +1,4 @@
-package io.xstefank.wildfly.bot.config;
+package io.xstefank.wildfly.bot.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

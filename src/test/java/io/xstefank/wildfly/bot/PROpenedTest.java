@@ -43,7 +43,7 @@ public class PROpenedTest {
                     .comment("/cc @0979986727, @7125767235");
                 GHRepository repo = mocks.repository("xstefank/wildfly");
                 Mockito.verify(repo).createCommitStatus("5db0f8e923d84fe05a60658ed5bb95f7aa23b66f",
-                        GHCommitState.ERROR, "", "\u274C title-check: Wrong content of the title!", "Format");
+                        GHCommitState.ERROR, "", "title-check: Wrong content of the title!", "Format");
                 Mockito.verify(mocks.pullRequest(1371642823)).listFiles();
                 Mockito.verifyNoMoreInteractions(mocks.ghObjects());
             });
@@ -72,7 +72,7 @@ public class PROpenedTest {
                     .comment("/cc @7125767235");
                 GHRepository repo = mocks.repository("xstefank/wildfly");
                 Mockito.verify(repo).createCommitStatus("5db0f8e923d84fe05a60658ed5bb95f7aa23b66f",
-                        GHCommitState.SUCCESS, "", "\u2705 Correct", "Format");
+                        GHCommitState.SUCCESS, "", "Valid", "Format");
                 Mockito.verify(mocks.pullRequest(1371642823)).listFiles();
                 Mockito.verifyNoMoreInteractions(mocks.ghObjects());
             });
@@ -102,7 +102,7 @@ public class PROpenedTest {
                     .comment("/cc @7125767235");
                 GHRepository repo = mocks.repository("xstefank/wildfly");
                 Mockito.verify(repo).createCommitStatus("5db0f8e923d84fe05a60658ed5bb95f7aa23b66f",
-                        GHCommitState.SUCCESS, "", "\u2705 Correct", "Format");
+                        GHCommitState.SUCCESS, "", "Valid", "Format");
                 Mockito.verify(mocks.pullRequest(1371642823)).listFiles();
                 Mockito.verifyNoMoreInteractions(mocks.ghObjects());
             });
@@ -131,7 +131,7 @@ public class PROpenedTest {
                 Mockito.verify(mocks.pullRequest(1371642823), Mockito.never()).comment("/cc @7125767235");
                 GHRepository repo = mocks.repository("xstefank/wildfly");
                 Mockito.verify(repo).createCommitStatus("5db0f8e923d84fe05a60658ed5bb95f7aa23b66f",
-                        GHCommitState.SUCCESS, "", "\u2705 Correct", "Format");
+                        GHCommitState.SUCCESS, "", "Valid", "Format");
                 Mockito.verify(mocks.pullRequest(1371642823)).listFiles();
                 Mockito.verifyNoMoreInteractions(mocks.ghObjects());
             });
@@ -264,7 +264,7 @@ public class PROpenedTest {
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository("xstefank/wildfly");
                     Mockito.verify(repo).createCommitStatus("5db0f8e923d84fe05a60658ed5bb95f7aa23b66f",
-                            GHCommitState.ERROR, "", "\u274C title-check: Wrong content of the title!", "Format");
+                            GHCommitState.ERROR, "", "title-check: Wrong content of the title!", "Format");
                 });
     }
 }

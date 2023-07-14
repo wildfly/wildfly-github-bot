@@ -2,21 +2,20 @@ package io.xstefank.wildfly.bot;
 
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.PullRequest;
-import io.xstefank.wildfly.bot.config.RuntimeConstants;
-import io.xstefank.wildfly.bot.config.WildFlyConfigFile;
-import io.xstefank.wildfly.bot.config.util.GithubCommitProcessor;
-import io.xstefank.wildfly.bot.format.DescriptionCheck;
-import io.xstefank.wildfly.bot.format.TitleCheck;
+import io.xstefank.wildfly.bot.format.Check;
 import io.xstefank.wildfly.bot.format.CommitMessagesCheck;
 import io.xstefank.wildfly.bot.format.CommitsQuantityCheck;
-import io.xstefank.wildfly.bot.format.Check;
+import io.xstefank.wildfly.bot.format.DescriptionCheck;
+import io.xstefank.wildfly.bot.format.TitleCheck;
+import io.xstefank.wildfly.bot.model.RuntimeConstants;
+import io.xstefank.wildfly.bot.model.WildFlyConfigFile;
+import io.xstefank.wildfly.bot.util.GithubCommitProcessor;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
-import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHPullRequest;
 
-import jakarta.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,12 +48,12 @@ public class PullRequestFormatProcessor {
         for (Check check : checks) {
             String result = check.check(pullRequest);
             if (result != null) {
-                githubCommitProcessor.updateFormatCommitStatus(pullRequest, GHCommitState.ERROR, CHECK_NAME, "\u274C " + check.getName() + ": " + result);
+                githubCommitProcessor.commitStatusError(pullRequest, CHECK_NAME, check.getName() + ": " + result);
                 return;
             }
         }
 
-        githubCommitProcessor.updateFormatCommitStatus(pullRequest, GHCommitState.SUCCESS, CHECK_NAME, "\u2705 Correct");
+        githubCommitProcessor.commitStatusSuccess(pullRequest, CHECK_NAME, "Valid");
     }
 
     private void initialize(WildFlyConfigFile wildflyConfigFile) {

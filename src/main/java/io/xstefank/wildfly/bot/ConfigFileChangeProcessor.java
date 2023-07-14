@@ -6,13 +6,11 @@ import io.quarkiverse.githubapp.event.PullRequest;
 import io.quarkiverse.githubapp.runtime.UtilsProducer;
 import io.quarkiverse.githubapp.runtime.github.GitHubConfigFileProviderImpl;
 import io.quarkus.logging.Log;
-import io.xstefank.wildfly.bot.config.util.GithubCommitProcessor;
+import io.xstefank.wildfly.bot.model.RuntimeConstants;
+import io.xstefank.wildfly.bot.model.WildFlyConfigFile;
+import io.xstefank.wildfly.bot.util.GithubCommitProcessor;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-
-import io.xstefank.wildfly.bot.config.RuntimeConstants;
-import io.xstefank.wildfly.bot.config.WildFlyConfigFile;
-import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHContent;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHPullRequest;
@@ -48,17 +46,18 @@ public class ConfigFileChangeProcessor {
                     Optional<WildFlyConfigFile> file = Optional.ofNullable(yamlObjectMapper.readValue(updatedFileContent, WildFlyConfigFile.class));
 
                     if (file.isPresent()) {
-                        githubCommitProcessor.updateFormatCommitStatus(pullRequest, GHCommitState.SUCCESS, CHECK_NAME, "\u2705");
+                        githubCommitProcessor.commitStatusSuccess(pullRequest, CHECK_NAME, "Valid");
                         Log.debug("Configuration File check successful");
                     } else {
-                        githubCommitProcessor.updateFormatCommitStatus(pullRequest, GHCommitState.ERROR, CHECK_NAME, "\u274C");
-                        Log.debugf("Configuration File check unsuccessful. Unable to map loaded file.");
+                        String message = "Configuration File check unsuccessful. Unable to correctly map loaded file to YAML.";
+                        githubCommitProcessor.commitStatusError(pullRequest, CHECK_NAME, message);
+                        Log.debugf(message);
                     }
                 } catch (JsonMappingException e) {
                     Log.errorf(e, "Unable to parse the configuration file from the repository %s on the following Pull Request [%s]: %s",
                         pullRequest.getHead().getRepository().getFullName(), pullRequest.getId(), pullRequest.getTitle());
-                    githubCommitProcessor.updateFormatCommitStatus(pullRequest, GHCommitState.ERROR, CHECK_NAME,
-                        "\u274C Unable to parse the configuration file.");
+                    githubCommitProcessor.commitStatusError(pullRequest, CHECK_NAME, "Unable to parse the configuration file. " +
+                        "Make sure it can be loaded to model at https://github.com/xstefank/wildfly-github-bot/blob/main/CONFIGURATION.yml");
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
