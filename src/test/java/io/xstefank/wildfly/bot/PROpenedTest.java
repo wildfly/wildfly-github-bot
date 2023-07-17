@@ -109,6 +109,75 @@ public class PROpenedTest {
     }
 
     @Test
+    void testTitleBodyCheckForTitleBodyCaseInsensitive() throws IOException {
+        given().github(mocks -> {
+                    mocks.configFileFromString(
+                            "wildfly-bot.yml", """
+                                    wildfly:
+                                      rules:
+                                        - id: "Hello Test"
+                                          titleBody: "FoObAr"
+                                          notify: [7125767235]
+                                    """);
+
+                    PagedSearchIterable<GHPullRequestFileDetail> fileDetails = GitHubAppMockito.mockPagedIterable(mockEmptyFileDetails());
+                    Mockito.when(mocks.pullRequest(1371642823).listFiles()).thenReturn(fileDetails);
+                })
+                .when().payloadFromClasspath("/pr-opened.json")
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    Mockito.verify(mocks.pullRequest(1371642823))
+                            .comment("/cc @7125767235");
+                });
+    }
+
+    @Test
+    void testTitleBodyCheckForTitleCaseInsensitive() throws IOException {
+        given().github(mocks -> {
+                    mocks.configFileFromString(
+                            "wildfly-bot.yml", """
+                                    wildfly:
+                                      rules:
+                                        - id: "Hello Test"
+                                          title: "TeSt"
+                                          notify: [7125767235]
+                                    """);
+
+                    PagedSearchIterable<GHPullRequestFileDetail> fileDetails = GitHubAppMockito.mockPagedIterable(mockEmptyFileDetails());
+                    Mockito.when(mocks.pullRequest(1371642823).listFiles()).thenReturn(fileDetails);
+                })
+                .when().payloadFromClasspath("/pr-opened.json")
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    Mockito.verify(mocks.pullRequest(1371642823))
+                            .comment("/cc @7125767235");
+                });
+    }
+
+    @Test
+    void testTitleBodyCheckForBodyCaseInsensitive() throws IOException {
+        given().github(mocks -> {
+                    mocks.configFileFromString(
+                            "wildfly-bot.yml", """
+                                    wildfly:
+                                      rules:
+                                        - id: "Hello Test"
+                                          body: "FoObAr"
+                                          notify: [7125767235]
+                                    """);
+
+                    PagedSearchIterable<GHPullRequestFileDetail> fileDetails = GitHubAppMockito.mockPagedIterable(mockEmptyFileDetails());
+                    Mockito.when(mocks.pullRequest(1371642823).listFiles()).thenReturn(fileDetails);
+                })
+                .when().payloadFromClasspath("/pr-opened.json")
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    Mockito.verify(mocks.pullRequest(1371642823))
+                            .comment("/cc @7125767235");
+                });
+    }
+
+    @Test
     void testFailedTitleBodyCheck() throws IOException {
         given().github(mocks -> {
                     mocks.configFileFromString(
