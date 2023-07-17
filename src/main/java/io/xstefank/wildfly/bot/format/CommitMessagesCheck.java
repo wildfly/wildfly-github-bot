@@ -36,7 +36,7 @@ public class CommitMessagesCheck implements Check {
             Matcher matcher = pattern.matcher(commitMessage);
 
             if (!matcher.matches()) {
-                return "For commit: " + commitMessage + " " + this.message;
+                return String.format("For commit: \"%s\" %s" , commitMessage, this.message);
             }
         }
         return null;
