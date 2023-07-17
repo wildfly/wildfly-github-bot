@@ -14,8 +14,8 @@ import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHPullRequest;
 
 import java.io.IOException;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.ArrayList;
+import java.util.List;
 
 @ApplicationScoped
 public class TriagePullRequestProcessor {
@@ -33,11 +33,11 @@ public class TriagePullRequestProcessor {
         }
 
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
-        Set<String> mentions = new TreeSet<>();
+        List<String> mentions = new ArrayList<>();
 
         for (WildFlyRule rule : wildflyBotConfigFile.wildfly.rules) {
             if (Matcher.matches(pullRequest, rule)) {
-                 LOG.debugf("Pull Request %s was matched with a rule with the id: %s.", pullRequest.getTitle(), rule.id != null ? rule.id : "N/A");
+                LOG.debugf("Pull Request %s was matched with a rule with the id: %s.", pullRequest.getTitle(), rule.id != null ? rule.id : "N/A");
                 for (String nick : rule.notify) {
                     if (!nick.equals(pullRequest.getUser().getLogin())) {
                         mentions.add(nick);

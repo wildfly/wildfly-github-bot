@@ -2,9 +2,8 @@ package io.xstefank.wildfly.bot.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 
 public class WildFlyConfigFile {
 
@@ -27,11 +26,11 @@ public class WildFlyConfigFile {
 
         public String titleBody;
 
-        @JsonDeserialize(as = TreeSet.class)
-        public Set<String> directories = new TreeSet<>();
+        @JsonDeserialize(as = ArrayList.class)
+        public List<String> directories = new ArrayList<>();
 
-        @JsonDeserialize(as = TreeSet.class)
-        public Set<String> notify = new TreeSet<>();
+        @JsonDeserialize(as = ArrayList.class)
+        public List<String> notify = new ArrayList<>();
 
         @Override
         public String toString() {
