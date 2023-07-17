@@ -1,38 +1,40 @@
 wildfly:
-  rules:                  # list of objects with no mandatory fields. The rule is fired if at least one check is satisfied. The object is as follows
-    - id: id-1            # each rule should have unique id
-      title: "resteasy"   # string looked-up in the title of the Pull Request
-      notify:             # list of users to notify with a `/cc` comment
+  projectKey: "WFCORE"    # Abbreviation for project, used for title, commit check. By default, this setting is set to "WFLY"
+
+  rules:                  # List of objects with no mandatory fields. The rule is fired if at least one check is satisfied. The object is as follows
+    - id: id-1            # Each rule should have unique id
+      title: "resteasy"   # String looked-up in the title of the Pull Request
+      notify:             # List of users to notify with a `/cc` comment
         - random-person
         - random-person-2
     - id: id-2
-      body: "hibernate"   # string looked-up in the body of the Pull Request
+      body: "hibernate"   # String looked-up in the body of the Pull Request
       notify: [ random-person ]
 
     - id: id-3
-      titleBody: "health"                                       # string looked-up either in the title, the body or both
-      directories: [ src/main/, src/test/org/acme/resources/* ] # list of directories, supporting glob matching if wildcard '*' is used. Matches at least one file found changed by the Pull Request
+      titleBody: "health"                                       # String looked-up either in the title, the body or both
+      directories: [ src/main/, src/test/org/acme/resources/* ] # List of directories. Matches at least one file found changed by the Pull Request
       notify: [ another-random-person ]
 
-  format:                 # validation check for a correct format of the Pull Request
-    title-check:
-      pattern: "\\[WFLY-\\d+\\]\\s+.*|WFLY-\\d+\\s+.*"    # regex pattern must be matched by the title
-      message: "Wrong content of the title!"              # message to display if check does not succeed
+  format:                 # Validation check for a correct format of the Pull Request
+    title:                                      # Enabled by default. You have to disable explicitly.
+      enabled: false                            # If check enabled. By default, this setting is set true
+      message: "Wrong content of the title"    # Override default message. Message is display if check does not succeed
 
     description:
-      regexes:            # list of objects, where the object is as follows:
-        - pattern: "JIRA:\\s+https://issues.redhat.com/browse/WFLY-\\d+|https://issues.redhat.com/browse/WFLY-\\d+"   # regex pattern must be matched by the title
-          message: "The PR description must contain a link to the JIRA issue"                                         # message to display if check does not succeed
-      message: "The PR description is not correct"                                                                    # default message to display if a object is missing message field
+      regexes:            # List of objects, where the object is as follows:
+        - pattern: "JIRA:\\s+https://issues.redhat.com/browse/WFLY-\\d+|https://issues.redhat.com/browse/WFLY-\\d+"   # Regex pattern must be matched by the title
+          message: "The PR description must contain a link to the JIRA issue"                                         # Message to display if check does not succeed
+      message: "The PR description is not correct"                                                                    # Default message to display if a object is missing message field
 
     commits-quantity:
-      quantity: "1-3"                       # single value or a range. Values between 0-100. No spaces allowed.
-      message: "Too many commits in PR!"    # message to display if check does not succeed
+      quantity: "1-3"                       # Single value or a range. Values between 0-100. No spaces allowed.
+      message: "Too many commits in PR!"    # Message to display if check does not succeed
 
-    commits-message:
-      pattern: "\\[WFLY-\\d+\\]\\s+.*|WFLY-\\d+\\s+.*"    # regex pattern must be matched by the commit message
-      message: "Wrong content of the title!"              # message to display if check does not succeed
+    commit:                                     # Enabled by default. You have to disable explicitly.
+      enabled: true                             # If check enabled. By default, this setting is set true
+      message: "Wrong commit message!"          # Override default message. Message is display if check does not succeed
 
-  emails:     # list of email addresses, which will receive updates from this app
+  emails:     # List of email addresses, which will receive updates from this app
     - random-person@bar.baz
     - another-random-person@gmail.com

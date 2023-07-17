@@ -8,6 +8,7 @@ import io.xstefank.wildfly.bot.format.CommitMessagesCheck;
 import io.xstefank.wildfly.bot.format.CommitsQuantityCheck;
 import io.xstefank.wildfly.bot.format.DescriptionCheck;
 import io.xstefank.wildfly.bot.format.TitleCheck;
+import io.xstefank.wildfly.bot.model.RegexDefinition;
 import io.xstefank.wildfly.bot.model.RuntimeConstants;
 import io.xstefank.wildfly.bot.model.WildFlyConfigFile;
 import io.xstefank.wildfly.bot.util.GithubCommitProcessor;
@@ -128,8 +129,12 @@ public class PullRequestFormatProcessor {
             return;
         }
 
-        if (wildflyConfigFile.wildfly.format.titleCheck != null) {
-            checks.add(new TitleCheck(wildflyConfigFile.wildfly.format.titleCheck));
+        if (wildflyConfigFile.wildfly.format.title.enabled) {
+            checks.add(new TitleCheck(new RegexDefinition(wildflyConfigFile.wildfly.getProjectPattern(), wildflyConfigFile.wildfly.format.title.message)));
+        }
+
+        if (wildflyConfigFile.wildfly.format.commit.enabled) {
+            checks.add(new CommitMessagesCheck(new RegexDefinition(wildflyConfigFile.wildfly.getProjectPattern(), wildflyConfigFile.wildfly.format.commit.message)));
         }
 
         if (wildflyConfigFile.wildfly.format.description != null) {
@@ -139,10 +144,6 @@ public class PullRequestFormatProcessor {
 
         if (wildflyConfigFile.wildfly.format.commitsQuantity != null) {
             checks.add(new CommitsQuantityCheck(wildflyConfigFile.wildfly.format.commitsQuantity));
-        }
-
-        if (wildflyConfigFile.wildfly.format.commitsMessage != null) {
-            checks.add(new CommitMessagesCheck(wildflyConfigFile.wildfly.format.commitsMessage));
         }
 
         initialized = true;

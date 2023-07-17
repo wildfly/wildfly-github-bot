@@ -80,7 +80,6 @@ public class GitHubJson {
             ((ObjectNode) this.jsonFile.get(PULL_REQUEST)).put(COMMITS, quantity);
             return this;
         }
-
         public GitHubJson build() {
             return new GitHubJson(this);
         }

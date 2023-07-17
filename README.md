@@ -86,9 +86,8 @@ wildfly:
    - body: "test"
      notify: [xstefank,petrberan]
  format:
-   title-check:
-     pattern: "\\[WFLY-\\d+\\]\\s+.*|WFLY-\\d+\\s+.*"
-     message: "Wrong content of the title!"
+   title:
+     message: "Wrong content of the PR title"
    description:
      regexes:
        - pattern: "JIRA:\\s+https://issues.redhat.com/browse/WFLY-\\d+|https://issues.redhat.com/browse/WFLY-\\d+"
@@ -101,14 +100,15 @@ wildfly:
    - user@acme.org
 ```
 
-1. `title-check`- Checks the title of a PR by using a regular expression in the `pattern` field.
-> The correct format in example is "[WFLY-11] Name"
+1. `title`- Checks the title of a PR by using a regular expression generated from `projectKey` field, which is by default "WFLY". You can find more information in [wildfly-bot-config-example.yml](wildfly-bot-config-example.yml)
 2. `description`- Checks comments of a PR by using individual regular expressions in the `pattern` fields under `regexes`.
 > The correct format in example is "https://issues.jboss.org/browse/WFLY-11"
 3. `commits-quantity`- Checks the amount of commits in PR with the amount in the `quantity` field.
 > In the field you can use the exact values '1', '2' or range '1-2', '2-4' up to 100.
 4. `message` - The text of an error message in the respective check.
 5. `emails` - List of emails to receive notifications.
+
+> **_NOTE:_**  `title` and `commit` are enabled by default. More [here](wildfly-bot-config-example.yml).
 
 Also, there is a possibility to select checks that you need. Just left in the `wildfly-bot.yml` file checks you need.
 
@@ -120,9 +120,8 @@ wildfly:
    - body: "test"
      notify: [xstefank,petrberan]
  format:
-   title-check:
-     pattern: "\\[WFLY-\\d+\\]\\s+.*|WFLY-\\d+\\s+.*"
-     message: "Wrong content of the title!"
+   title:
+     message: "Wrong content of the PR title"
  emails:
    - nonexisistingemail@whatever.com
    - whoever@nonexistingmailingservice.com

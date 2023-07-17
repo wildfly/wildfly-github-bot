@@ -35,6 +35,10 @@ public class PRDescriptionCheckTest {
                         - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
                           message: "The PR description must contain a link to the JIRA issue"
                         - pattern: "JIRA:\\\\s+https://issues.redhat.com/browse/WFLY-\\\\d+"
+                    title:
+                      enabled: false
+                    commit:
+                      enabled: false
                 """;
     }
 

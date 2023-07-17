@@ -8,8 +8,6 @@ import java.util.regex.Pattern;
 
 public class TitleCheck implements Check {
 
-    static final String DEFAULT_MESSAGE = "Invalid title content";
-
     private Pattern pattern;
     private String message;
 
@@ -18,7 +16,7 @@ public class TitleCheck implements Check {
             throw new IllegalArgumentException("Input argument cannot be null");
         }
         pattern = title.pattern;
-        message = (title.message != null) ? title.message : DEFAULT_MESSAGE;
+        message = title.message;
     }
 
     @Override
@@ -33,6 +31,6 @@ public class TitleCheck implements Check {
 
     @Override
     public String getName() {
-        return "title-check";
+        return "title";
     }
 }

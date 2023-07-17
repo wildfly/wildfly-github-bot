@@ -24,9 +24,6 @@ public class PREditTest {
         wildflyConfigFile = """
             wildfly:
               format:
-                title-check:
-                  pattern: "\\\\[WFLY-\\\\d+\\\\]\\\\s+.*|WFLY-\\\\d+\\\\s+.*"
-                  message: "Wrong content of the title!"
                 description:
                   regexes:
                     - pattern: "JIRA:\\\\s+https://issues.redhat.com/browse/WFLY-\\\\d+|https://issues.redhat.com/browse/WFLY-\\\\d+"
@@ -34,6 +31,8 @@ public class PREditTest {
                 commits-quantity:
                   quantity: "1-2"
                   message: "Too many commits in PR!"
+                commit:
+                  enabled: false
             """;
     }
 
@@ -74,12 +73,12 @@ public class PREditTest {
             .then().github(mocks -> {
                 GHRepository repo = mocks.repository("xstefank/wildfly");
                 Mockito.verify(repo).createCommitStatus("860035425072e50c290561191e90edc90254f900",
-                    GHCommitState.ERROR, "", "Failed checks: title-check, description, commits-quantity", "Format");
+                    GHCommitState.ERROR, "", "Failed checks: description, title, commits-quantity", "Format");
                 Mockito.verify(mocks.pullRequest(1352150111)).comment(PullRequestFormatProcessor.FAILED_FORMAT_COMMENT
                     .formatted("""
-                        - Wrong content of the title!
-
                         - The PR description must contain a link to the JIRA issue
+
+                        - Wrong content of the title
 
                         - Too many commits in PR!"""));
             });
