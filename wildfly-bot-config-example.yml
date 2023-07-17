@@ -1,16 +1,16 @@
 wildfly:
   rules:                  # list of objects with no mandatory fields. The rule is fired if at least one check is satisfied. The object is as follows
-    - id: "id-1"    # each rule should have unique id
+    - id: id-1            # each rule should have unique id
       title: "resteasy"   # string looked-up in the title of the Pull Request
       notify:             # list of users to notify with a `/cc` comment
         - random-person
         - random-person-2
-    - id: "id-2"
+    - id: id-2
       body: "hibernate"   # string looked-up in the body of the Pull Request
       notify: [ random-person ]
 
-    - id: "id-3"
-      titleBody: "health" # string looked-up either in the title, the body or both
+    - id: id-3
+      titleBody: "health"                                       # string looked-up either in the title, the body or both
       directories: [ src/main/, src/test/org/acme/resources/* ] # list of directories, supporting glob matching if wildcard '*' is used. Matches at least one file found changed by the Pull Request
       notify: [ another-random-person ]
 
