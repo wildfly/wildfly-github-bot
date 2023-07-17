@@ -40,7 +40,7 @@ public class PROpenedTest {
             .event(GHEvent.PULL_REQUEST)
             .then().github(mocks -> {
                 Mockito.verify(mocks.pullRequest(1371642823))
-                    .comment("/cc @0979986727, @7125767235");
+                    .comment("/cc @7125767235, @0979986727");
                 GHRepository repo = mocks.repository("xstefank/wildfly");
                 Mockito.verify(repo).createCommitStatus("5db0f8e923d84fe05a60658ed5bb95f7aa23b66f",
                         GHCommitState.ERROR, "", "title-check: Wrong content of the title!", "Format");
