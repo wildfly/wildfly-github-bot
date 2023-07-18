@@ -43,7 +43,13 @@ QUARKUS_GITHUB_APP_WEBHOOK_PROXY_URL=<your Smee.io channel URL>
 QUARKUS_GITHUB_APP_PRIVATE_KEY=-----BEGIN RSA PRIVATE KEY-----\
                  <your private key>                          \
 -----END RSA PRIVATE KEY-----
+
+QUARKUS_MAILER_FROM=<email address>
+QUARKUS_MAILER_USERNAME=<email address>
+QUARKUS_MAILER_PASSWORD=<email password>
 ```
+
+> **_NOTE:_**  If you do not wish to send emails, do not fill in the `QUARKUS_MAILER_*` variables please.
 
 **QUARKUS_GITHUB_APP_APP_ID**
 The numeric app id appears in the App ID field.
@@ -57,6 +63,17 @@ The URL you obtained when you created your Smee.io channel.
 **QUARKUS_GITHUB_APP_PRIVATE_KEY**
 The content of the private key you generated and downloaded. Open the key file with a text editor as key viewers usually only show fingerprints.
 
+**QUARKUS_MAILER_FROM**
+email address displayed in the message
+
+**QUARKUS_MAILER_USERNAME**
+email address sending the email
+
+**QUARKUS_MAILER_PASSWORD**
+password to the email address corresponding to QUARKUS_MAILER_USERNAME. **Note** You probably want to generate it using _Gmail_ > _Settings_ > _Security_ > _2-Step Verification_ > _App passwords_
+
+***Default email service***
+is Gmail. To change this behavior or to override predefined parameters in _applications.properties_ file please refer to [Mailer Extension Documentation](https://quarkus.io/guides/mailer-reference#popular)
 ### Step 3 - Set up the app
 
 1. Create a new repo or use an already created one in which you want to track PRs.
@@ -79,6 +96,9 @@ wildfly:
    commits-quantity:
      quantity: "1-3"
      message: "Too many commits in PR!"
+ emails:
+   - foo@bar.baz
+   - user@acme.org
 ```
 
 1. `title-check`- Checks the title of a PR by using a regular expression in the `pattern` field.
@@ -88,6 +108,7 @@ wildfly:
 3. `commits-quantity`- Checks the amount of commits in PR with the amount in the `quantity` field.
 > In the field you can use the exact values '1', '2' or range '1-2', '2-4' up to 100.
 4. `message` - The text of an error message in the respective check.
+5. `emails` - List of emails to receive notifications.
 
 Also, there is a possibility to select checks that you need. Just left in the `wildfly-bot.yml` file checks you need.
 
@@ -102,6 +123,9 @@ wildfly:
    title-check:
      pattern: "\\[WFLY-\\d+\\]\\s+.*|WFLY-\\d+\\s+.*"
      message: "Wrong content of the title!"
+ emails:
+   - nonexisistingemail@whatever.com
+   - whoever@nonexistingmailingservice.com
 ```
 
 ### Run the application in dev mode
@@ -112,6 +136,7 @@ Run your application in dev mode that enables live coding using:
 ```
 
 > **_NOTE:_**  Dev UI available in dev mode only at http://localhost:8080/q/dev/.
+> > **_NOTE:_**  In Dev mode sending emails is mocked. To disable this, set the following property `quarkus.mailer.mock=false`
 
 Try to create a PR and update it a few times. The format check sends commit statuses that you will see in the PR.
 
@@ -163,6 +188,8 @@ Fill in the following information.
 ### Step 5 - Create OpenShift secret with webhook secret and private key
 
       `oc create secret generic wildfly-bot --from-literal=QUARKUS_GITHUB_APP_WEBHOOK_SECRET=<your-webhook-secret> --from-file=QUARKUS_GITHUB_APP_PRIVATE_KEY=<path-to-your-private-key>`
+
+> **_NOTE:_**  If you wish to use mailing option, please append the following properties to the previous command ` --from-literal=QUARKUS_MAILER_FROM=<email address> --from-literal=QUARKUS_MAILER_USERNAME=<email address> --from-literal=QUARKUS_MAILER_PASSWORD=<email password>`
 
 ### Step 6 - Deploy the application
 

@@ -3,6 +3,8 @@ package io.xstefank.wildfly.bot;
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.GitHubClientProvider;
 import io.quarkiverse.githubapp.GitHubConfigFileProvider;
+import io.quarkus.mailer.Mail;
+import io.quarkus.mailer.Mailer;
 import io.quarkus.logging.Log;
 import io.quarkus.runtime.StartupEvent;
 import io.xstefank.wildfly.bot.config.WildFlyBotConfig;
@@ -12,12 +14,15 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.Any;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHAppInstallation;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
 
 @ApplicationScoped
 public class LifecycleProcessor {
@@ -33,6 +38,12 @@ public class LifecycleProcessor {
     @Inject
     GitHubConfigFileProvider fileProvider;
 
+    @Inject
+    Mailer mailer;
+
+    @ConfigProperty(name = "quarkus.mailer.username")
+    Optional<String> username;
+
     @Inject @Any
     ConfigFileChangeProcessor configFileChangeProcessor;
 
@@ -46,8 +57,29 @@ public class LifecycleProcessor {
                 GitHub app = clientProvider.getInstallationClient(installation.getId());
                 for (GHRepository repository : app.getInstallation().listRepositories()) {
                     try {
-                        fileProvider.fetchConfigFile(repository, RuntimeConstants.CONFIG_FILE_NAME, ConfigFile.Source.DEFAULT, WildFlyConfigFile.class).get();
-                        LOG.infof("The configuration file from the repository %s was parsed successfully.", repository.getFullName());
+                        WildFlyConfigFile wildflyBotConfigFile = fileProvider.fetchConfigFile(repository, RuntimeConstants.CONFIG_FILE_NAME, ConfigFile.Source.DEFAULT, WildFlyConfigFile.class).get();
+                        List<String> emailAddresses = wildflyBotConfigFile.wildfly.emails;
+                        List<String> problems = configFileChangeProcessor.validateFile(wildflyBotConfigFile);
+                        if (problems.isEmpty()) {
+                            LOG.infof("The configuration file from the repository %s was parsed successfully.", repository.getFullName());
+                        } else {
+                            LOG.errorf("The configuration file from the repository %s was not parsed successfully due to following problems: %s", repository.getFullName(), problems);
+
+                            if (username.isPresent() && emailAddresses != null && !emailAddresses.isEmpty()) {
+                                LOG.infof("Sending email to the following emails [%s].", String.join(", ", emailAddresses));
+                                mailer.send(
+                                        new Mail()
+                                                .setSubject("Unsuccessful installation of Wildfly Bot Application")
+                                                .setText(String.format("""
+                                                        Hello,\n
+                                                        The configuration file %s has some invalid rules in the following github repository: %s . The following problems were detected. %s\n
+                                                        This is generated message, please do not respond.""", RuntimeConstants.CONFIG_FILE_NAME, repository.getHttpTransportUrl(), problems))
+                                                .setTo(emailAddresses)
+                                );
+                            } else {
+                                LOG.debug("No emails setup to receive warnings or no email address setup to send emails from.");
+                            }
+                        }
                     } catch (IllegalStateException e) {
                         LOG.errorf(e, "Unable to retrieve or parse the configuration file from the repository %s", repository.getFullName());
                     }
