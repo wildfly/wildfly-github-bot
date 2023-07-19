@@ -195,7 +195,7 @@ Fill in the following information.
 
    - Go to the application home directory and run:
 
-      `./mvnw clean install -Dquarkus.kubernetes.deploy=true -Dquarkus.openshift.env.vars.quarkus-github-app-app-id=<your-github-app-id>
+      `./mvnw clean install -Dquarkus.kubernetes.deploy=true -Dquarkus.openshift.env.vars.quarkus-github-app-app-id=<your-github-app-id>`
 
    - You can also put the config properties to the `application.properties`
 
