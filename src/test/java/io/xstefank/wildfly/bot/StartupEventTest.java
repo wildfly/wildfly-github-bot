@@ -55,7 +55,7 @@ public class StartupEventTest {
 
     private static final java.util.logging.Logger rootLogger = LogManager.getLogManager().getLogger("io.xstefank.wildfly.bot");
     private static final InMemoryLogHandler inMemoryLogHandler = new InMemoryLogHandler(
-            record -> record.getLevel().intValue() >= Level.ALL.intValue());
+        record -> record.getLevel().intValue() >= Level.ALL.intValue());
 
     static {
         rootLogger.addHandler(inMemoryLogHandler);
@@ -77,7 +77,8 @@ public class StartupEventTest {
         public void setup(GitHubMockSetupContext mocks) throws Throwable {
             GitHub mockGitHub = mock(GitHub.class);
             GHApp mockGHApp = mock(GHApp.class);
-            PagedIterable<GHAppInstallation> mockGHAppInstallations = GitHubAppMockito.mockPagedIterable(mocks.ghObject(GHAppInstallation.class, 0L));
+            PagedIterable<GHAppInstallation> mockGHAppInstallations = GitHubAppMockito.mockPagedIterable(
+                mocks.ghObject(GHAppInstallation.class, 0L));
             GHAppInstallation mockGHAppInstallation = mock(GHAppInstallation.class);
             GHAuthenticatedAppInstallation mockGHAuthenticatedAppInstallation = mock(GHAuthenticatedAppInstallation.class);
             PagedSearchIterable<GHRepository> mockGHRepositories = mock(PagedSearchIterable.class);
@@ -110,102 +111,104 @@ public class StartupEventTest {
     @Test
     public void testMissingRuleId() throws IOException {
         given().github(new CustomGithubMockSetup("""
-                        wildfly:
-                          rules:
-                            - title: "Test"
-                              notify: [7125767235,0979986727]
-                          emails:
-                            - foo@bar.baz
-                        """))
-                .when().payloadFromClasspath("/pr-opened.json")
-                .event(GHEvent.STAR)
-                .then().github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(logRecord -> logRecord.getMessage().equals("The configuration file from the repository %s was not parsed successfully due to following problems: %s"))));
+                wildfly:
+                  rules:
+                    - title: "Test"
+                      notify: [7125767235,0979986727]
+                  emails:
+                    - foo@bar.baz
+                """))
+            .when().payloadFromClasspath("/pr-opened.json")
+            .event(GHEvent.STAR)
+            .then().github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
+                logRecord -> logRecord.getMessage().equals(
+                    "The configuration file from the repository %s was not parsed successfully due to following problems: %s"))));
     }
 
     @Test
     public void testSendEmailsOnInvalidRule() throws IOException {
         given().github(new CustomGithubMockSetup("""
-                        wildfly:
-                          rules:
-                            - title: "Test"
-                              notify: [7125767235,0979986727]
-                          emails:
-                            - foo@bar.baz
-                        """))
-                .when().payloadFromClasspath("/pr-opened.json")
-                .event(GHEvent.STAR)
-                .then().github(mocks -> {
-                    GHRepository repository = mocks.repository("xstefank/wildfly");
+                wildfly:
+                  rules:
+                    - title: "Test"
+                      notify: [7125767235,0979986727]
+                  emails:
+                    - foo@bar.baz
+                """))
+            .when().payloadFromClasspath("/pr-opened.json")
+            .event(GHEvent.STAR)
+            .then().github(mocks -> {
+                GHRepository repository = mocks.repository("xstefank/wildfly");
 
-                    List<Mail> sent = mailbox.getMailsSentTo("foo@bar.baz");
-                    Assertions.assertEquals(sent.size(), 1);
-                    Assertions.assertEquals(sent.get(0).getSubject(), "Unsuccessful installation of Wildfly Bot Application");
-                    Assertions.assertEquals(sent.get(0).getText(), String.format("""
-                                                        Hello,\n
-                                                        The configuration file %s has some invalid rules in the following github repository: %s . The following problems were detected. [Rule [id=null title=Test body=null titleBody=null directories=[] notify=[7125767235, 0979986727]] is missing an id]\n
-                                                        This is generated message, please do not respond.""", RuntimeConstants.CONFIG_FILE_NAME, repository.getHttpTransportUrl()));
-                });
+                List<Mail> sent = mailbox.getMailsSentTo("foo@bar.baz");
+                Assertions.assertEquals(sent.size(), 1);
+                Assertions.assertEquals(sent.get(0).getSubject(), LifecycleProcessor.EMAIL_SUBJECT);
+                Assertions.assertEquals(sent.get(0).getText(), LifecycleProcessor.EMAIL_TEXT.formatted(
+                    RuntimeConstants.CONFIG_FILE_NAME, repository.getHttpTransportUrl(),
+                    "- Rule [title=Test, notify=[7125767235, 0979986727]] is missing an id"));
+            });
     }
 
     @Test
     public void testWithOneValidRule() throws IOException {
         given().github(new CustomGithubMockSetup("""
-                        wildfly:
-                          rules:
-                            - id: Test
-                              title: "Test"
-                              notify: [7125767235,0979986727]
-                          emails:
-                            - foo@bar.baz
-                        """))
-                .when().payloadFromClasspath("/pr-opened.json")
-                .event(GHEvent.STAR)
-                .then().github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(logRecord -> logRecord.getMessage().equals("The configuration file from the repository %s was parsed successfully."))));
+                wildfly:
+                  rules:
+                    - id: Test
+                      title: "Test"
+                      notify: [7125767235,0979986727]
+                  emails:
+                    - foo@bar.baz
+                """))
+            .when().payloadFromClasspath("/pr-opened.json")
+            .event(GHEvent.STAR)
+            .then().github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
+                logRecord -> logRecord.getMessage().equals(
+                    "The configuration file from the repository %s was parsed successfully."))));
     }
 
     @Test
     public void testSendEmailsOnMultipleInvalidRules() throws IOException {
         given().github(new CustomGithubMockSetup("""
-                        wildfly:
-                          rules:
-                            - id: Test
-                              title: "Test"
-                            - id: Test
-                              body: "Test"
-                          emails:
-                            - foo@bar.baz
-                        """))
-                .when().payloadFromClasspath("/pr-opened.json")
-                .event(GHEvent.STAR)
-                .then().github(mocks -> {
-                    GHRepository repository = mocks.repository("xstefank/wildfly");
+                wildfly:
+                  rules:
+                    - id: Test
+                      title: "Test"
+                    - id: Test
+                      body: "Test"
+                  emails:
+                    - foo@bar.baz
+                """))
+            .when().payloadFromClasspath("/pr-opened.json")
+            .event(GHEvent.STAR)
+            .then().github(mocks -> {
+                GHRepository repository = mocks.repository("xstefank/wildfly");
 
-                    Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(logRecord -> logRecord.getMessage().equals("The configuration file from the repository %s was not parsed successfully due to following problems: %s")));
+                Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(logRecord -> logRecord.getMessage().equals("The configuration file from the repository %s was not parsed successfully due to following problems: %s")));
 
-                    List<Mail> sent = mailbox.getMailsSentTo("foo@bar.baz");
-                    Assertions.assertEquals(sent.size(), 1);
-                    Assertions.assertEquals(sent.get(0).getSubject(), "Unsuccessful installation of Wildfly Bot Application");
-                    Assertions.assertEquals(sent.get(0).getText(), String.format("""
-                                                        Hello,\n
-                                                        The configuration file %s has some invalid rules in the following github repository: %s . The following problems were detected. [Rule [id=Test title=Test body=null titleBody=null directories=[] notify=[]] and [id=Test title=null body=Test titleBody=null directories=[] notify=[]] have the same id]\n
-                                                        This is generated message, please do not respond.""", RuntimeConstants.CONFIG_FILE_NAME, repository.getHttpTransportUrl()));
-                });
+                List<Mail> sent = mailbox.getMailsSentTo("foo@bar.baz");
+                Assertions.assertEquals(sent.size(), 1);
+                Assertions.assertEquals(sent.get(0).getSubject(), LifecycleProcessor.EMAIL_SUBJECT);
+                Assertions.assertEquals(sent.get(0).getText(), LifecycleProcessor.EMAIL_TEXT.formatted(
+                    RuntimeConstants.CONFIG_FILE_NAME, repository.getHttpTransportUrl(),
+                    "- Rule [id=Test, title=Test] and [id=Test, body=Test] have the same id"));
+            });
     }
 
     @Test
     public void testWithMultipleValidRules() throws IOException {
         given().github(new CustomGithubMockSetup("""
-                        wildfly:
-                          rules:
-                            - id: Test
-                              title: "Test"
-                            - id: Test-2
-                              body: "Test"
-                          emails:
-                            - foo@bar.baz
-                        """))
-                .when().payloadFromClasspath("/pr-opened.json")
-                .event(GHEvent.STAR)
-                .then().github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(logRecord -> logRecord.getMessage().equals("The configuration file from the repository %s was parsed successfully."))));
+                wildfly:
+                  rules:
+                    - id: Test
+                      title: "Test"
+                    - id: Test-2
+                      body: "Test"
+                  emails:
+                    - foo@bar.baz
+                """))
+            .when().payloadFromClasspath("/pr-opened.json")
+            .event(GHEvent.STAR)
+            .then().github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(logRecord -> logRecord.getMessage().equals("The configuration file from the repository %s was parsed successfully."))));
     }
 }

@@ -82,9 +82,9 @@ public class ConfigFileChangeProcessor {
         for (WildFlyConfigFile.WildFlyRule rule : file.wildfly.rules) {
             rules.stream()
                     .filter(wildFlyRule -> wildFlyRule.id.equals(rule.id))
-                    .forEach(wildFlyRule -> problems.add("Rule [" + wildFlyRule + "] and [" + rule + "] have the same id"));
+                    .forEach(wildFlyRule -> problems.add("Rule [" + wildFlyRule.toPrettyString() + "] and [" + rule.toPrettyString() + "] have the same id"));
             if (rule.id == null) {
-                problems.add("Rule [" + rule + "] is missing an id");
+                problems.add("Rule [" + rule.toPrettyString() + "] is missing an id");
             } else {
                 rules.add(rule);
             }
