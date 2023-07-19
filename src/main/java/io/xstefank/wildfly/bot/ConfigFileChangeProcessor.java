@@ -55,9 +55,8 @@ public class ConfigFileChangeProcessor {
                             githubCommitProcessor.commitStatusSuccess(pullRequest, CHECK_NAME, "Valid");
                             Log.debug("Configuration File check successful");
                         } else {
-                            String message = String.join(",", problems);
-                            githubCommitProcessor.commitStatusError(pullRequest, CHECK_NAME, message);
-                            Log.warnf("Configuration File check unsuccessful. %s", message);
+                            githubCommitProcessor.commitStatusError(pullRequest, CHECK_NAME, "Rule is missing an id or multiple rules have the same id.");
+                            Log.warnf("Configuration File check unsuccessful. %s", String.join(",", problems));
                         }
                     } else {
                         String message = "Configuration File check unsuccessful. Unable to correctly map loaded file to YAML.";
