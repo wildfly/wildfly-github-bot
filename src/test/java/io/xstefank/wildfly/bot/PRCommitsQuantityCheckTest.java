@@ -1,6 +1,5 @@
 package io.xstefank.wildfly.bot;
 
-import io.quarkiverse.githubapp.testing.GitHubAppMockito;
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkiverse.githubapp.testing.GitHubAppTesting;
 import io.quarkus.test.junit.QuarkusTest;
@@ -11,14 +10,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHEvent;
-import org.kohsuke.github.GHPullRequestFileDetail;
 import org.kohsuke.github.GHRepository;
-import org.kohsuke.github.PagedSearchIterable;
 import org.mockito.Mockito;
 
 import java.io.IOException;
 
-import static io.xstefank.wildfly.bot.helper.MockedGHPullRequestFileDetailProcessor.mockEmptyFileDetails;
+import static io.xstefank.wildfly.bot.helper.MockedGHPullRequestProcessor.processEmptyPullRequestMock;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @QuarkusTest
@@ -36,7 +33,6 @@ public class PRCommitsQuantityCheckTest {
                       quantity: "1-2"
                       message: "Too many commits in PR!"
             """;
-
     }
 
     @Test
@@ -53,16 +49,16 @@ public class PRCommitsQuantityCheckTest {
         GitHubAppTesting.given()
             .github(mocks -> {
                 mocks.configFile("wildfly-bot.yml").fromString(wildflyConfigFile);
-
-                PagedSearchIterable<GHPullRequestFileDetail> fileDetails = GitHubAppMockito.mockPagedIterable(mockEmptyFileDetails());
-                Mockito.when(mocks.pullRequest(1352150111).listFiles()).thenReturn(fileDetails);
+                processEmptyPullRequestMock(mocks.pullRequest(1352150111));
             })
             .when().payloadFromClasspath("/pr-fail-checks.json")
             .event(GHEvent.PULL_REQUEST)
             .then().github(mocks -> {
                 GHRepository repo = mocks.repository("xstefank/wildfly");
                 Mockito.verify(repo).createCommitStatus("860035425072e50c290561191e90edc90254f900",
-                    GHCommitState.ERROR, "", "commits-quantity: Too many commits in PR!", "Format");
+                    GHCommitState.ERROR, "", "Failed checks: commits-quantity", "Format");
+                Mockito.verify(mocks.pullRequest(1352150111)).comment(PullRequestFormatProcessor.FAILED_FORMAT_COMMENT
+                    .formatted("- Too many commits in PR!"));
             });
     }
 
@@ -71,9 +67,7 @@ public class PRCommitsQuantityCheckTest {
         GitHubAppTesting.given()
             .github(mocks -> {
                 mocks.configFile("wildfly-bot.yml").fromString(wildflyConfigFile);
-
-                PagedSearchIterable<GHPullRequestFileDetail> fileDetails = GitHubAppMockito.mockPagedIterable(mockEmptyFileDetails());
-                Mockito.when(mocks.pullRequest(1352150111).listFiles()).thenReturn(fileDetails);
+                processEmptyPullRequestMock(mocks.pullRequest(1352150111));
             })
             .when().payloadFromClasspath("/pr-success-checks.json")
             .event(GHEvent.PULL_REQUEST)

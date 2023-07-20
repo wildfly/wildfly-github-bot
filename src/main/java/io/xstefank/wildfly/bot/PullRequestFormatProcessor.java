@@ -2,6 +2,7 @@ package io.xstefank.wildfly.bot;
 
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.PullRequest;
+import io.xstefank.wildfly.bot.config.WildFlyBotConfig;
 import io.xstefank.wildfly.bot.format.Check;
 import io.xstefank.wildfly.bot.format.CommitMessagesCheck;
 import io.xstefank.wildfly.bot.format.CommitsQuantityCheck;
@@ -14,11 +15,16 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
+import org.kohsuke.github.GHIssueComment;
 import org.kohsuke.github.GHPullRequest;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class PullRequestFormatProcessor {
@@ -26,6 +32,13 @@ public class PullRequestFormatProcessor {
     private static final Logger LOG = Logger.getLogger(PullRequestFormatProcessor.class);
 
     private static final String CHECK_NAME = "Format";
+    public static final String FAILED_FORMAT_COMMENT = """
+        Failed format check on this pull request:
+
+        %s
+
+        Please fix the format according to these guidelines.
+        """;
 
     private boolean initialized = false;
     private final List<Check> checks = new ArrayList<>();
@@ -33,9 +46,11 @@ public class PullRequestFormatProcessor {
     @Inject
     GithubCommitProcessor githubCommitProcessor;
 
-    void onPullRequestEdited(@PullRequest.Edited  @PullRequest.Opened @PullRequest.Synchronize GHEventPayload.PullRequest pullRequestPayload,
-                             @ConfigFile(RuntimeConstants.CONFIG_FILE_NAME) WildFlyConfigFile wildflyConfigFile) throws IOException {
+    @Inject
+    WildFlyBotConfig wildFlyBotConfig;
 
+    void onPullRequestEdited(@PullRequest.Edited @PullRequest.Opened @PullRequest.Synchronize GHEventPayload.PullRequest pullRequestPayload,
+                             @ConfigFile(RuntimeConstants.CONFIG_FILE_NAME) WildFlyConfigFile wildflyConfigFile) throws IOException {
         if (wildflyConfigFile == null) {
             LOG.error("No configuration file available. ");
             return;
@@ -44,16 +59,68 @@ public class PullRequestFormatProcessor {
         }
 
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
+        Map<String, String> errors = new HashMap<>();
 
         for (Check check : checks) {
             String result = check.check(pullRequest);
             if (result != null) {
-                githubCommitProcessor.commitStatusError(pullRequest, CHECK_NAME, check.getName() + ": " + result);
-                return;
+                errors.put(check.getName(), result);
             }
         }
 
-        githubCommitProcessor.commitStatusSuccess(pullRequest, CHECK_NAME, "Valid");
+        if (errors.isEmpty()) {
+            githubCommitProcessor.commitStatusSuccess(pullRequest, CHECK_NAME, "Valid");
+            deleteFormatComment(pullRequest);
+        } else {
+            githubCommitProcessor.commitStatusError(pullRequest, CHECK_NAME, "Failed checks: " + String.join(", ", errors.keySet()));
+            formatComment(pullRequest, errors.values());
+        }
+
+    }
+
+    private void deleteFormatComment(GHPullRequest pullRequest) throws IOException {
+        formatComment(pullRequest, null);
+    }
+
+    private void formatComment(GHPullRequest pullRequest, Collection<String> errors) throws IOException {
+        boolean update = false;
+        for (GHIssueComment comment : pullRequest.listComments()) {
+            if (comment.getUser().getLogin().equals(wildFlyBotConfig.githubName())
+                && comment.getBody().startsWith("Failed format check")) {
+                if (errors == null) {
+                    if (wildFlyBotConfig.isDryRun()) {
+                        LOG.infof("Pull request #%d - Delete comment %s", pullRequest.getNumber(), comment);
+                    } else {
+                        comment.delete();
+                    }
+                    update = true;
+                    break;
+                }
+
+                String updatedBody = FAILED_FORMAT_COMMENT.formatted(errors.stream()
+                    .map("- %s"::formatted)
+                    .collect(Collectors.joining("\n\n")));
+
+                if (wildFlyBotConfig.isDryRun()) {
+                    LOG.infof("Pull request %d - Update comment %s to %s", pullRequest.getNumber(), comment.getBody(), updatedBody);
+                } else {
+                    comment.update(updatedBody);
+                }
+                update = true;
+                break;
+            }
+        }
+
+        if (!update && errors != null) {
+            String updatedBody = FAILED_FORMAT_COMMENT.formatted(errors.stream()
+                .map("- %s"::formatted)
+                .collect(Collectors.joining("\n\n")));
+            if (wildFlyBotConfig.isDryRun()) {
+                LOG.infof("Pull request %d - Add new comment %s", pullRequest.getNumber(), updatedBody);
+            } else {
+                pullRequest.comment(updatedBody);
+            }
+        }
     }
 
     private void initialize(WildFlyConfigFile wildflyConfigFile) {

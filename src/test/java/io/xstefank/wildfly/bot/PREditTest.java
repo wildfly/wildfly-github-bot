@@ -1,21 +1,17 @@
 package io.xstefank.wildfly.bot;
 
-import io.quarkiverse.githubapp.testing.GitHubAppMockito;
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkiverse.githubapp.testing.GitHubAppTesting;
 import io.quarkus.test.junit.QuarkusTest;
+import io.xstefank.wildfly.bot.helper.MockedGHPullRequestProcessor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHEvent;
-import org.kohsuke.github.GHPullRequestFileDetail;
 import org.kohsuke.github.GHRepository;
-import org.kohsuke.github.PagedSearchIterable;
 import org.mockito.Mockito;
 
 import java.io.IOException;
-
-import static io.xstefank.wildfly.bot.helper.MockedGHPullRequestFileDetailProcessor.mockEmptyFileDetails;
 
 @QuarkusTest
 @GitHubAppTest
@@ -55,9 +51,7 @@ public class PREditTest {
         GitHubAppTesting.given()
             .github(mocks -> {
                 mocks.configFileFromString("wildfly-bot.yml", wildflyConfigFile);
-
-                PagedSearchIterable<GHPullRequestFileDetail> fileDetails = GitHubAppMockito.mockPagedIterable(mockEmptyFileDetails());
-                Mockito.when(mocks.pullRequest(1352150111).listFiles()).thenReturn(fileDetails);
+                MockedGHPullRequestProcessor.processEmptyPullRequestMock(mocks.pullRequest(1352150111));
             })
             .when().payloadFromClasspath("/pr-success-checks.json")
             .event(GHEvent.PULL_REQUEST)
@@ -73,16 +67,21 @@ public class PREditTest {
         GitHubAppTesting.given()
             .github(mocks -> {
                 mocks.configFileFromString("wildfly-bot.yml", wildflyConfigFile);
-
-                PagedSearchIterable<GHPullRequestFileDetail> fileDetails = GitHubAppMockito.mockPagedIterable(mockEmptyFileDetails());
-                Mockito.when(mocks.pullRequest(1352150111).listFiles()).thenReturn(fileDetails);
+                MockedGHPullRequestProcessor.processEmptyPullRequestMock(mocks.pullRequest(1352150111));
             })
             .when().payloadFromClasspath("/pr-fail-checks.json")
             .event(GHEvent.PULL_REQUEST)
             .then().github(mocks -> {
                 GHRepository repo = mocks.repository("xstefank/wildfly");
                 Mockito.verify(repo).createCommitStatus("860035425072e50c290561191e90edc90254f900",
-                    GHCommitState.ERROR, "","title-check: Wrong content of the title!", "Format");
+                    GHCommitState.ERROR, "", "Failed checks: title-check, description, commits-quantity", "Format");
+                Mockito.verify(mocks.pullRequest(1352150111)).comment(PullRequestFormatProcessor.FAILED_FORMAT_COMMENT
+                    .formatted("""
+                        - Wrong content of the title!
+
+                        - The PR description must contain a link to the JIRA issue
+
+                        - Too many commits in PR!"""));
             });
     }
 
@@ -91,9 +90,7 @@ public class PREditTest {
         GitHubAppTesting.given()
             .github(mocks -> {
                 mocks.configFileFromString("wildfly-bot.yml", wildflyConfigFile);
-
-                PagedSearchIterable<GHPullRequestFileDetail> fileDetails = GitHubAppMockito.mockPagedIterable(mockEmptyFileDetails());
-                Mockito.when(mocks.pullRequest(1352150111).listFiles()).thenReturn(fileDetails);
+                MockedGHPullRequestProcessor.processEmptyPullRequestMock(mocks.pullRequest(1352150111));
             })
             .when().payloadFromClasspath("/pr-success-checks.json")
             .event(GHEvent.PULL_REQUEST)
