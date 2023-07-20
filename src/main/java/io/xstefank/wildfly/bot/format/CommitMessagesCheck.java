@@ -28,15 +28,15 @@ public class CommitMessagesCheck implements Check {
         PagedIterable<GHPullRequestCommitDetail> commits = pullRequest.listCommits();
         for (GHPullRequestCommitDetail commit : commits) {
 
-            String commitSha =  commit.getSha();
-            if (commitSha.isEmpty()) {
+            String commitMessage =  commit.getCommit().getMessage();
+            if (commitMessage.isEmpty()) {
                 return commit.getSha() + ": Commit message is Empty";
             }
 
-            Matcher matcher = pattern.matcher(commitSha);
+            Matcher matcher = pattern.matcher(commitMessage);
 
             if (!matcher.matches()) {
-                return String.format("For commit: \"%s\" %s" , commitSha, this.message);
+                return String.format("For commit: \"%s\" (%s) - %s" , commitMessage, commit.getSha(), this.message);
             }
         }
         return null;
