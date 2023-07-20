@@ -39,7 +39,7 @@ public class TriagePullRequestProcessor {
             if (Matcher.matches(pullRequest, rule)) {
                 LOG.debugf("Pull Request %s was matched with a rule with the id: %s.", pullRequest.getTitle(), rule.id != null ? rule.id : "N/A");
                 for (String nick : rule.notify) {
-                    if (!nick.equals(pullRequest.getUser().getLogin())) {
+                    if (!nick.equals(pullRequest.getUser().getLogin()) && !mentions.contains(nick)) {
                         mentions.add(nick);
                     }
                 }

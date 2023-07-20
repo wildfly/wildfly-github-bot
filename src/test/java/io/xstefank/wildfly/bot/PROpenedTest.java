@@ -31,6 +31,9 @@ public class PROpenedTest {
                                         - id: "Test"
                                           title: "Test"
                                           notify: [7125767235,0979986727]
+                                        - id: "Best"
+                                          title: "Best"
+                                          notify: [3251142365,4533458845]
                                     """);
 
                     PagedSearchIterable<GHPullRequestFileDetail> fileDetails = GitHubAppMockito.mockPagedIterable(mockEmptyFileDetails());
@@ -42,11 +45,47 @@ public class PROpenedTest {
                 Mockito.verify(mocks.pullRequest(1371642823))
                     .comment("/cc @7125767235, @0979986727");
                 GHRepository repo = mocks.repository("xstefank/wildfly");
+                // TODO The expected state should be SUCCESS. Fix this test as part of the issue #59.
                 Mockito.verify(repo).createCommitStatus("5db0f8e923d84fe05a60658ed5bb95f7aa23b66f",
                         GHCommitState.ERROR, "", "title-check: Wrong content of the title!", "Format");
                 Mockito.verify(mocks.pullRequest(1371642823)).listFiles();
                 Mockito.verifyNoMoreInteractions(mocks.ghObjects());
             });
+    }
+
+    @Test
+    void testMentionsCCCommentForDuplicateMentions() throws IOException {
+        given().github(mocks -> {
+                    mocks.configFileFromString(
+                            "wildfly-bot.yml", """
+                                    wildfly:
+                                      rules:
+                                        - id: "Test"
+                                          title: "Test"
+                                          notify: [7125767235,0979986727]
+                                        - id: "Best"
+                                          title: "Commit"
+                                          notify: [7125767235,4533458845]
+                                    """);
+
+                    PagedSearchIterable<GHPullRequestFileDetail> fileDetails = GitHubAppMockito.mockPagedIterable(mockEmptyFileDetails());
+                    Mockito.when(mocks.pullRequest(1371642823).listFiles()).thenReturn(fileDetails);
+                })
+                .when().payloadFromClasspath("/pr-opened.json")
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    Mockito.verify(mocks.pullRequest(1371642823))
+                            .comment("/cc @7125767235, @0979986727, @4533458845");
+                    GHRepository repo = mocks.repository("xstefank/wildfly");
+
+                    // Even though the test is the same as testMentionsCCComment, the expected status is different.
+                    // There is a problem with test isolation (see issue #59), but the important check is if there are
+                    // only 3 mentioned users.
+                    Mockito.verify(repo).createCommitStatus("5db0f8e923d84fe05a60658ed5bb95f7aa23b66f",
+                            GHCommitState.SUCCESS, "", "Valid", "Format");
+                    Mockito.verify(mocks.pullRequest(1371642823)).listFiles();
+                    Mockito.verifyNoMoreInteractions(mocks.ghObjects());
+                });
     }
 
     @Test
