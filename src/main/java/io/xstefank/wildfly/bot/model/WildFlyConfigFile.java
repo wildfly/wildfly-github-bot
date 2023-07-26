@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
+import java.util.regex.Pattern;
 
 public class WildFlyConfigFile {
 
@@ -14,9 +15,19 @@ public class WildFlyConfigFile {
 
     public static final class WildFlyConfig {
 
+        private Pattern projectPattern = Pattern.compile(String.format("\\[%s-\\d+]\\s+.*|%s-\\d+\\s+.*", RuntimeConstants.DEFAULT_PROJECT_KEY, RuntimeConstants.DEFAULT_PROJECT_KEY));
+
         public List<WildFlyRule> rules;
 
-        public Format format;
+        public Format format = new Format();
+
+        public void setProjectKey(String name) {
+            projectPattern = Pattern.compile(String.format("\\[%s-\\d+]\\s+.*|%s-\\d+\\s+.*", name, name));
+        }
+
+        public Pattern getProjectPattern() {
+            return projectPattern;
+        }
 
         public List<String> emails;
     }

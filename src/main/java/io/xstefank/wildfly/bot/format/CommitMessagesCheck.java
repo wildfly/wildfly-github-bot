@@ -10,8 +10,6 @@ import java.io.IOException;
 
 public class CommitMessagesCheck implements Check {
 
-    static final String DEFAULT_MESSAGE = "One of the commit messages has wrong format";
-
     private Pattern pattern;
     private String message;
 
@@ -20,7 +18,7 @@ public class CommitMessagesCheck implements Check {
             throw new IllegalArgumentException("Input argument cannot be null");
         }
         pattern = description.pattern;
-        message = (description.message != null) ? description.message : DEFAULT_MESSAGE;
+        message = description.message;
     }
 
     @Override
@@ -44,6 +42,6 @@ public class CommitMessagesCheck implements Check {
 
     @Override
     public String getName() {
-        return "commits-message";
+        return "commit";
     }
 }

@@ -29,9 +29,8 @@ public class PRTitleCheckTest {
         wildflyConfigFile = """
             wildfly:
               format:
-                title-check:
-                  pattern: "\\\\[WFLY-\\\\d+\\\\]\\\\s+.*|WFLY-\\\\d+\\\\s+.*"
-                  message: "Wrong content of the title!"
+                commit:
+                  enabled: false
             """;
     }
 
@@ -56,9 +55,9 @@ public class PRTitleCheckTest {
             .then().github(mocks -> {
                 GHRepository repo = mocks.repository("xstefank/wildfly");
                 Mockito.verify(repo).createCommitStatus("860035425072e50c290561191e90edc90254f900",
-                    GHCommitState.ERROR, "", "Failed checks: title-check", "Format");
+                    GHCommitState.ERROR, "", "Failed checks: title", "Format");
                 Mockito.verify(mocks.pullRequest(1352150111)).comment(PullRequestFormatProcessor.FAILED_FORMAT_COMMENT
-                    .formatted("- Wrong content of the title!"));
+                    .formatted("- Wrong content of the title"));
             });
     }
 

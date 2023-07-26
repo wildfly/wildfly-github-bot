@@ -32,6 +32,10 @@ public class PRCommitsQuantityCheckTest {
                     commits-quantity:
                       quantity: "1-2"
                       message: "Too many commits in PR!"
+                    title:
+                      enabled: false
+                    commit:
+                      enabled: false
             """;
     }
 

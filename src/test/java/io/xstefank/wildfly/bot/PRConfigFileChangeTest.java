@@ -41,9 +41,6 @@ public class PRConfigFileChangeTest {
                             - body: "test"
                                notify: [The-non-existing-user]
                           format:
-                            title-check:
-                              pattern: "\\\\[TITLE-\\\\d+\\\\]\\\\s+.*|TITLE-\\\\d+\\\\s+.*"
-                              message: "Wrong content of the title!"
                             description:
                               regexes:
                                 - pattern: "\\\\s+https://"
@@ -90,7 +87,7 @@ public class PRConfigFileChangeTest {
                           format:
                             title-check:
                               pattern: "\\\\[TITLE-\\\\d+\\\\]\\\\s+.*|TITLE-\\\\d+\\\\s+.*"
-                              message: "Wrong content of the title!"
+                              message: "Wrong content of the title"
                             description:
                               regexes:
                                 - pattern: "\\\\s+https://"

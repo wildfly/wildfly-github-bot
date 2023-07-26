@@ -33,6 +33,9 @@ public class PROpenedTest {
                             - id: "Best"
                               title: "Best"
                               notify: [3251142365,4533458845]
+                          format:
+                            commit:
+                              enabled: false
                         """);
 
                 MockedGHPullRequestProcessor.processEmptyPullRequestMock(mocks.pullRequest(1371642823));
@@ -45,9 +48,9 @@ public class PROpenedTest {
                 GHRepository repo = mocks.repository("xstefank/wildfly");
                 // TODO The expected state should be SUCCESS. Fix this test as part of the issue #59.
                 Mockito.verify(repo).createCommitStatus("5db0f8e923d84fe05a60658ed5bb95f7aa23b66f",
-                    GHCommitState.ERROR, "", "Failed checks: title-check", "Format");
+                    GHCommitState.ERROR, "", "Failed checks: title", "Format");
                 Mockito.verify(mockedPR).comment(PullRequestFormatProcessor.FAILED_FORMAT_COMMENT
-                    .formatted("- Wrong content of the title!"));
+                    .formatted("- Wrong content of the title"));
                 Mockito.verify(mockedPR).listFiles();
                 Mockito.verify(mockedPR).listComments();
                 Mockito.verifyNoMoreInteractions(mocks.ghObjects());
@@ -67,6 +70,9 @@ public class PROpenedTest {
                             - id: "Best"
                               title: "Commit"
                               notify: [7125767235,4533458845]
+                          format:
+                            commit:
+                              enabled: false
                         """);
 
                 MockedGHPullRequestProcessor.processEmptyPullRequestMock(mocks.pullRequest(1371642823));
@@ -83,7 +89,9 @@ public class PROpenedTest {
                 // There is a problem with test isolation (see issue #59), but the important check is if there are
                 // only 3 mentioned users.
                 Mockito.verify(repo).createCommitStatus("5db0f8e923d84fe05a60658ed5bb95f7aa23b66f",
-                    GHCommitState.SUCCESS, "", "Valid", "Format");
+                        GHCommitState.ERROR, "", "Failed checks: title", "Format");
+                Mockito.verify(mockedPR).comment(PullRequestFormatProcessor.FAILED_FORMAT_COMMENT
+                        .formatted("- Wrong content of the title"));
                 Mockito.verify(mockedPR).listFiles();
                 Mockito.verify(mockedPR).listComments();
                 Mockito.verifyNoMoreInteractions(mocks.ghObjects());
@@ -102,6 +110,9 @@ public class PROpenedTest {
                               body: "there"
                               titleBody: "test"
                               notify: [7125767235]
+                          format:
+                            commit:
+                              enabled: false
                         """);
                 MockedGHPullRequestProcessor.processEmptyPullRequestMock(mocks.pullRequest(1371642823));
             })
@@ -113,7 +124,9 @@ public class PROpenedTest {
                     .comment("/cc @7125767235");
                 GHRepository repo = mocks.repository("xstefank/wildfly");
                 Mockito.verify(repo).createCommitStatus("5db0f8e923d84fe05a60658ed5bb95f7aa23b66f",
-                    GHCommitState.SUCCESS, "", "Valid", "Format");
+                        GHCommitState.ERROR, "", "Failed checks: title", "Format");
+                Mockito.verify(mockedPR).comment(PullRequestFormatProcessor.FAILED_FORMAT_COMMENT
+                        .formatted("- Wrong content of the title"));
                 Mockito.verify(mockedPR).listFiles();
                 Mockito.verify(mockedPR).listComments();
                 Mockito.verifyNoMoreInteractions(mocks.ghObjects());
@@ -132,6 +145,9 @@ public class PROpenedTest {
                               body: "there"
                               titleBody: "foobar"
                               notify: [7125767235]
+                          format:
+                            commit:
+                              enabled: false
                         """);
                 MockedGHPullRequestProcessor.processEmptyPullRequestMock(mocks.pullRequest(1371642823));
             })
@@ -143,7 +159,9 @@ public class PROpenedTest {
                     .comment("/cc @7125767235");
                 GHRepository repo = mocks.repository("xstefank/wildfly");
                 Mockito.verify(repo).createCommitStatus("5db0f8e923d84fe05a60658ed5bb95f7aa23b66f",
-                    GHCommitState.SUCCESS, "", "Valid", "Format");
+                        GHCommitState.ERROR, "", "Failed checks: title", "Format");
+                Mockito.verify(mockedPR).comment(PullRequestFormatProcessor.FAILED_FORMAT_COMMENT
+                        .formatted("- Wrong content of the title"));
                 Mockito.verify(mockedPR).listFiles();
                 Mockito.verify(mockedPR).listComments();
                 Mockito.verifyNoMoreInteractions(mocks.ghObjects());
@@ -160,6 +178,9 @@ public class PROpenedTest {
                             - id: "Hello Test"
                               titleBody: "FoObAr"
                               notify: [7125767235]
+                          format:
+                            commit:
+                              enabled: false
                         """);
                 MockedGHPullRequestProcessor.processEmptyPullRequestMock(mocks.pullRequest(1371642823));
             })
@@ -181,6 +202,9 @@ public class PROpenedTest {
                             - id: "Hello Test"
                               title: "TeSt"
                               notify: [7125767235]
+                          format:
+                            commit:
+                              enabled: false
                         """);
                 MockedGHPullRequestProcessor.processEmptyPullRequestMock(mocks.pullRequest(1371642823));
             })
@@ -202,6 +226,9 @@ public class PROpenedTest {
                             - id: "Hello Test"
                               body: "FoObAr"
                               notify: [7125767235]
+                          format:
+                            commit:
+                              enabled: false
                         """);
                 MockedGHPullRequestProcessor.processEmptyPullRequestMock(mocks.pullRequest(1371642823));
             })
@@ -225,6 +252,9 @@ public class PROpenedTest {
                               body: "there"
                               titleBody: "General Kenobi"
                               notify: [7125767235]
+                          format:
+                            commit:
+                              enabled: false
                         """);
                 MockedGHPullRequestProcessor.processEmptyPullRequestMock(mocks.pullRequest(1371642823));
             })
@@ -234,8 +264,10 @@ public class PROpenedTest {
                 GHPullRequest mockedPR = mocks.pullRequest(1371642823);
                 Mockito.verify(mockedPR, Mockito.never()).comment("/cc @7125767235");
                 GHRepository repo = mocks.repository("xstefank/wildfly");
-                Mockito.verify(repo).createCommitStatus("5db0f8e923d84fe05a60658ed5bb95f7aa23b66f",
-                    GHCommitState.SUCCESS, "", "Valid", "Format");
+                    Mockito.verify(repo).createCommitStatus("5db0f8e923d84fe05a60658ed5bb95f7aa23b66f",
+                            GHCommitState.ERROR, "", "Failed checks: title", "Format");
+                    Mockito.verify(mockedPR).comment(PullRequestFormatProcessor.FAILED_FORMAT_COMMENT
+                            .formatted("- Wrong content of the title"));
                 Mockito.verify(mockedPR).listFiles();
                 Mockito.verify(mockedPR).listComments();
                 Mockito.verifyNoMoreInteractions(mocks.ghObjects());
@@ -253,6 +285,9 @@ public class PROpenedTest {
                               directories:
                                - appclient
                               notify: [7125767235]
+                          format:
+                            commit:
+                              enabled: false
                         """);
                 MockedGHPullRequestProcessor.processPullRequestMock(mocks.pullRequest(1371642823),
                     mockFileDetails(), MockedGHPullRequestProcessor.mockEmptyComments());
@@ -265,7 +300,7 @@ public class PROpenedTest {
                 Mockito.verify(mockedPR).comment("/cc @7125767235");
                 Mockito.verify(mockedPR, Mockito.times(1)).listComments();
                 Mockito.verify(mockedPR).comment(PullRequestFormatProcessor.FAILED_FORMAT_COMMENT
-                    .formatted("- Wrong content of the title!"));
+                    .formatted("- Wrong content of the title"));
                 Mockito.verifyNoMoreInteractions(mockedPR);
             });
     }
@@ -281,6 +316,9 @@ public class PROpenedTest {
                               directories:
                                - microprofile/health-smallrye
                               notify: [7125767235]
+                          format:
+                            commit:
+                              enabled: false
                         """);
                 MockedGHPullRequestProcessor.processPullRequestMock(mocks.pullRequest(1371642823),
                     mockFileDetails(), MockedGHPullRequestProcessor.mockEmptyComments());
@@ -292,7 +330,7 @@ public class PROpenedTest {
                 Mockito.verify(mockedPR, Mockito.times(2)).listFiles();
                 Mockito.verify(mockedPR, Mockito.times(1)).listComments();
                 Mockito.verify(mockedPR).comment(PullRequestFormatProcessor.FAILED_FORMAT_COMMENT
-                    .formatted("- Wrong content of the title!"));
+                    .formatted("- Wrong content of the title"));
                 Mockito.verify(mockedPR).comment("/cc @7125767235");
                 Mockito.verifyNoMoreInteractions(mockedPR);
             });
@@ -309,6 +347,9 @@ public class PROpenedTest {
                               directories:
                                - testsuite/integration
                               notify: [7125767235]
+                          format:
+                            commit:
+                              enabled: false
                         """);
                 MockedGHPullRequestProcessor.processPullRequestMock(mocks.pullRequest(1371642823),
                     mockFileDetails(), MockedGHPullRequestProcessor.mockEmptyComments());
@@ -319,6 +360,8 @@ public class PROpenedTest {
                 GHPullRequest mockedPR = mocks.pullRequest(1371642823);
                 Mockito.verify(mockedPR, Mockito.times(2)).listFiles();
                 Mockito.verify(mockedPR, Mockito.times(1)).listComments();
+                Mockito.verify(mockedPR).comment(PullRequestFormatProcessor.FAILED_FORMAT_COMMENT
+                        .formatted("- Wrong content of the title"));
                 Mockito.verify(mockedPR).comment("/cc @7125767235");
                 Mockito.verifyNoMoreInteractions(mockedPR);
             });
@@ -335,6 +378,9 @@ public class PROpenedTest {
                               directories:
                                - transactions
                               notify: [7125767235]
+                          format:
+                            commit:
+                              enabled: false
                         """);
                 MockedGHPullRequestProcessor.processPullRequestMock(mocks.pullRequest(1371642823),
                     mockFileDetails(), MockedGHPullRequestProcessor.mockEmptyComments());
@@ -346,7 +392,7 @@ public class PROpenedTest {
                 Mockito.verify(mockedPR, Mockito.times(2)).listFiles();
                 Mockito.verify(mockedPR, Mockito.times(1)).listComments();
                 Mockito.verify(mockedPR).comment(PullRequestFormatProcessor.FAILED_FORMAT_COMMENT
-                    .formatted("- Wrong content of the title!"));
+                    .formatted("- Wrong content of the title"));
                 Mockito.verifyNoMoreInteractions(mockedPR);
             });
     }
@@ -362,9 +408,8 @@ public class PROpenedTest {
                             - body: "there"
                               notify: [7125767235]
                           format:
-                            title-check:
-                              pattern: "\\\\[WFLY-\\\\d+\\\\]\\\\s+.*|WFLY-\\\\d+\\\\s+.*"
-                              message: "Wrong content of the title!"
+                            commit:
+                              enabled: false
                         """);
                 MockedGHPullRequestProcessor.processEmptyPullRequestMock(mocks.pullRequest(1371642823));
             })
@@ -373,9 +418,9 @@ public class PROpenedTest {
             .then().github(mocks -> {
                 GHRepository repo = mocks.repository("xstefank/wildfly");
                 Mockito.verify(repo).createCommitStatus("5db0f8e923d84fe05a60658ed5bb95f7aa23b66f",
-                    GHCommitState.ERROR, "", "Failed checks: title-check", "Format");
+                    GHCommitState.ERROR, "", "Failed checks: title", "Format");
                 Mockito.verify(mocks.pullRequest(1371642823)).comment(PullRequestFormatProcessor.FAILED_FORMAT_COMMENT
-                    .formatted("- Wrong content of the title!"));
+                    .formatted("- Wrong content of the title"));
             });
     }
 
