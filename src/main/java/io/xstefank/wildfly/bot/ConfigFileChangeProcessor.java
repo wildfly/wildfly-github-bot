@@ -9,7 +9,7 @@ import io.quarkus.logging.Log;
 import io.xstefank.wildfly.bot.model.RuntimeConstants;
 import io.xstefank.wildfly.bot.model.WildFlyConfigFile;
 import io.xstefank.wildfly.bot.util.GithubCommitProcessor;
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import org.kohsuke.github.GHContent;
 import org.kohsuke.github.GHEventPayload;
@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-@ApplicationScoped
+@RequestScoped
 public class ConfigFileChangeProcessor {
 
     private static final String CHECK_NAME = "Configuration File";

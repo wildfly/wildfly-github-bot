@@ -7,7 +7,7 @@ import io.xstefank.wildfly.bot.model.RuntimeConstants;
 import io.xstefank.wildfly.bot.model.WildFlyConfigFile;
 import io.xstefank.wildfly.bot.model.WildFlyConfigFile.WildFlyRule;
 import io.xstefank.wildfly.bot.util.Matcher;
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-@ApplicationScoped
+@RequestScoped
 public class TriagePullRequestProcessor {
     private static final Logger LOG = Logger.getLogger(TriagePullRequestProcessor.class);
 
