@@ -4,6 +4,7 @@ import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.format.TitleCheck;
 import io.xstefank.wildfly.bot.model.RegexDefinition;
+import io.xstefank.wildfly.bot.utils.Action;
 import io.xstefank.wildfly.bot.utils.MockedContext;
 import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.Util;
@@ -193,6 +194,94 @@ public class PRTitleCheckTest {
     }
 
     @Test
+    void correctTitleCheckSuccessMultipleJirasWithTextTest() throws IOException {
+        wildflyConfigFile = """
+                wildfly:
+                  format:
+                    commit:
+                      enabled: false
+                """;
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
+                .action(Action.EDITED)
+                .title("WFLY-00001 jira,WFLY-00002 title")
+                .build();
+
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Util.verifyFormatSuccess(repo, pullRequestJson);
+                });
+    }
+
+    @Test
+    void correctTitleCheckFailMultipleJirasBracketsMissingBracketTest() throws IOException {
+        wildflyConfigFile = """
+                wildfly:
+                  format:
+                    commit:
+                      enabled: false
+                """;
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
+                .action(Action.EDITED)
+                .title("[WFLY-00001,WFLY-00002 title")
+                .build();
+
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Util.verifyFormatSuccess(repo, pullRequestJson);
+                });
+    }
+
+    @Test
+    void correctTitleCheckSuccessMultipleJirasBracketsIncorrectIssuePlacementTest() throws IOException {
+        wildflyConfigFile = """
+                wildfly:
+                  format:
+                    commit:
+                      enabled: false
+                """;
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
+                .action(Action.EDITED)
+                .title("[WFLY-00001 jira,WFLY-00002] title")
+                .build();
+
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Util.verifyFormatSuccess(repo, pullRequestJson);
+                });
+    }
+
+    @Test
+    void correctTitleCheckSuccessMultipleJirasBracketsIncorrectEndingBracketPlacementTest() throws IOException {
+        wildflyConfigFile = """
+                wildfly:
+                  format:
+                    commit:
+                      enabled: false
+                """;
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
+                .action(Action.EDITED)
+                .title("[WFLY-00001, WFLY-00002 jira] title")
+                .build();
+
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Util.verifyFormatSuccess(repo, pullRequestJson);
+                });
+    }
+
+    @Test
     void correctTitleCheckSuccessTest() throws IOException {
         wildflyConfigFile = """
                 wildfly:
@@ -273,6 +362,116 @@ public class PRTitleCheckTest {
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Mockito.verify(repo, never()).createCommitStatus(anyString(), any(), anyString(), anyString());
                     Mockito.verify(repo, never()).createCommitStatus(anyString(), any(), anyString(), anyString(), anyString());
+                });
+    }
+
+    @Test
+    void correctTitleCheckSuccessSingleJiraBracketsTest() throws IOException {
+        wildflyConfigFile = """
+                wildfly:
+                  format:
+                    commit:
+                      enabled: false
+                """;
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
+                .action(Action.EDITED)
+                .title("[WFLY-00001] title")
+                .build();
+
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Util.verifyFormatSuccess(repo, pullRequestJson);
+                });
+    }
+
+    @Test
+    void correctTitleCheckSuccessMultipleJirasTest() throws IOException {
+        wildflyConfigFile = """
+                wildfly:
+                  format:
+                    commit:
+                      enabled: false
+                """;
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
+                .action(Action.EDITED)
+                .title("WFLY-00001,WFLY-00002 title")
+                .build();
+
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Util.verifyFormatSuccess(repo, pullRequestJson);
+                });
+    }
+
+    @Test
+    void correctTitleCheckSuccessMultipleJirasWithSpacesTest() throws IOException {
+        wildflyConfigFile = """
+                wildfly:
+                  format:
+                    commit:
+                      enabled: false
+                """;
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
+                .action(Action.EDITED)
+                .title("WFLY-00001, WFLY-00002 title")
+                .build();
+
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Util.verifyFormatSuccess(repo, pullRequestJson);
+                });
+    }
+
+    @Test
+    void correctTitleCheckSuccessMultipleJirasBracketsTest() throws IOException {
+        wildflyConfigFile = """
+                wildfly:
+                  format:
+                    commit:
+                      enabled: false
+                """;
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
+                .action(Action.EDITED)
+                .title("[WFLY-00001,WFLY-00002] title")
+                .build();
+
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Util.verifyFormatSuccess(repo, pullRequestJson);
+                });
+    }
+
+    @Test
+    void correctTitleCheckSuccessMultipleJirasBracketsWithSpacesTest() throws IOException {
+        wildflyConfigFile = """
+                wildfly:
+                  format:
+                    commit:
+                      enabled: false
+                """;
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
+                .action(Action.EDITED)
+                .title("[WFLY-00001, WFLY-00002] title")
+                .build();
+
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Util.verifyFormatSuccess(repo, pullRequestJson);
                 });
     }
 }
