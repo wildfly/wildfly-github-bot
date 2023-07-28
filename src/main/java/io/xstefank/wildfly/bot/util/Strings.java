@@ -14,6 +14,10 @@ public class Strings {
         return string == null || string.trim().isEmpty();
     }
 
+    public static String blockQuoted(String line) {
+        return "> " + line;
+    }
+
     private Strings() {
     }
 }

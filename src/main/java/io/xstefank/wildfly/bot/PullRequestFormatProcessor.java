@@ -17,13 +17,21 @@ import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHPullRequest;
+import org.kohsuke.github.GHPullRequestCommitDetail;
+import org.kohsuke.github.PagedIterable;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
+import static io.xstefank.wildfly.bot.util.Strings.blockQuoted;
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEPENDABOT;
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.FAILED_FORMAT_COMMENT;
 
@@ -68,6 +76,8 @@ public class PullRequestFormatProcessor {
             }
         }
 
+        generateAppendedMessage(pullRequest, wildflyConfigFile.wildfly.getIssuePattern());
+
         if (errors.isEmpty()) {
             githubProcessor.commitStatusSuccess(pullRequest, CHECK_NAME, "Valid");
         } else {
@@ -94,6 +104,80 @@ public class PullRequestFormatProcessor {
             }
         }
 
+    }
+
+    private void generateAppendedMessage(GHPullRequest pullRequest, Pattern projectPattern) throws IOException {
+        Set<String> jiraIssues = parseJiraIssues(pullRequest, projectPattern);
+        if (jiraIssues.isEmpty()) {
+            LOG.debugf("No JIRA issues found for Pull Request [#%s]: \"%s\"", pullRequest.getNumber(), pullRequest.getTitle());
+        }
+
+        String originalBody = pullRequest.getBody();
+        final StringBuilder sb = new StringBuilder();
+
+        if (originalBody != null) {
+            final String trimmedOriginalBody = originalBody.replaceAll("\\r", "");
+            final int startIndex = trimmedOriginalBody.indexOf(RuntimeConstants.BOT_MESSAGE_HEADER);
+            sb.append(trimmedOriginalBody.substring(0, startIndex > -1 ? startIndex : trimmedOriginalBody.length()).trim())
+                    .append("\n\n");
+
+            // we create links, search for ones contained in the original body
+            Set<String> jiraLinks = jiraIssues.stream()
+                    .map(s -> String.format(RuntimeConstants.BOT_JIRA_LINK_TEMPLATE, s))
+                    .collect(Collectors.toSet());
+
+            // collect back jira issues from links, which are missing in the description
+            jiraIssues = jiraLinks.stream()
+                    .filter(s -> !trimmedOriginalBody.contains(s))
+                    .map(s -> {
+                        Matcher matcher = projectPattern.matcher(s);
+                        matcher.find();
+                        return matcher.group();
+                    })
+                    .collect(Collectors.toSet());
+        }
+
+        if (jiraIssues.isEmpty()) {
+            return;
+        }
+
+        sb.append(RuntimeConstants.BOT_MESSAGE_HEADER)
+                .append("\n\n")
+                .append(blockQuoted(RuntimeConstants.BOT_JIRA_LINKS_HEADER));
+
+        for (String jira : jiraIssues) {
+
+            sb.append(blockQuoted(String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, jira)));
+        }
+
+        sb.append(RuntimeConstants.BOT_MESSAGE_FOOTER);
+        String newBody = sb.toString();
+
+        if (wildFlyBotConfig.isDryRun()) {
+            LOG.infof("Pull Request #%s - Updated PR body:\n%s", newBody);
+        } else {
+            pullRequest.setBody(newBody);
+        }
+    }
+
+    private Set<String> parseJiraIssues(GHPullRequest pullRequest, Pattern jiraPattern) {
+        Set<String> jiras = parseJirasFromString(pullRequest.getTitle(), jiraPattern);
+        PagedIterable<GHPullRequestCommitDetail> commits = pullRequest.listCommits();
+        for (GHPullRequestCommitDetail commit : commits) {
+            String commitMessage = commit.getCommit().getMessage();
+            jiras.addAll(parseJirasFromString(commitMessage, jiraPattern));
+        }
+        return jiras;
+    }
+
+    private Set<String> parseJirasFromString(String fromString, Pattern jiraPattern) {
+        Set<String> jiras = new TreeSet<>();
+        Matcher matcher = jiraPattern.matcher(fromString);
+        while (matcher.find()) {
+            jiras.add(matcher.group());
+        }
+
+        return jiras;
     }
 
     private List<Check> initializeChecks(WildFlyConfigFile wildflyConfigFile) {

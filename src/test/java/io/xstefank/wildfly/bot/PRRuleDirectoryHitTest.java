@@ -2,8 +2,8 @@ package io.xstefank.wildfly.bot;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
-import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.MockedContext;
+import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.Util;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
@@ -160,6 +160,32 @@ public class PRRuleDirectoryHitTest {
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never())
                             .requestReviewers(ArgumentMatchers.any());
                     Mockito.verify(mockedPR, Mockito.times(2)).listComments();
+                });
+    }
+
+    @Test
+    void testDirectoriesNoHitInDiffIfSubstring() throws IOException {
+        wildflyConfigFile = """
+                wildfly:
+                  rules:
+                    - id: "Directory Test"
+                      directories:
+                       - app
+                      notify: [7125767235]
+                """;
+        mockedContext = MockedContext.builder(pullRequestJson.id())
+                .prFiles("appclient/test.txt",
+                        "microprofile/health-smallrye/pom.xml",
+                        "testsuite/integration/basic/pom.xml");
+
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
+                    Mockito.verify(mockedPR, Mockito.times(2)).listFiles();
+                    Mockito.verify(mockedPR, Mockito.times(2)).listComments();
+                    Mockito.verify(mockedPR, Mockito.never()).comment("/cc @7125767235");
                 });
     }
 }
