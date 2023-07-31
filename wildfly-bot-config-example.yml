@@ -27,10 +27,6 @@ wildfly:
           message: "The PR description must contain a link to the JIRA issue"                                         # Message to display if check does not succeed
       message: "The PR description is not correct"                                                                    # Default message to display if a object is missing message field
 
-    commits-quantity:
-      quantity: "1-3"                       # Single value or a range. Values between 0-100. No spaces allowed.
-      message: "Too many commits in PR!"    # Message to display if check does not succeed
-
     commit:                                     # Enabled by default. You have to disable explicitly.
       enabled: true                             # If check enabled. By default, this setting is set true
       message: "Wrong commit message!"          # Override default message. Message is display if check does not succeed

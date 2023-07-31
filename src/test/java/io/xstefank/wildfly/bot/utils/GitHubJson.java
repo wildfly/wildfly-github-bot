@@ -76,10 +76,6 @@ public class GitHubJson {
             return this;
         }
 
-        public Builder commitQuantity(int quantity) {
-            ((ObjectNode) this.jsonFile.get(PULL_REQUEST)).put(COMMITS, quantity);
-            return this;
-        }
         public GitHubJson build() {
             return new GitHubJson(this);
         }

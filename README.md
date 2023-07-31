@@ -92,9 +92,6 @@ wildfly:
      regexes:
        - pattern: "JIRA:\\s+https://issues.redhat.com/browse/WFLY-\\d+|https://issues.redhat.com/browse/WFLY-\\d+"
          message: "The PR description must contain a link to the JIRA issue"
-   commits-quantity:
-     quantity: "1-3"
-     message: "Too many commits in PR!"
  emails:
    - foo@bar.baz
    - user@acme.org
@@ -103,8 +100,6 @@ wildfly:
 1. `title`- Checks the title of a PR by using a regular expression generated from `projectKey` field, which is by default "WFLY". You can find more information in [wildfly-bot-config-example.yml](wildfly-bot-config-example.yml)
 2. `description`- Checks comments of a PR by using individual regular expressions in the `pattern` fields under `regexes`.
 > The correct format in example is "https://issues.jboss.org/browse/WFLY-11"
-3. `commits-quantity`- Checks the amount of commits in PR with the amount in the `quantity` field.
-> In the field you can use the exact values '1', '2' or range '1-2', '2-4' up to 100.
 4. `message` - The text of an error message in the respective check.
 5. `emails` - List of emails to receive notifications.
 

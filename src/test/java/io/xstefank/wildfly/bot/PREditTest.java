@@ -73,14 +73,12 @@ public class PREditTest {
             .then().github(mocks -> {
                 GHRepository repo = mocks.repository("xstefank/wildfly");
                 Mockito.verify(repo).createCommitStatus("860035425072e50c290561191e90edc90254f900",
-                    GHCommitState.ERROR, "", "Failed checks: description, title, commits-quantity", "Format");
+                    GHCommitState.ERROR, "", "Failed checks: description, title", "Format");
                 Mockito.verify(mocks.pullRequest(1352150111)).comment(PullRequestFormatProcessor.FAILED_FORMAT_COMMENT
                     .formatted("""
                         - The PR description must contain a link to the JIRA issue
 
-                        - Wrong content of the title
-
-                        - Too many commits in PR!"""));
+                        - Wrong content of the title"""));
             });
     }
 
