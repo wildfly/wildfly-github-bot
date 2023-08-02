@@ -1,6 +1,5 @@
 package io.xstefank.wildfly.bot.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 
@@ -11,9 +10,6 @@ public final class Format {
     public Description description;
 
     public RegexPattern commit = new RegexPattern(RuntimeConstants.DEFAULT_COMMIT_MESSAGE);
-
-    @JsonProperty("commits-quantity")
-    public CommitsQuantity commitsQuantity;
 
     public static class RegexPattern {
         @JsonSetter(nulls = Nulls.SKIP)

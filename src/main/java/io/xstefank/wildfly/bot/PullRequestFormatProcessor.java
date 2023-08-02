@@ -5,7 +5,6 @@ import io.quarkiverse.githubapp.event.PullRequest;
 import io.xstefank.wildfly.bot.config.WildFlyBotConfig;
 import io.xstefank.wildfly.bot.format.Check;
 import io.xstefank.wildfly.bot.format.CommitMessagesCheck;
-import io.xstefank.wildfly.bot.format.CommitsQuantityCheck;
 import io.xstefank.wildfly.bot.format.DescriptionCheck;
 import io.xstefank.wildfly.bot.format.TitleCheck;
 import io.xstefank.wildfly.bot.model.RegexDefinition;
@@ -137,11 +136,6 @@ public class PullRequestFormatProcessor {
 
         if (wildflyConfigFile.wildfly.format.description != null) {
             checks.add(new DescriptionCheck(wildflyConfigFile.wildfly.format.description));
-        }
-
-
-        if (wildflyConfigFile.wildfly.format.commitsQuantity != null) {
-            checks.add(new CommitsQuantityCheck(wildflyConfigFile.wildfly.format.commitsQuantity));
         }
 
         return checks;
