@@ -20,6 +20,7 @@ public class GitHubJson {
     private static String SHA = "sha";
     private static String HEAD = "head";
     private static String ACTION = "action";
+    private static String ID = "id";
 
     private static JsonNode file;
     private static Builder builder;
@@ -46,6 +47,10 @@ public class GitHubJson {
 
     public String jsonString() {
         return file.toPrettyString();
+    }
+
+    public long id() {
+        return file.get(PULL_REQUEST).get(ID).longValue();
     }
 
     public static final class Builder {
