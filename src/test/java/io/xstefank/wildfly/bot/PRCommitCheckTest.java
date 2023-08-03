@@ -54,6 +54,25 @@ public class PRCommitCheckTest {
     }
 
     @Test
+    void testFailedCommitCheckCommitConfigNull() throws IOException {
+        wildflyConfigFile = """
+            wildfly:
+              format:
+                commit:
+            """;
+
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, INVALID_COMMIT_MESSAGE))
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Util.verifyFormatFailure(repo, gitHubJson, "commit");
+                    Util.verifyFailedFormatComment(mocks, gitHubJson,"- " + String.format(DEFAULT_COMMIT_MESSAGE,
+                            WildFlyConfigFile.PROJECT_PATTERN_REGEX.formatted("WFLY", "WFLY")));
+                });
+    }
+
+    @Test
     void testSuccessfulCommitCheck() throws IOException {
         wildflyConfigFile = """
             wildfly:
@@ -91,6 +110,24 @@ public class PRCommitCheckTest {
                 This reverts incorrect changes from
                 096a516e745663a99fce0062ff4bb93a4ca1066f:
                 Upgrade to Hibernate Search 6.2.0.CR1"""))
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Util.verifyFormatSuccess(repo, gitHubJson);
+                });
+    }
+
+    @Test
+    void testSuccessfulCommitCheckCommitConfigNull() throws IOException {
+        wildflyConfigFile = """
+            wildfly:
+              format:
+                commit:
+            """;
+
+        given()
+                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {

@@ -6,7 +6,6 @@ import io.xstefank.wildfly.bot.format.DescriptionCheck;
 import io.xstefank.wildfly.bot.model.Description;
 import io.xstefank.wildfly.bot.utils.GitHubJson;
 import io.xstefank.wildfly.bot.utils.Util;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHRepository;
@@ -15,8 +14,9 @@ import java.io.IOException;
 
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 import static io.xstefank.wildfly.bot.utils.TestConstants.INVALID_DESCRIPTION;
-import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
+import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -35,7 +35,7 @@ public class PRDescriptionCheckTest {
 
         IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
             () -> new DescriptionCheck(description));
-        Assertions.assertEquals("Input argument cannot be null", thrown.getMessage());
+        assertEquals("Input argument cannot be null", thrown.getMessage());
     }
 
     @Test
@@ -106,6 +106,24 @@ public class PRDescriptionCheckTest {
                 GHRepository repo = mocks.repository(TEST_REPO);
                 Util.verifyFormatSuccess(repo, gitHubJson);
             });
+    }
+
+    @Test
+    void testDescriptionCheckSuccessDescriptionConfigNull() throws IOException {
+        wildflyConfigFile = """
+                wildfly:
+                  format:
+                    description:
+                """;
+        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON).build();
+
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Util.verifyFormatSuccess(repo, gitHubJson);
+                });
     }
 
     @Test

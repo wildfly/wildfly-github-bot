@@ -8,7 +8,6 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.io.IOException;
 
-import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEFAULT_COMMIT_MESSAGE;
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEPENDABOT;
 
 public class CommitMessagesCheck implements Check {
@@ -21,7 +20,7 @@ public class CommitMessagesCheck implements Check {
             throw new IllegalArgumentException("Input argument cannot be null");
         }
         pattern = description.pattern;
-        message = description.message != null ? description.message : DEFAULT_COMMIT_MESSAGE;
+        message = description.message;
     }
 
     @Override
