@@ -13,20 +13,17 @@ import java.io.IOException;
  */
 public class GitHubJson {
 
-    private static String PULL_REQUEST = "pull_request";
-    private static String COMMITS = "commits";
-    private static String BODY = "body";
-    private static String TITLE = "title";
-    private static String SHA = "sha";
-    private static String HEAD = "head";
     private static String ACTION = "action";
+    private static String BODY = "body";
+    private static String HEAD = "head";
     private static String ID = "id";
+    private static String PULL_REQUEST = "pull_request";
+    private static String SHA = "sha";
+    private static String TITLE = "title";
 
     private static JsonNode file;
-    private static Builder builder;
 
     private GitHubJson(Builder jsonHandlerBuilder) {
-        builder = jsonHandlerBuilder;
         file = jsonHandlerBuilder.jsonFile;
     }
 
@@ -53,6 +50,10 @@ public class GitHubJson {
         return file.get(PULL_REQUEST).get(ID).longValue();
     }
 
+    public String status() {
+        return file.get(ACTION).textValue();
+    }
+
     public static final class Builder {
 
         private final JsonNode jsonFile;
@@ -76,8 +77,8 @@ public class GitHubJson {
             return this;
         }
 
-        public Builder body(String body) {
-            ((ObjectNode) this.jsonFile.get(PULL_REQUEST)).put(BODY, body);
+        public Builder description(String description) {
+            ((ObjectNode) this.jsonFile.get(PULL_REQUEST)).put(BODY, description);
             return this;
         }
 

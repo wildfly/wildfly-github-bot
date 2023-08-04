@@ -9,14 +9,16 @@ import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.MockMailbox;
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.test.InMemoryLogHandler;
+import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestExtension;
-import io.quarkus.test.junit.mockito.InjectMock;
 import io.xstefank.wildfly.bot.model.RuntimeConstants;
+import io.xstefank.wildfly.bot.utils.GitHubJson;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import org.jboss.logmanager.Level;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -35,11 +37,16 @@ import java.util.List;
 import java.util.logging.LogManager;
 
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
+import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
+import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+/**
+ * Tests for the startup of the application.
+ */
 @QuarkusTest
 @GitHubAppTest
 public class StartupEventTest {
@@ -52,6 +59,8 @@ public class StartupEventTest {
 
     @Inject
     MockMailbox mailbox;
+
+    private static GitHubJson gitHubJson;
 
     private static final java.util.logging.Logger rootLogger = LogManager.getLogManager().getLogger("io.xstefank.wildfly.bot");
     private static final InMemoryLogHandler inMemoryLogHandler = new InMemoryLogHandler(
@@ -85,7 +94,7 @@ public class StartupEventTest {
             PagedIterator<GHRepository> mockIterator = mock(PagedIterator.class);
             mocks.configFile(RuntimeConstants.CONFIG_FILE_NAME).fromString(configFile);
 
-            GHRepository repo = mocks.repository("xstefank/wildfly");
+            GHRepository repo = mocks.repository(TEST_REPO);
 
             when(clientProvider.getApplicationClient()).thenReturn(mockGitHub);
             when(mockGitHub.getApp()).thenReturn(mockGHApp);
@@ -103,6 +112,11 @@ public class StartupEventTest {
         }
     }
 
+    @BeforeAll
+    static void setUpGitHubJson() throws IOException {
+        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON).build();
+    }
+
     @BeforeEach
     void init() {
         mailbox.clear();
@@ -118,7 +132,7 @@ public class StartupEventTest {
                   emails:
                     - foo@bar.baz
                 """))
-            .when().payloadFromClasspath("/pr-opened.json")
+            .when().payloadFromString(gitHubJson.jsonString())
             .event(GHEvent.STAR)
             .then().github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
                 logRecord -> logRecord.getMessage().equals(
@@ -135,10 +149,10 @@ public class StartupEventTest {
                   emails:
                     - foo@bar.baz
                 """))
-            .when().payloadFromClasspath("/pr-opened.json")
+            .when().payloadFromString(gitHubJson.jsonString())
             .event(GHEvent.STAR)
             .then().github(mocks -> {
-                GHRepository repository = mocks.repository("xstefank/wildfly");
+                GHRepository repository = mocks.repository(TEST_REPO);
 
                 List<Mail> sent = mailbox.getMailsSentTo("foo@bar.baz");
                 Assertions.assertEquals(sent.size(), 1);
@@ -150,7 +164,7 @@ public class StartupEventTest {
     }
 
     @Test
-    public void testWithOneValidRule() throws IOException {
+    public void testWithOneValidRule() {
         given().github(new CustomGithubMockSetup("""
                 wildfly:
                   rules:
@@ -160,7 +174,7 @@ public class StartupEventTest {
                   emails:
                     - foo@bar.baz
                 """))
-            .when().payloadFromClasspath("/pr-opened.json")
+            .when().payloadFromString(gitHubJson.jsonString())
             .event(GHEvent.STAR)
             .then().github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
                 logRecord -> logRecord.getMessage().equals(
@@ -168,7 +182,7 @@ public class StartupEventTest {
     }
 
     @Test
-    public void testSendEmailsOnMultipleInvalidRules() throws IOException {
+    public void testSendEmailsOnMultipleInvalidRules() {
         given().github(new CustomGithubMockSetup("""
                 wildfly:
                   rules:
@@ -179,10 +193,10 @@ public class StartupEventTest {
                   emails:
                     - foo@bar.baz
                 """))
-            .when().payloadFromClasspath("/pr-opened.json")
+            .when().payloadFromString(gitHubJson.jsonString())
             .event(GHEvent.STAR)
             .then().github(mocks -> {
-                GHRepository repository = mocks.repository("xstefank/wildfly");
+                GHRepository repository = mocks.repository(TEST_REPO);
 
                 Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(logRecord -> logRecord.getMessage().equals("The configuration file from the repository %s was not parsed successfully due to following problems: %s")));
 
@@ -196,7 +210,7 @@ public class StartupEventTest {
     }
 
     @Test
-    public void testWithMultipleValidRules() throws IOException {
+    public void testWithMultipleValidRules() {
         given().github(new CustomGithubMockSetup("""
                 wildfly:
                   rules:
@@ -207,7 +221,7 @@ public class StartupEventTest {
                   emails:
                     - foo@bar.baz
                 """))
-            .when().payloadFromClasspath("/pr-opened.json")
+            .when().payloadFromString(gitHubJson.jsonString())
             .event(GHEvent.STAR)
             .then().github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(logRecord -> logRecord.getMessage().equals("The configuration file from the repository %s was parsed successfully."))));
     }

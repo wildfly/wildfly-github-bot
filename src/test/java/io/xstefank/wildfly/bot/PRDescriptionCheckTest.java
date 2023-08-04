@@ -1,46 +1,33 @@
 package io.xstefank.wildfly.bot;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
-import io.quarkiverse.githubapp.testing.GitHubAppTesting;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.format.DescriptionCheck;
-import io.xstefank.wildfly.bot.helper.MockedGHPullRequestProcessor;
 import io.xstefank.wildfly.bot.model.Description;
+import io.xstefank.wildfly.bot.utils.GitHubJson;
+import io.xstefank.wildfly.bot.utils.Util;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHRepository;
-import org.mockito.Mockito;
 
 import java.io.IOException;
 
+import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
+import static io.xstefank.wildfly.bot.utils.TestConstants.INVALID_DESCRIPTION;
+import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
+import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+/**
+ * Tests for the Wildfly -> Format -> Description checks.
+ */
 @QuarkusTest
 @GitHubAppTest
 public class PRDescriptionCheckTest {
 
-    private String wildflyConfigFile;
-
-    @BeforeEach
-    void setUp() {
-        wildflyConfigFile = """
-                wildfly:
-                  format:
-                    description:
-                      message: Default fail message
-                      regexes:
-                        - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
-                          message: "The PR description must contain a link to the JIRA issue"
-                        - pattern: "JIRA:\\\\s+https://issues.redhat.com/browse/WFLY-\\\\d+"
-                    title:
-                      enabled: false
-                    commit:
-                      enabled: false
-                """;
-    }
+    private static String wildflyConfigFile;
+    private static GitHubJson gitHubJson;
 
     @Test
     void configFileNullTest() {
@@ -52,52 +39,201 @@ public class PRDescriptionCheckTest {
     }
 
     @Test
-    void noLinkCheckFailTest() throws IOException {
-        GitHubAppTesting.given()
-            .github(mocks -> {
-                mocks.configFileFromString("wildfly-bot.yml", wildflyConfigFile);
-                MockedGHPullRequestProcessor.processEmptyPullRequestMock(mocks.pullRequest(1352150111));
-            })
-            .when().payloadFromClasspath("/pr-fail-checks.json")
+    void testDescriptionCheckFail() throws IOException {
+        wildflyConfigFile = """
+                wildfly:
+                  format:
+                    description:
+                      message: Default fail message
+                      regexes:
+                        - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
+                          message: "The PR description must contain a link to the JIRA issue"
+                """;
+        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+                .description(INVALID_DESCRIPTION)
+                .build();
+
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+            .when().payloadFromString(gitHubJson.jsonString())
             .event(GHEvent.PULL_REQUEST)
             .then().github(mocks -> {
-                GHRepository repo = mocks.repository("xstefank/wildfly");
-                Mockito.verify(repo).createCommitStatus("860035425072e50c290561191e90edc90254f900",
-                    GHCommitState.ERROR, "", "Failed checks: description", "Format");
-                Mockito.verify(mocks.pullRequest(1352150111)).comment(PullRequestFormatProcessor.FAILED_FORMAT_COMMENT
-                    .formatted("- The PR description must contain a link to the JIRA issue"));
+                GHRepository repo = mocks.repository(TEST_REPO);
+                Util.verifyFormatFailure(repo, gitHubJson, "description");
+                Util.verifyFailedFormatComment(mocks, gitHubJson, "- The PR description must contain a link to the JIRA issue");
             });
     }
 
     @Test
-    void correctLinkCheckSuccessTest() throws IOException {
-        GitHubAppTesting.given()
-            .github(mocks -> {
-                mocks.configFileFromString("wildfly-bot.yml", wildflyConfigFile);
-                MockedGHPullRequestProcessor.processEmptyPullRequestMock(mocks.pullRequest(1352150111));
-            })
-            .when().payloadFromClasspath("/pr-success-checks.json")
-            .event(GHEvent.PULL_REQUEST)
-            .then().github(mocks -> {
-                GHRepository repo = mocks.repository("xstefank/wildfly");
-                Mockito.verify(repo).createCommitStatus("40dbbdde147294cd8b29df16d79fe874247d8053",
-                    GHCommitState.SUCCESS, "", "Valid", "Format");
-            });
-    }
+    void testNoMessageInConfigFile() throws IOException {
+        wildflyConfigFile = """
+                wildfly:
+                  format:
+                    description:
+                      regexes:
+                        - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
+                """;
+        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+                .description(INVALID_DESCRIPTION)
+                .build();
 
-    @Test
-    void multipleLineDescription() throws IOException {
-        GitHubAppTesting.given()
-                .github(mocks -> {
-                    mocks.configFileFromString("wildfly-bot.yml", wildflyConfigFile);
-                    MockedGHPullRequestProcessor.processEmptyPullRequestMock(mocks.pullRequest(1352150111));
-                })
-                .when().payloadFromClasspath("/pr-success-checks-multiline-description.json")
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+                .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    GHRepository repo = mocks.repository("xstefank/wildfly");
-                    Mockito.verify(repo).createCommitStatus("65fdbdde133f94cy6b29df16d79fe874247d513",
-                            GHCommitState.SUCCESS, "", "Valid", "Format");
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Util.verifyFormatFailure(repo, gitHubJson, "description");
+                    Util.verifyFailedFormatComment(mocks, gitHubJson, "- Invalid description content");
+                });
+    }
+
+    @Test
+    void testDescriptionCheckSuccess() throws IOException {
+        wildflyConfigFile = """
+                wildfly:
+                  format:
+                    description:
+                      message: Default fail message
+                      regexes:
+                        - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
+                          message: "The PR description must contain a link to the JIRA issue"
+                """;
+        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON).build();
+
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+            .when().payloadFromString(gitHubJson.jsonString())
+            .event(GHEvent.PULL_REQUEST)
+            .then().github(mocks -> {
+                GHRepository repo = mocks.repository(TEST_REPO);
+                Util.verifyFormatSuccess(repo, gitHubJson);
+            });
+    }
+
+    @Test
+    void testMultipleLineDescription() throws IOException {
+        wildflyConfigFile = """
+                wildfly:
+                  format:
+                    description:
+                      message: Default fail message
+                      regexes:
+                        - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
+                          message: "The PR description must contain a link to the JIRA issue"
+                """;
+        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+                .description("""
+                        First line of description
+                        Additional line of description - JIRA: https://issues.redhat.com/browse/WFLY-666
+                        Another line with no JIRA link
+                        """)
+                .build();
+
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Util.verifyFormatSuccess(repo, gitHubJson);
+                });
+    }
+
+    @Test
+    void testMultipleRegexesFirstPatternHit() throws IOException {
+        wildflyConfigFile = """
+                wildfly:
+                  format:
+                    description:
+                      message: Default fail message
+                      regexes:
+                        - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
+                          message: "The PR description must contain a link to the JIRA issue"
+                        - pattern: "JIRA"
+                """;
+        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+                .description("JIRA")
+                .build();
+
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Util.verifyFormatFailure(repo, gitHubJson, "description");
+                    Util.verifyFailedFormatComment(mocks, gitHubJson, "- The PR description must contain a link to the JIRA issue");
+                });
+    }
+
+    @Test
+    void testMultipleRegexesSecondPatternHit() throws IOException {
+        wildflyConfigFile = """
+                wildfly:
+                  format:
+                    description:
+                      message: Lorem ipsum dolor sit amet
+                      regexes:
+                        - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
+                          message: "The PR description must contain a link to the JIRA issue"
+                        - pattern: "JIRA"
+                """;
+        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+                .description("https://issues.redhat.com/browse/WFLY-123")
+                .build();
+
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Util.verifyFormatFailure(repo, gitHubJson, "description");
+                    Util.verifyFailedFormatComment(mocks, gitHubJson, "- Lorem ipsum dolor sit amet");
+                });
+    }
+
+    @Test
+    void testMultipleRegexesAllPatternsHit() throws IOException {
+        wildflyConfigFile = """
+                wildfly:
+                  format:
+                    description:
+                      message: Default fail message
+                      regexes:
+                        - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
+                          message: "The PR description must contain a link to the JIRA issue"
+                        - pattern: "JIRA"
+                """;
+        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+                .description(INVALID_DESCRIPTION)
+                .build();
+
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Util.verifyFormatFailure(repo, gitHubJson, "description");
+                    Util.verifyFailedFormatComment(mocks, gitHubJson, "- The PR description must contain a link to the JIRA issue");
+                });
+    }
+
+    @Test
+    void testMultipleRegexesNoPatternsHit() throws IOException {
+        wildflyConfigFile = """
+                wildfly:
+                  format:
+                    description:
+                      message: Default fail message
+                      regexes:
+                        - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
+                          message: "The PR description must contain a link to the JIRA issue"
+                        - pattern: "JIRA"
+                """;
+        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON).build();
+
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Util.verifyFormatSuccess(repo, gitHubJson);
                 });
     }
 }
