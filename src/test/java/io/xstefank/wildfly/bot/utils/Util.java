@@ -4,6 +4,7 @@ import io.quarkiverse.githubapp.testing.GitHubAppMockito;
 import io.quarkiverse.githubapp.testing.dsl.GitHubMockSetupContext;
 import io.quarkiverse.githubapp.testing.dsl.GitHubMockVerificationContext;
 import io.xstefank.wildfly.bot.PullRequestFormatProcessor;
+import io.xstefank.wildfly.bot.helper.MockedGHPullRequestProcessor;
 import io.xstefank.wildfly.bot.model.RuntimeConstants;
 import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHPullRequestCommitDetail;
@@ -12,8 +13,6 @@ import org.kohsuke.github.PagedSearchIterable;
 import org.mockito.Mockito;
 
 import java.io.IOException;
-
-import static io.xstefank.wildfly.bot.helper.MockedGHPullRequestProcessor.processEmptyPullRequestMock;
 
 /**
  * Class containing utility and helper methods for tests
@@ -32,7 +31,8 @@ public class Util {
         Mockito.when(mockCommitDetail.getCommit()).thenReturn(mockCommit);
         Mockito.when(mockCommit.getMessage()).thenReturn(commitMessage);
 
-        processEmptyPullRequestMock(mocks.pullRequest(gitHubJson.id()));
+        MockedGHPullRequestProcessor.builder(gitHubJson.id())
+                .mock(mocks);
     }
 
     public static void verifyFormatSuccess(GHRepository repo, GitHubJson gitHubJson) throws IOException {

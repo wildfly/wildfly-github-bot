@@ -6,12 +6,14 @@ import io.xstefank.wildfly.bot.config.WildFlyBotConfig;
 import io.xstefank.wildfly.bot.model.RuntimeConstants;
 import io.xstefank.wildfly.bot.model.WildFlyConfigFile;
 import io.xstefank.wildfly.bot.model.WildFlyConfigFile.WildFlyRule;
+import io.xstefank.wildfly.bot.util.GithubProcessor;
 import io.xstefank.wildfly.bot.util.Matcher;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHPullRequest;
+import org.kohsuke.github.GitHub;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,8 +26,12 @@ public class TriagePullRequestProcessor {
     @Inject
     WildFlyBotConfig wildFlyBotConfig;
 
+    @Inject
+    GithubProcessor githubProcessor;
+
     void onPullRequestOpened(@PullRequest.Opened GHEventPayload.PullRequest pullRequestPayload,
-                             @ConfigFile(RuntimeConstants.CONFIG_FILE_NAME) WildFlyConfigFile wildflyBotConfigFile) throws IOException {
+                             @ConfigFile(RuntimeConstants.CONFIG_FILE_NAME) WildFlyConfigFile wildflyBotConfigFile,
+                             GitHub gitHub) throws IOException {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
 
         String message = skipPullRequestRules(pullRequest, wildflyBotConfigFile);
@@ -48,15 +54,7 @@ public class TriagePullRequestProcessor {
             }
         }
 
-        if (!mentions.isEmpty()) {
-            String mentionsComment = "/cc @" + String.join(", @", mentions);
-            if (wildFlyBotConfig.isDryRun()) {
-                LOG.infof("Pull request #%d - Comment \"%s\"", pullRequest.getNumber(), mentionsComment);
-            } else {
-                pullRequest.comment(mentionsComment);
-            }
-        }
-
+        githubProcessor.processMentions(pullRequest, gitHub, mentions);
     }
 
     private String skipPullRequestRules(GHPullRequest pullRequest, WildFlyConfigFile wildflyBotConfigFile) throws IOException {

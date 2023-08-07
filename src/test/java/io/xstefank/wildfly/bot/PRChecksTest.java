@@ -79,7 +79,7 @@ public class PRChecksTest {
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatSuccess(repo, gitHubJson);
                     GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                    Mockito.verify(mockedPR).comment("/cc @7125767235, @3251142365");
+                    Mockito.verify(mockedPR, Mockito.times(2)).comment("/cc @7125767235, @3251142365");
                 });
     }
 

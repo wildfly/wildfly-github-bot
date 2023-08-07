@@ -8,7 +8,7 @@ import io.quarkiverse.githubapp.runtime.github.GitHubConfigFileProviderImpl;
 import io.quarkus.logging.Log;
 import io.xstefank.wildfly.bot.model.RuntimeConstants;
 import io.xstefank.wildfly.bot.model.WildFlyConfigFile;
-import io.xstefank.wildfly.bot.util.GithubCommitProcessor;
+import io.xstefank.wildfly.bot.util.GithubProcessor;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import org.kohsuke.github.GHContent;
@@ -37,7 +37,7 @@ public class ConfigFileChangeProcessor {
     ObjectMapper yamlObjectMapper;
 
     @Inject
-    GithubCommitProcessor githubCommitProcessor;
+    GithubProcessor githubProcessor;
 
     void onFileChanged(@PullRequest.Opened @PullRequest.Edited @PullRequest.Synchronize @PullRequest.Reopened @PullRequest.ReadyForReview GHEventPayload.PullRequest pullRequestPayload, GitHub gitHub) throws IOException {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
@@ -52,21 +52,21 @@ public class ConfigFileChangeProcessor {
                     if (file.isPresent()) {
                         List<String> problems = validateFile(file.get());
                         if (problems.isEmpty()) {
-                            githubCommitProcessor.commitStatusSuccess(pullRequest, CHECK_NAME, "Valid");
+                            githubProcessor.commitStatusSuccess(pullRequest, CHECK_NAME, "Valid");
                             Log.debug("Configuration File check successful");
                         } else {
-                            githubCommitProcessor.commitStatusError(pullRequest, CHECK_NAME, "Rule is missing an id or multiple rules have the same id.");
+                            githubProcessor.commitStatusError(pullRequest, CHECK_NAME, "Rule is missing an id or multiple rules have the same id.");
                             Log.warnf("Configuration File check unsuccessful. %s", String.join(",", problems));
                         }
                     } else {
                         String message = "Configuration File check unsuccessful. Unable to correctly map loaded file to YAML.";
-                        githubCommitProcessor.commitStatusError(pullRequest, CHECK_NAME, message);
+                        githubProcessor.commitStatusError(pullRequest, CHECK_NAME, message);
                         Log.debugf(message);
                     }
                 } catch (JsonProcessingException e) {
                     Log.errorf(e, "Unable to parse the configuration file from the repository %s on the following Pull Request [%s]: %s",
                         pullRequest.getHead().getRepository().getFullName(), pullRequest.getId(), pullRequest.getTitle());
-                    githubCommitProcessor.commitStatusError(pullRequest, CHECK_NAME, "Unable to parse the configuration file. " +
+                    githubProcessor.commitStatusError(pullRequest, CHECK_NAME, "Unable to parse the configuration file. " +
                         "Make sure it can be loaded to model at https://github.com/xstefank/wildfly-github-bot/blob/main/CONFIGURATION.yml");
                 } catch (IOException e) {
                     throw new RuntimeException(e);

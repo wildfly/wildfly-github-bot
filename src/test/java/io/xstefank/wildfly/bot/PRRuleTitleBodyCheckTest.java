@@ -46,7 +46,7 @@ public class PRRuleTitleBodyCheckTest {
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                    Mockito.verify(mockedPR).comment("/cc @7125767235");
+                    Mockito.verify(mockedPR, Mockito.times(2)).comment("/cc @7125767235");
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatSuccess(repo, gitHubJson);
                 });
@@ -69,7 +69,7 @@ public class PRRuleTitleBodyCheckTest {
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                    Mockito.verify(mockedPR).comment("/cc @7125767235");
+                    Mockito.verify(mockedPR, Mockito.times(2)).comment("/cc @7125767235");
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatSuccess(repo, gitHubJson);
                 });
@@ -92,7 +92,7 @@ public class PRRuleTitleBodyCheckTest {
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                    Mockito.verify(mockedPR).comment("/cc @7125767235");
+                    Mockito.verify(mockedPR, Mockito.times(2)).comment("/cc @7125767235");
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatSuccess(repo, gitHubJson);
                 });
@@ -140,7 +140,7 @@ public class PRRuleTitleBodyCheckTest {
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                    Mockito.verify(mockedPR).comment("/cc @7125767235");
+                    Mockito.verify(mockedPR, Mockito.times(2)).comment("/cc @7125767235");
                 });
     }
 
@@ -161,7 +161,7 @@ public class PRRuleTitleBodyCheckTest {
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                    Mockito.verify(mockedPR).comment("/cc @7125767235");
+                    Mockito.verify(mockedPR, Mockito.times(2)).comment("/cc @7125767235");
                 });
     }
 

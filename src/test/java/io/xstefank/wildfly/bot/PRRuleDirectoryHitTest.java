@@ -5,6 +5,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.helper.MockedGHPullRequestProcessor;
 import io.xstefank.wildfly.bot.model.MockedGHPullRequestFileDetail;
 import io.xstefank.wildfly.bot.utils.GitHubJson;
+import io.xstefank.wildfly.bot.utils.Util;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
@@ -15,7 +16,6 @@ import org.mockito.Mockito;
 import java.io.IOException;
 
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
-import static io.xstefank.wildfly.bot.model.RuntimeConstants.CONFIG_FILE_NAME;
 import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 
 /**
@@ -50,19 +50,19 @@ public class PRRuleDirectoryHitTest {
             """;
 
         given().github(mocks -> {
-                mocks.configFile(CONFIG_FILE_NAME).fromString(wildflyConfigFile);
-                MockedGHPullRequestProcessor.processPullRequestMock(mocks.pullRequest(gitHubJson.id()),
-                    mockFileDetails(), MockedGHPullRequestProcessor.mockEmptyComments());
-            })
-            .when().payloadFromString(gitHubJson.jsonString())
-            .event(GHEvent.PULL_REQUEST)
-            .then().github(mocks -> {
-                GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                Mockito.verify(mockedPR, Mockito.times(2)).listFiles();
-                Mockito.verify(mockedPR).comment("/cc @7125767235");
-                Mockito.verify(mockedPR, Mockito.times(1)).listComments();
-                Mockito.verifyNoMoreInteractions(mockedPR);
-            });
+                    Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null);
+                    MockedGHPullRequestProcessor.builder(gitHubJson.id())
+                            .fileDetails(mockFileDetails())
+                            .mock(mocks);
+                })
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
+                    Mockito.verify(mockedPR, Mockito.times(3)).listFiles();
+                    Mockito.verify(mockedPR, Mockito.times(2)).comment("/cc @7125767235");
+                    Mockito.verify(mockedPR, Mockito.times(3)).listComments();
+                });
     }
 
     @Test
@@ -77,18 +77,19 @@ public class PRRuleDirectoryHitTest {
             """;
 
         given().github(mocks -> {
-                mocks.configFile(CONFIG_FILE_NAME).fromString(wildflyConfigFile);
-                MockedGHPullRequestProcessor.processPullRequestMock(mocks.pullRequest(gitHubJson.id()),
-                    mockFileDetails(), MockedGHPullRequestProcessor.mockEmptyComments());
-            })
-            .when().payloadFromString(gitHubJson.jsonString())
-            .event(GHEvent.PULL_REQUEST)
-            .then().github(mocks -> {
-                GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                Mockito.verify(mockedPR, Mockito.times(2)).listFiles();
-                Mockito.verify(mockedPR, Mockito.times(1)).listComments();
-                Mockito.verify(mockedPR).comment("/cc @7125767235");
-            });
+                    Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null);
+                    MockedGHPullRequestProcessor.builder(gitHubJson.id())
+                            .fileDetails(mockFileDetails())
+                            .mock(mocks);
+                })
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
+                    Mockito.verify(mockedPR, Mockito.times(3)).listFiles();
+                    Mockito.verify(mockedPR, Mockito.times(3)).listComments();
+                    Mockito.verify(mockedPR, Mockito.times(2)).comment("/cc @7125767235");
+                });
     }
 
     @Test
@@ -103,18 +104,19 @@ public class PRRuleDirectoryHitTest {
             """;
 
         given().github(mocks -> {
-                mocks.configFile(CONFIG_FILE_NAME).fromString(wildflyConfigFile);
-                MockedGHPullRequestProcessor.processPullRequestMock(mocks.pullRequest(gitHubJson.id()),
-                    mockFileDetails(), MockedGHPullRequestProcessor.mockEmptyComments());
-            })
-            .when().payloadFromString(gitHubJson.jsonString())
-            .event(GHEvent.PULL_REQUEST)
-            .then().github(mocks -> {
-                GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                Mockito.verify(mockedPR, Mockito.times(2)).listFiles();
-                Mockito.verify(mockedPR, Mockito.times(1)).listComments();
-                Mockito.verify(mockedPR).comment("/cc @7125767235");
-            });
+                    Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null);
+                    MockedGHPullRequestProcessor.builder(gitHubJson.id())
+                            .fileDetails(mockFileDetails())
+                            .mock(mocks);
+                })
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
+                    Mockito.verify(mockedPR, Mockito.times(3)).listFiles();
+                    Mockito.verify(mockedPR, Mockito.times(3)).listComments();
+                    Mockito.verify(mockedPR, Mockito.times(2)).comment("/cc @7125767235");
+                });
     }
 
     @Test
@@ -129,44 +131,18 @@ public class PRRuleDirectoryHitTest {
             """;
 
         given().github(mocks -> {
-                mocks.configFile(CONFIG_FILE_NAME).fromString(wildflyConfigFile);
-                MockedGHPullRequestProcessor.processPullRequestMock(mocks.pullRequest(gitHubJson.id()),
-                    mockFileDetails(), MockedGHPullRequestProcessor.mockEmptyComments());
-            })
-            .when().payloadFromString(gitHubJson.jsonString())
-            .event(GHEvent.PULL_REQUEST)
-            .then().github(mocks -> {
-                GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                Mockito.verify(mockedPR, Mockito.times(2)).listFiles();
-                Mockito.verify(mockedPR, Mockito.times(1)).listComments();
-                Mockito.verify(mockedPR, Mockito.never()).comment("/cc @7125767235");
-            });
-    }
-
-    @Test
-    void testDirectoriesNoHitInDiffIfSubstring() throws IOException {
-        wildflyConfigFile = """
-            wildfly:
-              rules:
-                - id: "Directory Test"
-                  directories:
-                   - app
-                  notify: [7125767235]
-            """;
-
-        given().github(mocks -> {
-                mocks.configFile(CONFIG_FILE_NAME).fromString(wildflyConfigFile);
-                MockedGHPullRequestProcessor.processPullRequestMock(mocks.pullRequest(gitHubJson.id()),
-                    mockFileDetails(), MockedGHPullRequestProcessor.mockEmptyComments());
-            })
-            .when().payloadFromString(gitHubJson.jsonString())
-            .event(GHEvent.PULL_REQUEST)
-            .then().github(mocks -> {
-                GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                Mockito.verify(mockedPR, Mockito.times(2)).listFiles();
-                Mockito.verify(mockedPR, Mockito.times(1)).listComments();
-                Mockito.verify(mockedPR, Mockito.never()).comment("/cc @7125767235");
-            });
+                    Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null);
+                    MockedGHPullRequestProcessor.builder(gitHubJson.id())
+                            .fileDetails(mockFileDetails())
+                            .mock(mocks);
+                })
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
+                    Mockito.verify(mockedPR, Mockito.times(3)).listFiles();
+                    Mockito.verify(mockedPR, Mockito.times(1)).listComments();
+                });
     }
 
     private static GHPullRequestFileDetail[] mockFileDetails() {

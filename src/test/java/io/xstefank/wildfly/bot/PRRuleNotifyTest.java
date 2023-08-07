@@ -49,7 +49,7 @@ public class PRRuleNotifyTest {
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                    Mockito.verify(mockedPR).comment("/cc @7125767235, @0979986727");
+                    Mockito.verify(mockedPR, Mockito.times(2)).comment("/cc @7125767235, @0979986727");
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatSuccess(repo, gitHubJson);
                 });
@@ -72,7 +72,7 @@ public class PRRuleNotifyTest {
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                    Mockito.verify(mockedPR).comment("/cc @7125767235, @0979986727, @3251142365, @4533458845");
+                    Mockito.verify(mockedPR, Mockito.times(2)).comment("/cc @7125767235, @0979986727, @3251142365, @4533458845");
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatSuccess(repo, gitHubJson);
                 });
@@ -95,7 +95,7 @@ public class PRRuleNotifyTest {
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                    Mockito.verify(mockedPR).comment("/cc @7125767235, @0979986727, @4533458845");
+                    Mockito.verify(mockedPR, Mockito.times(2)).comment("/cc @7125767235, @0979986727, @4533458845");
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatSuccess(repo, gitHubJson);
                 });
