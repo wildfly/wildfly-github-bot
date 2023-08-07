@@ -2,18 +2,24 @@ package io.xstefank.wildfly.bot;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
-import io.xstefank.wildfly.bot.helper.MockedGHPullRequestProcessor;
-import io.xstefank.wildfly.bot.model.MockedGHPullRequestFileDetail;
 import io.xstefank.wildfly.bot.utils.GitHubJson;
+import io.xstefank.wildfly.bot.utils.MockedContext;
 import io.xstefank.wildfly.bot.utils.Util;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
+import org.kohsuke.github.GHPerson;
 import org.kohsuke.github.GHPullRequest;
-import org.kohsuke.github.GHPullRequestFileDetail;
+import org.kohsuke.github.GHUser;
+import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 import java.io.IOException;
+import java.util.List;
 
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
@@ -27,6 +33,7 @@ public class PRRuleDirectoryHitTest {
 
     private static String wildflyConfigFile;
     private static GitHubJson gitHubJson;
+    private MockedContext mockedContext;
 
     @BeforeAll
     static void setUpGitHubJson() throws IOException {
@@ -34,7 +41,7 @@ public class PRRuleDirectoryHitTest {
     }
 
     @Test
-    void testDirectoriesMentionsNewFileInDiff() throws IOException {
+    void testDirectoriesNotifyNewFileInDiff() throws IOException {
         wildflyConfigFile = """
             wildfly:
               rules:
@@ -48,25 +55,25 @@ public class PRRuleDirectoryHitTest {
                 title:
                   enabled: false
             """;
+        mockedContext = MockedContext.builder(gitHubJson.id())
+                .collaborators("7125767235")
+                .prFiles("appclient/test.txt",
+                        "microprofile/health-smallrye/pom.xml",
+                        "testsuite/integration/basic/pom.xml");
 
-        given().github(mocks -> {
-                    Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null);
-                    MockedGHPullRequestProcessor.builder(gitHubJson.id())
-                            .fileDetails(mockFileDetails())
-                            .mock(mocks);
-                })
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                    Mockito.verify(mockedPR, Mockito.times(3)).listFiles();
-                    Mockito.verify(mockedPR, Mockito.times(2)).comment("/cc @7125767235");
-                    Mockito.verify(mockedPR, Mockito.times(3)).listComments();
+                    Mockito.verify(mockedPR, Mockito.times(2)).listFiles();
+                    Mockito.verify(mocks.pullRequest(gitHubJson.id())).requestReviewers(ArgumentMatchers.anyList());
+                    Mockito.verify(mockedPR, Mockito.times(2)).listComments();
                 });
     }
 
     @Test
-    void testDirectoriesMentionsChangeInSubdirectoryDiff() throws IOException {
+    void testDirectoriesNotifyChangeInSubdirectoryDiff() throws IOException {
         wildflyConfigFile = """
             wildfly:
               rules:
@@ -75,25 +82,30 @@ public class PRRuleDirectoryHitTest {
                    - microprofile/health-smallrye
                   notify: [7125767235]
             """;
+        mockedContext = MockedContext.builder(gitHubJson.id())
+                .collaborators("7125767235")
+                .prFiles("appclient/test.txt",
+                        "microprofile/health-smallrye/pom.xml",
+                        "testsuite/integration/basic/pom.xml");
 
-        given().github(mocks -> {
-                    Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null);
-                    MockedGHPullRequestProcessor.builder(gitHubJson.id())
-                            .fileDetails(mockFileDetails())
-                            .mock(mocks);
-                })
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                    Mockito.verify(mockedPR, Mockito.times(3)).listFiles();
-                    Mockito.verify(mockedPR, Mockito.times(3)).listComments();
-                    Mockito.verify(mockedPR, Mockito.times(2)).comment("/cc @7125767235");
+                    Mockito.verify(mockedPR, Mockito.times(2)).listFiles();
+                    ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
+                    Mockito.verify(mocks.pullRequest(gitHubJson.id())).requestReviewers(captor.capture());
+                    Assertions.assertEquals(captor.getValue().size(), 1);
+                    MatcherAssert.assertThat(captor.getValue().stream()
+                            .map(GHPerson::getLogin)
+                            .toList(), Matchers.containsInAnyOrder("7125767235"));
+                    Mockito.verify(mockedPR, Mockito.times(2)).listComments();
                 });
     }
 
     @Test
-    void testDirectoriesMentionsChangeInSubdirectoryOfConfiguredDirectoryDiff() throws IOException {
+    void testDirectoriesNotifyChangeInSubdirectoryOfConfiguredDirectoryDiff() throws IOException {
         wildflyConfigFile = """
             wildfly:
               rules:
@@ -102,25 +114,30 @@ public class PRRuleDirectoryHitTest {
                    - testsuite/integration
                   notify: [7125767235]
             """;
+        mockedContext = MockedContext.builder(gitHubJson.id())
+                .collaborators("7125767235")
+                .prFiles("appclient/test.txt",
+                        "microprofile/health-smallrye/pom.xml",
+                        "testsuite/integration/basic/pom.xml");
 
-        given().github(mocks -> {
-                    Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null);
-                    MockedGHPullRequestProcessor.builder(gitHubJson.id())
-                            .fileDetails(mockFileDetails())
-                            .mock(mocks);
-                })
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                    Mockito.verify(mockedPR, Mockito.times(3)).listFiles();
-                    Mockito.verify(mockedPR, Mockito.times(3)).listComments();
-                    Mockito.verify(mockedPR, Mockito.times(2)).comment("/cc @7125767235");
+                    Mockito.verify(mockedPR, Mockito.times(2)).listFiles();
+                    ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
+                    Mockito.verify(mocks.pullRequest(gitHubJson.id())).requestReviewers(captor.capture());
+                    Assertions.assertEquals(captor.getValue().size(), 1);
+                    MatcherAssert.assertThat(captor.getValue().stream()
+                            .map(GHPerson::getLogin)
+                            .toList(), Matchers.containsInAnyOrder("7125767235"));
+                    Mockito.verify(mockedPR, Mockito.times(2)).listComments();
                 });
     }
 
     @Test
-    void testDirectoriesMentionsNoHitInDiff() throws IOException {
+    void testDirectoriesNotifyNoHitInDiff() throws IOException {
         wildflyConfigFile = """
             wildfly:
               rules:
@@ -129,44 +146,19 @@ public class PRRuleDirectoryHitTest {
                    - transactions
                   notify: [7125767235]
             """;
+        mockedContext = MockedContext.builder(gitHubJson.id())
+                .prFiles("appclient/test.txt",
+                        "microprofile/health-smallrye/pom.xml",
+                        "testsuite/integration/basic/pom.xml");
 
-        given().github(mocks -> {
-                    Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null);
-                    MockedGHPullRequestProcessor.builder(gitHubJson.id())
-                            .fileDetails(mockFileDetails())
-                            .mock(mocks);
-                })
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                    Mockito.verify(mockedPR, Mockito.times(3)).listFiles();
-                    Mockito.verify(mockedPR, Mockito.times(1)).listComments();
+                    Mockito.verify(mockedPR, Mockito.times(2)).listFiles();
+                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.never()).requestReviewers(ArgumentMatchers.any());
+                    Mockito.verify(mockedPR, Mockito.times(2)).listComments();
                 });
-    }
-
-    private static GHPullRequestFileDetail[] mockFileDetails() {
-        return new GHPullRequestFileDetail[]{
-            new MockedGHPullRequestFileDetail("9daeafb9864cf43055ae93beb0afd6c7d144bfa4",
-                "appclient/test.txt", "added", 1, 0, 1,
-                "https://github.com/xstefank/wildfly/blob/5db0f8e923d84fe05a60658ed5bb95f7aa23b66f/appclient%2Ftest.txt",
-                "https://github.com/xstefank/wildfly/raw/5db0f8e923d84fe05a60658ed5bb95f7aa23b66f/appclient%2Ftest.txt",
-                "https://api.github.com/repos/xstefank/wildfly/contents/appclient%2Ftest.txt?ref=5db0f8e923d84fe05a60658ed5bb95f7aa23b66f",
-                "@@ -0,0 +1 @@\\n+test", null),
-            new MockedGHPullRequestFileDetail("3b125a455e091e58db3acd8e8460019aaef2d3f4",
-                "microprofile/health-smallrye/pom.xml", "modified", 4, 0, 4,
-                "https://github.com/xstefank/wildfly/blob/5db0f8e923d84fe05a60658ed5bb95f7aa23b66f/microprofile%2Fhealth-smallrye%2Fpom.xml",
-                "https://github.com/xstefank/wildfly/raw/5db0f8e923d84fe05a60658ed5bb95f7aa23b66f/microprofile%2Fhealth-smallrye%2Fpom.xml",
-                "https://api.github.com/repos/xstefank/wildfly/contents/microprofile%2Fhealth-smallrye%2Fpom.xml?ref=5db0f8e923d84fe05a60658ed5bb95f7aa23b66f",
-                "@@ -36,6 +36,10 @@\\n \\n     <name>WildFly: MicroProfile Health Extension With SmallRye</name>\\n \\n+    <properties>\\n+      <test>test</test>\\n+    </properties>\\n+\\n     <dependencyManagement>\\n         <dependencies>\\n             <dependency>",
-                null),
-            new MockedGHPullRequestFileDetail("62ca1d70d69efbf5ab79d46512292c29df72a9b1",
-                "testsuite/integration/basic/pom.xml", "modified", 1, 0, 1,
-                "https://github.com/xstefank/wildfly/blob/5db0f8e923d84fe05a60658ed5bb95f7aa23b66f/testsuite%2Fintegration%2Fbasic%2Fpom.xml",
-                "https://github.com/xstefank/wildfly/raw/5db0f8e923d84fe05a60658ed5bb95f7aa23b66f/testsuite%2Fintegration%2Fbasic%2Fpom.xml",
-                "https://api.github.com/repos/xstefank/wildfly/contents/testsuite%2Fintegration%2Fbasic%2Fpom.xml?ref=5db0f8e923d84fe05a60658ed5bb95f7aa23b66f",
-                "@@ -22,6 +22,7 @@\\n     <name>WildFly Test Suite: Integration - Basic</name>\\n \\n     <properties>\\n+        <test>test</test>\\n         <jbossas.ts.integ.dir>${basedir}/..</jbossas.ts.integ.dir>\\n         <jbossas.ts.dir>${jbossas.ts.integ.dir}/..</jbossas.ts.dir>\\n         <jbossas.project.dir>${jbossas.ts.dir}/..</jbossas.project.dir>",
-                null)
-        };
     }
 }

@@ -42,7 +42,7 @@ public class PRDependabotTest {
             .title("Bump some version from x.y to x.y+1")
             .description("Very detailed description of this upgrade.")
             .build();
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
             .when().payloadFromString(gitHubJson.jsonString())
             .event(GHEvent.PULL_REQUEST)
             .then().github(mocks -> {

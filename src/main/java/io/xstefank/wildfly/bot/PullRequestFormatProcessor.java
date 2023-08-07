@@ -11,8 +11,6 @@ import io.xstefank.wildfly.bot.model.RegexDefinition;
 import io.xstefank.wildfly.bot.model.RuntimeConstants;
 import io.xstefank.wildfly.bot.model.WildFlyConfigFile;
 import io.xstefank.wildfly.bot.util.GithubProcessor;
-import io.xstefank.wildfly.bot.util.Matcher;
-import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
@@ -27,7 +25,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEPENDABOT;
@@ -44,7 +41,6 @@ public class PullRequestFormatProcessor {
         """;
     private static final Logger LOG = Logger.getLogger(PullRequestFormatProcessor.class);
     private static final String CHECK_NAME = "Format";
-    private Pattern SKIP_FORMAT_COMMAND;
 
     @Inject
     GithubProcessor githubProcessor;
@@ -52,13 +48,13 @@ public class PullRequestFormatProcessor {
     @Inject
     WildFlyBotConfig wildFlyBotConfig;
 
-    void onPullRequestEdited(@PullRequest.Edited @PullRequest.Opened @PullRequest.Synchronize @PullRequest.Reopened
+    void pullRequestFormatCheck(@PullRequest.Edited @PullRequest.Opened @PullRequest.Synchronize @PullRequest.Reopened
                              @PullRequest.ReadyForReview GHEventPayload.PullRequest pullRequestPayload,
                              @ConfigFile(RuntimeConstants.CONFIG_FILE_NAME) WildFlyConfigFile wildflyConfigFile,
                              GitHub gitHub) throws IOException {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
 
-        String message = skipPullRequestFormat(pullRequest, wildflyConfigFile);
+        String message = githubProcessor.skipPullRequest(pullRequest, wildflyConfigFile);
         if (message != null) {
             LOG.infof("Pull Request [#%d] - %s -- Skipping format due to %s", pullRequest.getNumber(), pullRequest.getTitle(), message);
             return;
@@ -66,6 +62,10 @@ public class PullRequestFormatProcessor {
 
         List<Check> checks = initializeChecks(wildflyConfigFile);
         Map<String, String> errors = new HashMap<>();
+
+        if (!pullRequest.getMergeable()) {
+            pullRequest.addLabels(RuntimeConstants.LABEL_NEEDS_REBASE);
+        }
 
         for (Check check : checks) {
             String result = check.check(pullRequest);
@@ -81,28 +81,6 @@ public class PullRequestFormatProcessor {
             githubProcessor.commitStatusError(pullRequest, CHECK_NAME, "Failed checks: " + String.join(", ", errors.keySet()));
             formatComment(pullRequest, errors.values());
         }
-
-        List<String> mentions = new ArrayList<>();
-
-        if (wildflyConfigFile.wildfly.rules != null) {
-            for (WildFlyConfigFile.WildFlyRule rule : wildflyConfigFile.wildfly.rules) {
-                if (!rule.notify.isEmpty() && Matcher.matches(pullRequest, rule)) {
-                    LOG.infof("Pull Request %s was matched with a rule, containing notify, with the id: %s.", pullRequest.getTitle(), rule.id != null ? rule.id : "N/A");
-                    for (String nick : rule.notify) {
-                        if (!nick.equals(pullRequest.getUser().getLogin()) && !mentions.contains(nick)) {
-                            mentions.add(nick);
-                        }
-                    }
-                }
-            }
-        }
-
-        githubProcessor.processMentions(pullRequest, gitHub, mentions);
-    }
-
-    @PostConstruct
-    void construct() {
-        SKIP_FORMAT_COMMAND = Pattern.compile("@%s skip format".formatted(wildFlyBotConfig.githubName()), Pattern.DOTALL | Pattern.LITERAL);
     }
 
     void postDependabotInfo(@PullRequest.Opened GHEventPayload.PullRequest pullRequestPayload,
@@ -188,21 +166,5 @@ public class PullRequestFormatProcessor {
         }
 
         return checks;
-    }
-
-    private String skipPullRequestFormat(GHPullRequest pullRequest, WildFlyConfigFile wildFlyConfigFile) throws IOException {
-        if (SKIP_FORMAT_COMMAND.matcher(pullRequest.getBody()).find()) {
-            return "skip format command found";
-        }
-
-        if (wildFlyConfigFile == null) {
-            return "no configuration file found";
-        }
-
-        if (pullRequest.isDraft()) {
-            return "pull request being a draft";
-        }
-
-        return null;
     }
 }

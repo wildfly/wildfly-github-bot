@@ -41,12 +41,12 @@ public class PRRuleTitleCheckTest {
                   title: "Title"
                   notify: [7125767235]
             """;
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                    Mockito.verify(mockedPR, Mockito.times(2)).comment("/cc @7125767235");
+                    Mockito.verify(mockedPR).comment("/cc @7125767235");
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatSuccess(repo, gitHubJson);
                 });
@@ -61,7 +61,7 @@ public class PRRuleTitleCheckTest {
                   title: "NonValidTitle"
                   notify: [7125767235]
             """;
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -82,12 +82,12 @@ public class PRRuleTitleCheckTest {
                   notify: [7125767235]
             """;
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                    Mockito.verify(mockedPR, Mockito.times(2)).comment("/cc @7125767235");
+                    Mockito.verify(mockedPR).comment("/cc @7125767235");
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatSuccess(repo, gitHubJson);
                 });

@@ -3,6 +3,7 @@ package io.xstefank.wildfly.bot;
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.utils.GitHubJson;
+import io.xstefank.wildfly.bot.utils.MockedContext;
 import io.xstefank.wildfly.bot.utils.Util;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,7 @@ public class PRCommitCheckTest {
 
     private static String wildflyConfigFile;
     private static GitHubJson gitHubJson;
+    private MockedContext mockedContext;
 
     @BeforeAll
     static void setUpGitHubJson() throws IOException {
@@ -41,8 +43,9 @@ public class PRCommitCheckTest {
                 commit:
                   enabled: true
             """;
-
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, INVALID_COMMIT_MESSAGE))
+        mockedContext = MockedContext.builder(gitHubJson.id())
+                .commit(INVALID_COMMIT_MESSAGE);
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -60,8 +63,10 @@ public class PRCommitCheckTest {
               format:
                 commit:
             """;
+        mockedContext = MockedContext.builder(gitHubJson.id())
+                        .commit(INVALID_COMMIT_MESSAGE);
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, INVALID_COMMIT_MESSAGE))
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -82,7 +87,7 @@ public class PRCommitCheckTest {
             """;
 
         given()
-                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -103,13 +108,15 @@ public class PRCommitCheckTest {
                   enabled: true
             """;
 
-        given()
-                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, """
+        mockedContext = MockedContext.builder(gitHubJson.id())
+                        .commit("""
                 WFLY-18341 Restore incorrectly updated copyright dates in Jipijapa
 
                 This reverts incorrect changes from
                 096a516e745663a99fce0062ff4bb93a4ca1066f:
-                Upgrade to Hibernate Search 6.2.0.CR1"""))
+                Upgrade to Hibernate Search 6.2.0.CR1""");
+        given()
+                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -127,7 +134,7 @@ public class PRCommitCheckTest {
             """;
 
         given()
-                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -144,8 +151,10 @@ public class PRCommitCheckTest {
                 commit:
                   enabled: false
             """;
+        mockedContext = MockedContext.builder(gitHubJson.id())
+                        .commit(INVALID_COMMIT_MESSAGE);
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, INVALID_COMMIT_MESSAGE))
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -163,7 +172,10 @@ public class PRCommitCheckTest {
                       message: "Lorem ipsum dolor sit amet"
                 """;
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, INVALID_COMMIT_MESSAGE))
+        mockedContext = MockedContext.builder(gitHubJson.id())
+                .commit(INVALID_COMMIT_MESSAGE);
+
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {

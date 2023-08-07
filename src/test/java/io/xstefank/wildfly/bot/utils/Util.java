@@ -1,15 +1,11 @@
 package io.xstefank.wildfly.bot.utils;
 
-import io.quarkiverse.githubapp.testing.GitHubAppMockito;
 import io.quarkiverse.githubapp.testing.dsl.GitHubMockSetupContext;
 import io.quarkiverse.githubapp.testing.dsl.GitHubMockVerificationContext;
 import io.xstefank.wildfly.bot.PullRequestFormatProcessor;
-import io.xstefank.wildfly.bot.helper.MockedGHPullRequestProcessor;
 import io.xstefank.wildfly.bot.model.RuntimeConstants;
 import org.kohsuke.github.GHCommitState;
-import org.kohsuke.github.GHPullRequestCommitDetail;
 import org.kohsuke.github.GHRepository;
-import org.kohsuke.github.PagedSearchIterable;
 import org.mockito.Mockito;
 
 import java.io.IOException;
@@ -19,20 +15,16 @@ import java.io.IOException;
  */
 public class Util {
 
-    public static void mockRepo(GitHubMockSetupContext mocks, String wildflyConfigFile, GitHubJson gitHubJson, String commitMessage) throws IOException {
+    public static void mockRepo(GitHubMockSetupContext mocks, String wildflyConfigFile, GitHubJson gitHubJson) throws IOException {
         mocks.configFile(RuntimeConstants.CONFIG_FILE_NAME).fromString(wildflyConfigFile);
-        GHPullRequestCommitDetail mockCommitDetail = Mockito.mock(GHPullRequestCommitDetail.class);
-        Mockito.when(mockCommitDetail.getSha()).thenReturn(gitHubJson.commitSHA());
-        PagedSearchIterable<GHPullRequestCommitDetail> commitDetails = GitHubAppMockito.mockPagedIterable(mockCommitDetail);
-        Mockito.when(mocks.pullRequest(gitHubJson.id()).listCommits()).thenReturn(commitDetails);
+        MockedContext context = MockedContext.builder(gitHubJson.id())
+                .commit("[WFLY-123] Valid commit message");
+        context.mock(mocks);
+    }
 
-        commitMessage = commitMessage != null ? commitMessage : "[WFLY-123] Valid commit message";
-        GHPullRequestCommitDetail.Commit mockCommit = Mockito.mock(GHPullRequestCommitDetail.Commit.class);
-        Mockito.when(mockCommitDetail.getCommit()).thenReturn(mockCommit);
-        Mockito.when(mockCommit.getMessage()).thenReturn(commitMessage);
-
-        MockedGHPullRequestProcessor.builder(gitHubJson.id())
-                .mock(mocks);
+    public static void mockRepo(GitHubMockSetupContext mocks, String wildflyConfigFile, GitHubJson gitHubJson, MockedContext context) throws IOException {
+        mocks.configFile(RuntimeConstants.CONFIG_FILE_NAME).fromString(wildflyConfigFile);
+        context.mock(mocks);
     }
 
     public static void verifyFormatSuccess(GHRepository repo, GitHubJson gitHubJson) throws IOException {

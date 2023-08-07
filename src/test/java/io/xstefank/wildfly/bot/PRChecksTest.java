@@ -3,6 +3,7 @@ package io.xstefank.wildfly.bot;
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.utils.GitHubJson;
+import io.xstefank.wildfly.bot.utils.MockedContext;
 import io.xstefank.wildfly.bot.utils.Util;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
@@ -16,8 +17,8 @@ import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 import static io.xstefank.wildfly.bot.utils.TestConstants.INVALID_COMMIT_MESSAGE;
 import static io.xstefank.wildfly.bot.utils.TestConstants.INVALID_DESCRIPTION;
 import static io.xstefank.wildfly.bot.utils.TestConstants.INVALID_TITLE;
-import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
+import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 
 /**
  * Tests containing multiple/all checks at the same time.
@@ -28,6 +29,7 @@ public class PRChecksTest {
 
     private static String wildflyConfigFile;
     private static GitHubJson gitHubJson;
+    private MockedContext mockedContext;
 
     @Test
     void testNoConfigFile() throws IOException {
@@ -43,8 +45,10 @@ public class PRChecksTest {
                 .title(INVALID_TITLE)
                 .description(INVALID_DESCRIPTION)
                 .build();
+        mockedContext = MockedContext.builder(gitHubJson.id())
+                        .commit(INVALID_COMMIT_MESSAGE);
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, INVALID_COMMIT_MESSAGE))
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -72,14 +76,14 @@ public class PRChecksTest {
             """;
         gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON).build();
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatSuccess(repo, gitHubJson);
                     GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                    Mockito.verify(mockedPR, Mockito.times(2)).comment("/cc @7125767235, @3251142365");
+                    Mockito.verify(mockedPR).comment("/cc @7125767235, @3251142365");
                 });
     }
 
@@ -104,8 +108,10 @@ public class PRChecksTest {
                 .title(INVALID_TITLE)
                 .description(INVALID_DESCRIPTION)
                 .build();
+        mockedContext = MockedContext.builder(gitHubJson.id())
+                .commit(INVALID_COMMIT_MESSAGE);
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, INVALID_COMMIT_MESSAGE))
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {

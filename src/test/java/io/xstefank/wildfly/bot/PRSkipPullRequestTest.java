@@ -3,11 +3,10 @@ package io.xstefank.wildfly.bot;
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.utils.GitHubJson;
+import io.xstefank.wildfly.bot.utils.MockedContext;
 import io.xstefank.wildfly.bot.utils.Util;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
-import org.kohsuke.github.GHPullRequest;
-import org.mockito.Mockito;
 
 import java.io.IOException;
 
@@ -24,6 +23,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 public class PRSkipPullRequestTest {
 
     private static GitHubJson gitHubJson;
+    private MockedContext mockedContext;
     private static final String wildflyConfigFile = """
             wildfly:
               format:
@@ -47,15 +47,16 @@ public class PRSkipPullRequestTest {
 
                         finished""")
                 .build();
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, INVALID_COMMIT_MESSAGE))
+        mockedContext = MockedContext.builder(gitHubJson.id()).commit(INVALID_COMMIT_MESSAGE);
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    verify(mocks.pullRequest(gitHubJson.id())).getBody();
+                    verify(mocks.pullRequest(gitHubJson.id()), times(2)).getBody();
                     verify(mocks.pullRequest(gitHubJson.id())).listFiles();
                     // Following invocations are used for logging
-                    verify(mocks.pullRequest(gitHubJson.id())).getNumber();
-                    verify(mocks.pullRequest(gitHubJson.id())).getTitle();
+                    verify(mocks.pullRequest(gitHubJson.id()), times(2)).getNumber();
+                    verify(mocks.pullRequest(gitHubJson.id()), times(2)).getTitle();
                     verifyNoMoreInteractions(mocks.pullRequest(gitHubJson.id()));
                 });
     }
@@ -65,18 +66,17 @@ public class PRSkipPullRequestTest {
         gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
                 .title(INVALID_TITLE)
                 .build();
-        given().github(mocks -> {
-            // TODO update with `add-labels` branch merged
-            GHPullRequest pullRequest = mocks.pullRequest(gitHubJson.id());
-            Mockito.when(pullRequest.isDraft()).thenReturn(true);
-            Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null);
-        })
+        mockedContext = MockedContext.builder(gitHubJson.id()).draft();
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    verify(mocks.pullRequest(gitHubJson.id())).getBody();
+                    verify(mocks.pullRequest(gitHubJson.id()), times(2)).getBody();
                     verify(mocks.pullRequest(gitHubJson.id())).listFiles();
                     verify(mocks.pullRequest(gitHubJson.id()), times(2)).isDraft();
+                    // Following invocations are used for logging
+                    verify(mocks.pullRequest(gitHubJson.id()), times(2)).getNumber();
+                    verify(mocks.pullRequest(gitHubJson.id()), times(2)).getTitle();
                     verifyNoMoreInteractions(mocks.pullRequest(gitHubJson.id()));
                 });
     }

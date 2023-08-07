@@ -54,16 +54,22 @@ public class WildFlyConfigFile {
 
         public String titleBody;
 
+        @JsonSetter(nulls = Nulls.SKIP)
         @JsonDeserialize(as = ArrayList.class)
         public List<String> directories = new ArrayList<>();
 
+        @JsonSetter(nulls = Nulls.SKIP)
         @JsonDeserialize(as = ArrayList.class)
         public List<String> notify = new ArrayList<>();
+
+        @JsonSetter(nulls = Nulls.SKIP)
+        @JsonDeserialize(as = ArrayList.class)
+        public List<String> labels = new ArrayList<>();
 
         @Override
         public String toString() {
             return "id=" + stringify(id) + " title=" + stringify(title) + " body=" + stringify(body) + " titleBody="
-                + stringify(titleBody) + " directories=" + directories + " notify=" + notify;
+                + stringify(titleBody) + " directories=" + directories + " notify=" + notify + " labels=" + labels;
         }
 
         public String toPrettyString() {
@@ -73,7 +79,8 @@ public class WildFlyConfigFile {
                 () -> body != null ? "body=" + body : null,
                 () -> titleBody != null ? "titleBody=" + titleBody : null,
                 () -> !directories.isEmpty() ? "directories=" + directories : null,
-                () -> !notify.isEmpty() ? "notify=" + notify : null
+                () -> !notify.isEmpty() ? "notify=" + notify : null,
+                () -> !labels.isEmpty() ? "labels=" + labels : null
             ).map(Supplier::get).filter(Objects::nonNull).toList());
 
         }

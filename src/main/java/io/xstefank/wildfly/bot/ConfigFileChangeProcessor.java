@@ -13,9 +13,12 @@ import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import org.kohsuke.github.GHContent;
 import org.kohsuke.github.GHEventPayload;
+import org.kohsuke.github.GHFileNotFoundException;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHPullRequestFileDetail;
+import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
+import org.kohsuke.github.HttpException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @RequestScoped
 public class ConfigFileChangeProcessor {
@@ -41,6 +45,7 @@ public class ConfigFileChangeProcessor {
 
     void onFileChanged(@PullRequest.Opened @PullRequest.Edited @PullRequest.Synchronize @PullRequest.Reopened @PullRequest.ReadyForReview GHEventPayload.PullRequest pullRequestPayload, GitHub gitHub) throws IOException {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
+        GHRepository repository = pullRequest.getRepository();
         for (GHPullRequestFileDetail changedFile : pullRequest.listFiles()) {
             if (changedFile.getFilename().equals(fileProvider.getFilePath(RuntimeConstants.CONFIG_FILE_NAME))) {
                 try {
@@ -50,7 +55,7 @@ public class ConfigFileChangeProcessor {
                     Optional<WildFlyConfigFile> file = Optional.ofNullable(yamlObjectMapper.readValue(updatedFileContent, WildFlyConfigFile.class));
 
                     if (file.isPresent()) {
-                        List<String> problems = validateFile(file.get());
+                        List<String> problems = validateFile(file.get(), repository);
                         if (problems.isEmpty()) {
                             githubProcessor.commitStatusSuccess(pullRequest, CHECK_NAME, "Valid");
                             Log.debug("Configuration File check successful");
@@ -75,19 +80,47 @@ public class ConfigFileChangeProcessor {
         }
     }
 
-    List<String> validateFile(WildFlyConfigFile file) {
+    List<String> validateFile(WildFlyConfigFile file, GHRepository repository) throws IOException {
         List<String> problems = new ArrayList<>();
         Set<WildFlyConfigFile.WildFlyRule> rules = new HashSet<>();
-        for (WildFlyConfigFile.WildFlyRule rule : file.wildfly.rules) {
-            rules.stream()
-                    .filter(wildFlyRule -> wildFlyRule.id.equals(rule.id))
-                    .forEach(wildFlyRule -> problems.add("Rule [" + wildFlyRule.toPrettyString() + "] and [" + rule.toPrettyString() + "] have the same id"));
-            if (rule.id == null) {
-                problems.add("Rule [" + rule.toPrettyString() + "] is missing an id");
-            } else {
-                rules.add(rule);
+        Set<String> repoLabels = repository.listLabels()
+                .toList()
+                .stream()
+                .map(ghLabel -> ghLabel.getName())
+                .collect(Collectors.toSet());
+
+        if (file.wildfly.rules != null) {
+            for (WildFlyConfigFile.WildFlyRule rule : file.wildfly.rules) {
+                rules.stream()
+                        .filter(wildFlyRule -> wildFlyRule.id.equals(rule.id))
+                        .forEach(wildFlyRule -> problems.add("Rule [" + wildFlyRule.toPrettyString() + "] and [" + rule.toPrettyString() + "] have the same id"));
+                if (rule.id == null) {
+                    problems.add("Rule [" + rule.toPrettyString() + "] is missing an id");
+                } else {
+                    rules.add(rule);
+                }
+
+                for (String label: rule.labels) {
+                    if (!repoLabels.contains(label)) {
+                        problems.add("Rule [" + rule.toPrettyString() + "] points to non-existing label: " + label);
+                    }
+                }
+
+                for (String directory : rule.directories) {
+                    try {
+                        repository.getDirectoryContent(directory);
+                    } catch (IOException e) {
+                        // non-existing directory or it is not a file
+                        if (e instanceof GHFileNotFoundException ||
+                                (e instanceof HttpException && !e.getMessage().startsWith("Server returned HTTP response code: 200, message: 'null' for URL: https://api.github.com/repos/"))) {
+                            problems.add("Rule [" + rule.toPrettyString() + "] has the following non-existing directory specified: " + directory);
+                            Log.debugf(e, "Exception on directories check caught");
+                        }
+                    }
+                }
             }
         }
+
         return problems;
     }
 }

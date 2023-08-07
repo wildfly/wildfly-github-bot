@@ -1,19 +1,16 @@
 package io.xstefank.wildfly.bot;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
-import io.quarkiverse.githubapp.testing.dsl.GitHubMockContext;
 import io.quarkus.test.junit.QuarkusTest;
-import io.xstefank.wildfly.bot.helper.MockedGHPullRequestProcessor;
-import io.xstefank.wildfly.bot.model.MockedGHPullRequestFileDetail;
 import io.xstefank.wildfly.bot.model.RuntimeConstants;
 import io.xstefank.wildfly.bot.utils.GitHubJson;
+import io.xstefank.wildfly.bot.utils.MockedContext;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHContent;
 import org.kohsuke.github.GHEvent;
-import org.kohsuke.github.GHPullRequestFileDetail;
 import org.kohsuke.github.GHRepository;
 import org.mockito.Mockito;
 
@@ -58,7 +55,9 @@ public class PRConfigFileChangeTest {
                             - address@email.com""",
                     "UTF-8"));
 
-                mockPullRequestContents(mocks, gitHubJson.id());
+                    MockedContext.builder(gitHubJson.id())
+                            .prFiles(".github/wildfly-bot.yml")
+                            .mock(mocks);
             })
             .when().payloadFromString(gitHubJson.jsonString())
             .event(GHEvent.PULL_REQUEST)
@@ -94,7 +93,9 @@ public class PRConfigFileChangeTest {
                             - address@email.com""",
                     "UTF-8"));
 
-                mockPullRequestContents(mocks, gitHubJson.id());
+                MockedContext.builder(gitHubJson.id())
+                        .prFiles(".github/wildfly-bot.yml")
+                        .mock(mocks);
             })
             .when().payloadFromString(gitHubJson.jsonString())
             .event(GHEvent.PULL_REQUEST)
@@ -107,21 +108,5 @@ public class PRConfigFileChangeTest {
 
                 verifyNoMoreInteractions(mocks.pullRequest(gitHubJson.id()));
             });
-    }
-
-    private static void mockPullRequestContents(GitHubMockContext mocks, long pullRequest) throws IOException {
-        GHPullRequestFileDetail[] fileDetails = {
-            new MockedGHPullRequestFileDetail("62ca1d70d69efbf5ab79d46512292c29df72a9b1",
-                ".github/wildfly-bot.yml", "modified", 3, 2, 5,
-                "https://github.com/xstefank/wildfly/blob/b167e4aa848bcdd4b3dacdd6edb4032bf045b9df/.github%2Fwildfly-bot.yml",
-                "https://raw.githubusercontent.com/xstefank/wildfly/b167e4aa848bcdd4b3dacdd6edb4032bf045b9df/.github/wildfly-bot.yml",
-                "https://api.github.com/repos/xstefank/wildfly/contents/.github%2Fwildfly-bot.yml?ref=b167e4aa848bcdd4b3dacdd6edb4032bf045b9df",
-                ".. omitted ..",
-                null)
-        };
-
-        MockedGHPullRequestProcessor.builder(pullRequest)
-                .fileDetails(fileDetails)
-                .mock(mocks);
     }
 }

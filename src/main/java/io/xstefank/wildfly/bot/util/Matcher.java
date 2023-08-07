@@ -7,7 +7,7 @@ import org.kohsuke.github.GHPullRequestFileDetail;
 
 public class Matcher {
 
-    public static boolean matches(GHPullRequest pullRequest, WildFlyRule rule) {
+    public static boolean notifyComment(GHPullRequest pullRequest, WildFlyRule rule) {
         if (Strings.isNotBlank(rule.title)) {
             if (Patterns.find(regexWordWrap(rule.title), pullRequest.getTitle())) {
                 return true;
@@ -27,6 +27,10 @@ public class Matcher {
             }
         }
 
+        return false;
+    }
+
+    public static boolean notifyRequestReview(GHPullRequest pullRequest, WildFlyRule rule) {
         if (!rule.directories.isEmpty()) {
             for (GHPullRequestFileDetail changedFile : pullRequest.listFiles()) {
                 for (String directory : rule.directories) {

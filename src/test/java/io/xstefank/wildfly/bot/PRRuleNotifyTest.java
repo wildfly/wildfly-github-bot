@@ -14,8 +14,8 @@ import org.mockito.Mockito;
 import java.io.IOException;
 
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
-import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
+import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 
 /**
  * Tests for the Wildfly -> Rules -> Notify function.
@@ -44,12 +44,12 @@ public class PRRuleNotifyTest {
                   title: "Description"
                   notify: [3251142365,4533458845]
             """;
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                    Mockito.verify(mockedPR, Mockito.times(2)).comment("/cc @7125767235, @0979986727");
+                    Mockito.verify(mockedPR).comment("/cc @0979986727, @7125767235");
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatSuccess(repo, gitHubJson);
                 });
@@ -67,12 +67,12 @@ public class PRRuleNotifyTest {
                   title: "Title"
                   notify: [3251142365,4533458845]
             """;
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                    Mockito.verify(mockedPR, Mockito.times(2)).comment("/cc @7125767235, @0979986727, @3251142365, @4533458845");
+                    Mockito.verify(mockedPR).comment("/cc @4533458845, @0979986727, @7125767235, @3251142365");
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatSuccess(repo, gitHubJson);
                 });
@@ -90,12 +90,12 @@ public class PRRuleNotifyTest {
                   body: "issues.redhat.com"
                   notify: [7125767235,4533458845]
             """;
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                    Mockito.verify(mockedPR, Mockito.times(2)).comment("/cc @7125767235, @0979986727, @4533458845");
+                    Mockito.verify(mockedPR).comment("/cc @4533458845, @0979986727, @7125767235");
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatSuccess(repo, gitHubJson);
                 });
