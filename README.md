@@ -204,3 +204,33 @@ Fill in the following information.
    `http://<HOST/PORT>`
 
 And that's it. Again, try to create a PR to verify the format of the PR.
+q
+## Production deployment
+
+We run WildFly GitHub Bot on Openshift in production. To save resources we also deploy it as native executable.
+
+1. Log in into Openshift
+
+   `oc login ...`
+
+
+2. Then create the relevant secret:
+
+   ```
+   oc create secret generic wildfly-bot
+   --from-literal=QUARKUS_GITHUB_APP_WEBHOOK_SECRET={TBD}
+   --from-file=QUARKUS_GITHUB_APP_PRIVATE_KEY={TBD}
+   --from-literal=QUARKUS_MAILER_FROM={TBD}
+   --from-literal=QUARKUS_MAILER_USERNAME={TBD}
+   --from-literal=QUARKUS_MAILER_PASSWORD={TBD}
+   ```
+
+3. Deploy the bot:
+
+   ```
+   ./mvnw clean install
+   -Dquarkus.kubernetes.deploy=true
+   -Dquarkus.openshift.env.vars.quarkus-github-app-app-id={TBD}
+   -Dquarkus.native.container-build=true
+   -Dnative
+   ```
