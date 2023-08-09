@@ -57,6 +57,11 @@ public class PullRequestFormatProcessor {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
         Map<String, String> errors = new HashMap<>();
 
+        if (pullRequest.getUser().getLogin().equals("dependabot[bot]")) {
+            LOG.infof("Dependabot Pull Request [%d] detected. Not running any format check", pullRequest.getNumber());
+            return;
+        }
+
         for (Check check : checks) {
             String result = check.check(pullRequest);
             if (result != null) {

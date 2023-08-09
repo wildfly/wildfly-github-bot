@@ -35,6 +35,11 @@ public class TriagePullRequestProcessor {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
         List<String> mentions = new ArrayList<>();
 
+        if (pullRequest.getUser().getLogin().equals("dependabot[bot]")) {
+            LOG.infof("Dependabot Pull Request [%d] detected. Not running any rule matching", pullRequest.getNumber());
+            return;
+        }
+
         if (wildflyBotConfigFile.wildfly.rules != null) {
             for (WildFlyRule rule : wildflyBotConfigFile.wildfly.rules) {
                 if (Matcher.matches(pullRequest, rule)) {
