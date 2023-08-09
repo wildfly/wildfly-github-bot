@@ -6,6 +6,8 @@ import org.kohsuke.github.GHPullRequest;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEFAULT_TITLE_MESSAGE;
+
 public class TitleCheck implements Check {
 
     private Pattern pattern;
@@ -16,7 +18,7 @@ public class TitleCheck implements Check {
             throw new IllegalArgumentException("Input argument cannot be null");
         }
         pattern = title.pattern;
-        message = title.message;
+        message = title.message != null ? title.message : DEFAULT_TITLE_MESSAGE;
     }
 
     @Override

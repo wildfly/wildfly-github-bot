@@ -8,6 +8,8 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.io.IOException;
 
+import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEFAULT_COMMIT_MESSAGE;
+
 public class CommitMessagesCheck implements Check {
 
     private Pattern pattern;
@@ -18,23 +20,26 @@ public class CommitMessagesCheck implements Check {
             throw new IllegalArgumentException("Input argument cannot be null");
         }
         pattern = description.pattern;
-        message = description.message;
+        message = description.message != null ? description.message : DEFAULT_COMMIT_MESSAGE;
     }
 
     @Override
     public String check(GHPullRequest pullRequest) throws IOException {
         PagedIterable<GHPullRequestCommitDetail> commits = pullRequest.listCommits();
-        for (GHPullRequestCommitDetail commit : commits) {
+        if (commits != null) {
+            for (GHPullRequestCommitDetail commit : commits) {
+                if (commit.getCommit() != null) {
+                    String commitMessage =  commit.getCommit().getMessage();
+                    if (commitMessage.isEmpty()) {
+                        return commit.getSha() + ": Commit message is Empty";
+                    }
 
-            String commitMessage =  commit.getCommit().getMessage();
-            if (commitMessage.isEmpty()) {
-                return commit.getSha() + ": Commit message is Empty";
-            }
+                    Matcher matcher = pattern.matcher(commitMessage);
 
-            Matcher matcher = pattern.matcher(commitMessage);
-
-            if (!matcher.matches()) {
-                return String.format("For commit: \"%s\" (%s) - %s" , commitMessage, commit.getSha(), this.message);
+                    if (!matcher.matches()) {
+                        return String.format("For commit: \"%s\" (%s) - %s" , commitMessage, commit.getSha(), this.message);
+                    }
+                }
             }
         }
         return null;
