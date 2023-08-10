@@ -9,4 +9,6 @@ public class RuntimeConstants {
     public static final String DEFAULT_TITLE_MESSAGE = "Wrong content of the title";
 
     public static final String DEFAULT_PROJECT_KEY = "WFLY";
+
+    public static final String DEPENDABOT = "dependabot[bot]";
 }

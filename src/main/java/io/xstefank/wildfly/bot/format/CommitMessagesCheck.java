@@ -9,6 +9,7 @@ import java.util.regex.Matcher;
 import java.io.IOException;
 
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEFAULT_COMMIT_MESSAGE;
+import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEPENDABOT;
 
 public class CommitMessagesCheck implements Check {
 
@@ -25,6 +26,10 @@ public class CommitMessagesCheck implements Check {
 
     @Override
     public String check(GHPullRequest pullRequest) throws IOException {
+        if (pullRequest.getUser().getLogin().equals(DEPENDABOT)) {
+            // skip for dependabot for now
+            return null;
+        }
         PagedIterable<GHPullRequestCommitDetail> commits = pullRequest.listCommits();
         if (commits != null) {
             for (GHPullRequestCommitDetail commit : commits) {

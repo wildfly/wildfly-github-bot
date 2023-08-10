@@ -28,7 +28,7 @@ public class TriagePullRequestProcessor {
                              @ConfigFile(RuntimeConstants.CONFIG_FILE_NAME) WildFlyConfigFile wildflyBotConfigFile) throws IOException {
 
         if (wildflyBotConfigFile == null) {
-            LOG.error("No configuration file available. ");
+            LOG.error("No configuration file available.");
             return;
         }
 
@@ -38,7 +38,8 @@ public class TriagePullRequestProcessor {
         if (wildflyBotConfigFile.wildfly.rules != null) {
             for (WildFlyRule rule : wildflyBotConfigFile.wildfly.rules) {
                 if (Matcher.matches(pullRequest, rule)) {
-                    LOG.debugf("Pull Request %s was matched with a rule with the id: %s.", pullRequest.getTitle(), rule.id != null ? rule.id : "N/A");
+                    LOG.infof("Pull Request %s was matched with a rule with the id: %s.", pullRequest.getTitle(),
+                        rule.id != null ? rule.id : "N/A");
                     for (String nick : rule.notify) {
                         if (!nick.equals(pullRequest.getUser().getLogin()) && !mentions.contains(nick)) {
                             mentions.add(nick);
