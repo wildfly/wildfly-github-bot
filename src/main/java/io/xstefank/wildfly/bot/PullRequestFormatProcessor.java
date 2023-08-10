@@ -48,8 +48,9 @@ public class PullRequestFormatProcessor {
     @Inject
     WildFlyBotConfig wildFlyBotConfig;
 
-    void onPullRequestEdited(@PullRequest.Edited @PullRequest.Opened @PullRequest.Synchronize @PullRequest.Reopened @PullRequest.ReadyForReview GHEventPayload.PullRequest pullRequestPayload,
-                             @ConfigFile(RuntimeConstants.CONFIG_FILE_NAME) WildFlyConfigFile wildflyConfigFile) throws IOException {
+    void verifyFormat(@PullRequest.Edited @PullRequest.Opened @PullRequest.Synchronize @PullRequest.Reopened
+                      @PullRequest.ReadyForReview GHEventPayload.PullRequest pullRequestPayload,
+                      @ConfigFile(RuntimeConstants.CONFIG_FILE_NAME) WildFlyConfigFile wildflyConfigFile) throws IOException {
         if (wildflyConfigFile == null) {
             LOG.error("No configuration file available. ");
             return;
@@ -58,19 +59,6 @@ public class PullRequestFormatProcessor {
 
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
         Map<String, String> errors = new HashMap<>();
-
-        if (pullRequest.getUser().getLogin().equals(DEPENDABOT)) {
-            LOG.infof("Dependabot Pull Request [#%d] detected.", pullRequest.getNumber());
-            String comment = """
-                WildFly Bot recognized this PR as dependabot dependency update. Please create a %s
-                issue and add its ID to the title and its link to the description.
-                """.formatted(wildflyConfigFile.wildfly.projectKey);
-            if (wildFlyBotConfig.isDryRun()) {
-                LOG.infof("Pull request #%d - Add new comment %s", pullRequest.getNumber(), comment);
-            } else {
-                pullRequest.comment(comment);
-            }
-        }
 
         for (Check check : checks) {
             String result = check.check(pullRequest);
@@ -85,6 +73,22 @@ public class PullRequestFormatProcessor {
         } else {
             githubCommitProcessor.commitStatusError(pullRequest, CHECK_NAME, "Failed checks: " + String.join(", ", errors.keySet()));
             formatComment(pullRequest, errors.values());
+        }
+
+    }
+
+    void postDependabotInfo(@PullRequest.Opened GHEventPayload.PullRequest pullRequestPayload,
+                            @ConfigFile(RuntimeConstants.CONFIG_FILE_NAME) WildFlyConfigFile wildflyConfigFile) throws IOException {
+        GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
+        if (pullRequest.getUser().getLogin().equals(DEPENDABOT)) {
+            LOG.infof("Dependabot Pull Request [#%d] detected.", pullRequest.getNumber());
+            String comment = ("WildFly Bot recognized this PR as dependabot dependency update. Please create a %s issue" +
+                " and add its ID to the title and its link to the description.").formatted(wildflyConfigFile.wildfly.projectKey);
+            if (wildFlyBotConfig.isDryRun()) {
+                LOG.infof("Pull request #%d - Add new comment %s", pullRequest.getNumber(), comment);
+            } else {
+                pullRequest.comment(comment);
+            }
         }
 
     }
