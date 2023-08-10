@@ -21,8 +21,11 @@ public class WildFlyConfigFile {
 
         public Format format = new Format();
 
-        public void setProjectKey(String name) {
-            projectPattern = Pattern.compile(String.format("\\[%s-\\d+]\\s+.*|%s-\\d+\\s+.*", name, name));
+        public String projectKey = RuntimeConstants.DEFAULT_PROJECT_KEY;
+
+        public void setProjectKey(String key) {
+            projectKey = key;
+            projectPattern = Pattern.compile(String.format("\\[%s-\\d+]\\s+.*|%s-\\d+\\s+.*", key, key));
         }
 
         public Pattern getProjectPattern() {

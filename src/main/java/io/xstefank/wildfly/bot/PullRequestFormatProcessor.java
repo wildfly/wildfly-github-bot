@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEPENDABOT;
+
 @RequestScoped
 public class PullRequestFormatProcessor {
 
@@ -56,6 +58,19 @@ public class PullRequestFormatProcessor {
 
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
         Map<String, String> errors = new HashMap<>();
+
+        if (pullRequest.getUser().getLogin().equals(DEPENDABOT)) {
+            LOG.infof("Dependabot Pull Request [#%d] detected.", pullRequest.getNumber());
+            String comment = """
+                WildFly Bot recognized this PR as dependabot dependency update. Please create a %s
+                issue and add its ID to the title and its link to the description.
+                """.formatted(wildflyConfigFile.wildfly.projectKey);
+            if (wildFlyBotConfig.isDryRun()) {
+                LOG.infof("Pull request #%d - Add new comment %s", pullRequest.getNumber(), comment);
+            } else {
+                pullRequest.comment(comment);
+            }
+        }
 
         for (Check check : checks) {
             String result = check.check(pullRequest);
@@ -98,7 +113,8 @@ public class PullRequestFormatProcessor {
                     .collect(Collectors.joining("\n\n")));
 
                 if (wildFlyBotConfig.isDryRun()) {
-                    LOG.infof("Pull request %d - Update comment %s to %s", pullRequest.getNumber(), comment.getBody(), updatedBody);
+                    LOG.infof("Pull request #%d - Update comment \"%s\" to \"%s\"", pullRequest.getNumber(),
+                        comment.getBody(), updatedBody);
                 } else {
                     comment.update(updatedBody);
                 }
@@ -112,7 +128,7 @@ public class PullRequestFormatProcessor {
                 .map("- %s"::formatted)
                 .collect(Collectors.joining("\n\n")));
             if (wildFlyBotConfig.isDryRun()) {
-                LOG.infof("Pull request %d - Add new comment %s", pullRequest.getNumber(), updatedBody);
+                LOG.infof("Pull request #%d - Add new comment %s", pullRequest.getNumber(), updatedBody);
             } else {
                 pullRequest.comment(updatedBody);
             }
