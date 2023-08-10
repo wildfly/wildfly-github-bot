@@ -39,7 +39,7 @@ public class ConfigFileChangeProcessor {
     @Inject
     GithubCommitProcessor githubCommitProcessor;
 
-    void onFileChanged(@PullRequest.Opened @PullRequest.Edited @PullRequest.Synchronize GHEventPayload.PullRequest pullRequestPayload, GitHub gitHub) throws IOException {
+    void onFileChanged(@PullRequest.Opened @PullRequest.Edited @PullRequest.Synchronize @PullRequest.Reopened @PullRequest.ReadyForReview GHEventPayload.PullRequest pullRequestPayload, GitHub gitHub) throws IOException {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
         for (GHPullRequestFileDetail changedFile : pullRequest.listFiles()) {
             if (changedFile.getFilename().equals(fileProvider.getFilePath(RuntimeConstants.CONFIG_FILE_NAME))) {
