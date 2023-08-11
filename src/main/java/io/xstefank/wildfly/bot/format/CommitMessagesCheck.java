@@ -30,6 +30,7 @@ public class CommitMessagesCheck implements Check {
             // skip for dependabot for now
             return null;
         }
+
         PagedIterable<GHPullRequestCommitDetail> commits = pullRequest.listCommits();
         if (commits != null) {
             for (GHPullRequestCommitDetail commit : commits) {

@@ -26,7 +26,6 @@ public class DescriptionCheck implements Check {
         if (description.message != null) {
             message = description.message;
         }
-
     }
 
 

@@ -67,6 +67,9 @@ public class LifecycleProcessor {
 
         try {
             for (GHAppInstallation installation : clientProvider.getApplicationClient().getApp().listInstallations()) {
+                if (installation.getUrl() == null) {
+                    continue;
+                }
                 GitHub app = clientProvider.getInstallationClient(installation.getId());
                 for (GHRepository repository : app.getInstallation().listRepositories()) {
                     try {

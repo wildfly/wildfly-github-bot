@@ -4,7 +4,7 @@ import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.utils.GitHubJson;
 import io.xstefank.wildfly.bot.utils.Util;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHPullRequest;
@@ -14,8 +14,8 @@ import org.mockito.Mockito;
 import java.io.IOException;
 
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
-import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
+import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 
 /**
  * Tests for the Wildfly -> Rules -> Title checks.
@@ -27,8 +27,8 @@ public class PRRuleTitleCheckTest {
     private static String wildflyConfigFile;
     private static GitHubJson gitHubJson;
 
-    @BeforeAll
-    static void setUpGitHubJson() throws IOException {
+    @BeforeEach
+    void setUpGitHubJson() throws IOException {
         gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON).build();
     }
 
@@ -50,6 +50,29 @@ public class PRRuleTitleCheckTest {
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatSuccess(repo, gitHubJson);
                 });
+    }
+
+    @Test
+    void testSuccessfulTitleIfSubstringHitCheck() throws IOException {
+        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+            .title("WFLY-123 See the substring deep is not hit")
+            .build();
+        wildflyConfigFile = """
+            wildfly:
+              rules:
+                - id: ee
+                  title: "ee"
+                  notify: [7125767235]
+            """;
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+            .when().payloadFromString(gitHubJson.jsonString())
+            .event(GHEvent.PULL_REQUEST)
+            .then().github(mocks -> {
+                GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
+                Mockito.verify(mockedPR, Mockito.never()).comment("/cc @7125767235");
+                GHRepository repo = mocks.repository(TEST_REPO);
+                Util.verifyFormatSuccess(repo, gitHubJson);
+            });
     }
 
     @Test

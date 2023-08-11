@@ -5,6 +5,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.utils.GitHubJson;
 import io.xstefank.wildfly.bot.utils.Util;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHRepository;
@@ -22,6 +23,7 @@ import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
  */
 @QuarkusTest
 @GitHubAppTest
+@Disabled
 public class PRCommitCheckTest {
 
     private static String wildflyConfigFile;

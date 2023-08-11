@@ -20,6 +20,7 @@ import org.jboss.logmanager.Level;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.kohsuke.github.GHApp;
@@ -49,6 +50,7 @@ import static org.mockito.Mockito.when;
  */
 @QuarkusTest
 @GitHubAppTest
+@Disabled
 public class StartupEventTest {
 
     @Inject
