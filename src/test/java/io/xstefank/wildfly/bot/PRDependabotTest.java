@@ -46,10 +46,8 @@ public class PRDependabotTest {
             .event(GHEvent.PULL_REQUEST)
             .then().github(mocks -> {
                 GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                Mockito.verify(mockedPR).comment("""
-                WildFly Bot recognized this PR as dependabot dependency update. Please create a WFLY
-                issue and add its ID to the title and its link to the description.
-                """);
+                Mockito.verify(mockedPR).comment("WildFly Bot recognized this PR as dependabot dependency update. " +
+                    "Please create a WFLY issue and add its ID to the title and its link to the description.");
                 GHRepository repo = mocks.repository(TEST_REPO);
                 Util.verifyFormatFailure(repo, gitHubJson, "description, title");
                 Util.verifyFailedFormatComment(mocks, gitHubJson, """
