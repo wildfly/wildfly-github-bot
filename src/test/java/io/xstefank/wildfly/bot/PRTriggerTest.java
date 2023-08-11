@@ -117,7 +117,7 @@ public class PRTriggerTest {
         gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
                 .action(Action.READY_FOR_REVIEW)
                 .build();
-        checkNoInteraction(gitHubJson, Action.READY_FOR_REVIEW);
+        checkValidRun(gitHubJson, Action.READY_FOR_REVIEW);
     }
 
     @Test
@@ -125,7 +125,7 @@ public class PRTriggerTest {
         gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
                 .action(Action.REOPENED)
                 .build();
-        checkNoInteraction(gitHubJson, Action.REOPENED);
+        checkValidRun(gitHubJson, Action.REOPENED);
     }
 
     @Test

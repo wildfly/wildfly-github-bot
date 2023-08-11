@@ -48,7 +48,7 @@ public class PullRequestFormatProcessor {
     @Inject
     WildFlyBotConfig wildFlyBotConfig;
 
-    void onPullRequestEdited(@PullRequest.Edited @PullRequest.Opened @PullRequest.Synchronize GHEventPayload.PullRequest pullRequestPayload,
+    void onPullRequestEdited(@PullRequest.Edited @PullRequest.Opened @PullRequest.Synchronize @PullRequest.Reopened @PullRequest.ReadyForReview GHEventPayload.PullRequest pullRequestPayload,
                              @ConfigFile(RuntimeConstants.CONFIG_FILE_NAME) WildFlyConfigFile wildflyConfigFile) throws IOException {
         if (wildflyConfigFile == null) {
             LOG.error("No configuration file available. ");
