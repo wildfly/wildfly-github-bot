@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 import java.io.IOException;
@@ -15,8 +16,8 @@ import java.io.IOException;
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 import static io.xstefank.wildfly.bot.utils.TestConstants.INVALID_DESCRIPTION;
 import static io.xstefank.wildfly.bot.utils.TestConstants.INVALID_TITLE;
-import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
+import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 
 /**
  * Tests for the Wildfly -> Rules -> TitleBody checks.
@@ -120,6 +121,65 @@ public class PRRuleTitleBodyCheckTest {
                     Mockito.verify(mockedPR, Mockito.never()).comment("/cc @7125767235");
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatFailure(repo, gitHubJson, "title");
+                });
+    }
+
+    @Test
+    void testTitleBodyCheckTitleRegex() throws IOException {
+        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+                .title("[WFLY-00000] Metrics PR")
+                .build();
+        wildflyConfigFile = """
+                wildfly:
+                  rules:
+                    - titleBody: "metrics|micrometer"
+                      notify: [7125767235]
+                """;
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
+                    Mockito.verify(mockedPR).comment("/cc @7125767235");
+                });
+    }
+
+
+    @Test
+    void testTitleBodyCheckBodyRegex() throws IOException {
+        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+                .description("[WFLY-00000] Micrometer commit")
+                .build();
+        wildflyConfigFile = """
+                wildfly:
+                  rules:
+                    - titleBody: "metrics|micrometer"
+                      notify: [7125767235]
+                """;
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
+                    Mockito.verify(mockedPR).comment("/cc @7125767235");
+                });
+    }
+
+    @Test
+    void testTitleBodyCheckBodyRegexNoHit() throws IOException {
+        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON).build();
+        wildflyConfigFile = """
+                wildfly:
+                  rules:
+                    - titleBody: "not|valid"
+                      notify: [7125767235]
+                """;
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
+                    Mockito.verify(mockedPR, Mockito.never()).comment(ArgumentMatchers.anyString());
                 });
     }
 }
