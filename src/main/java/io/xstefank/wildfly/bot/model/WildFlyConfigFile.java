@@ -15,7 +15,7 @@ public class WildFlyConfigFile {
 
     public static final class WildFlyConfig {
 
-        private Pattern projectPattern = Pattern.compile(String.format("\\[%s-\\d+]\\s+.*|%s-\\d+\\s+.*", RuntimeConstants.DEFAULT_PROJECT_KEY, RuntimeConstants.DEFAULT_PROJECT_KEY));
+        private Pattern projectPattern = Pattern.compile(String.format("\\[%s-\\d+]\\s+.*|%s-\\d+\\s+.*", RuntimeConstants.DEFAULT_PROJECT_KEY, RuntimeConstants.DEFAULT_PROJECT_KEY), Pattern.DOTALL);
 
         public List<WildFlyRule> rules;
 
@@ -25,7 +25,7 @@ public class WildFlyConfigFile {
 
         public void setProjectKey(String key) {
             projectKey = key;
-            projectPattern = Pattern.compile(String.format("\\[%s-\\d+]\\s+.*|%s-\\d+\\s+.*", key, key));
+            projectPattern = Pattern.compile(String.format("\\[%s-\\d+]\\s+.*|%s-\\d+\\s+.*", key, key), Pattern.DOTALL);
         }
 
         public Pattern getProjectPattern() {

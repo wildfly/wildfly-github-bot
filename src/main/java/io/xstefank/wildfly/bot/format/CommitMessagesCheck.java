@@ -33,6 +33,7 @@ public class CommitMessagesCheck implements Check {
 
         PagedIterable<GHPullRequestCommitDetail> commits = pullRequest.listCommits();
         if (commits != null) {
+            boolean oneMatched = false;
             for (GHPullRequestCommitDetail commit : commits) {
                 if (commit.getCommit() != null) {
                     String commitMessage =  commit.getCommit().getMessage();
@@ -42,10 +43,14 @@ public class CommitMessagesCheck implements Check {
 
                     Matcher matcher = pattern.matcher(commitMessage);
 
-                    if (!matcher.matches()) {
-                        return String.format("For commit: \"%s\" (%s) - %s" , commitMessage, commit.getSha(), this.message);
+                    if (matcher.matches()) {
+                        oneMatched = true;
+                        break;
                     }
                 }
+            }
+            if (!oneMatched) {
+                return String.format(this.message, pattern.pattern());
             }
         }
         return null;

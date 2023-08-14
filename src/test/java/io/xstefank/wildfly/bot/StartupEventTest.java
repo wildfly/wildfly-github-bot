@@ -20,7 +20,6 @@ import org.jboss.logmanager.Level;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.kohsuke.github.GHApp;
@@ -29,17 +28,19 @@ import org.kohsuke.github.GHAuthenticatedAppInstallation;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
+import org.kohsuke.github.HttpException;
 import org.kohsuke.github.PagedIterable;
 import org.kohsuke.github.PagedIterator;
 import org.kohsuke.github.PagedSearchIterable;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.logging.LogManager;
 
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
-import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
+import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
@@ -50,12 +51,13 @@ import static org.mockito.Mockito.when;
  */
 @QuarkusTest
 @GitHubAppTest
-@Disabled
 public class StartupEventTest {
 
     @Inject
     Event<StartupEvent> startupEvent;
 
+    // This injection causes problems with replaying events.
+    // However, it is needed for testing startup event
     @InjectMock
     GitHubClientProvider clientProvider;
 
@@ -79,9 +81,16 @@ public class StartupEventTest {
     private class CustomGithubMockSetup implements GitHubMockSetup {
 
         private final String configFile;
+        private final Consumer<GitHubMockSetupContext> additionalMocking;
 
         private CustomGithubMockSetup(String configFile) {
             this.configFile = configFile;
+            this.additionalMocking = null;
+        }
+
+        private CustomGithubMockSetup(String configFile, Consumer<GitHubMockSetupContext> additionalMocking) {
+            this.configFile = configFile;
+            this.additionalMocking = additionalMocking;
         }
 
         @Override
@@ -102,7 +111,12 @@ public class StartupEventTest {
             when(mockGitHub.getApp()).thenReturn(mockGHApp);
             when(mockGHApp.listInstallations()).thenReturn(mockGHAppInstallations);
             when(mockGHAppInstallation.getId()).thenReturn(0L);
-            when(clientProvider.getInstallationClient(anyLong())).thenReturn(mockGitHub);
+
+            if (additionalMocking != null) {
+                additionalMocking.accept(mocks);
+            } else {
+                when(clientProvider.getInstallationClient(anyLong())).thenReturn(mockGitHub);
+            }
             when(mockGitHub.getInstallation()).thenReturn(mockGHAuthenticatedAppInstallation);
             when(mockGHAuthenticatedAppInstallation.listRepositories()).thenReturn(mockGHRepositories);
 
@@ -111,6 +125,7 @@ public class StartupEventTest {
             when(mockIterator.hasNext()).thenReturn(true).thenReturn(false);
 
             startupEvent.fire(new StartupEvent());
+
         }
     }
 
@@ -226,5 +241,25 @@ public class StartupEventTest {
             .when().payloadFromString(gitHubJson.jsonString())
             .event(GHEvent.STAR)
             .then().github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(logRecord -> logRecord.getMessage().equals("The configuration file from the repository %s was parsed successfully."))));
+    }
+
+    @Test
+    public void testStartingSuspendedApp() throws IOException {
+        given().github(new CustomGithubMockSetup("""
+                        wildfly:
+                          rules:
+                            - title: "Test"
+                              notify: [7125767235,0979986727]
+                          emails:
+                            - foo@bar.baz
+                        """, (mocks) -> {
+                            when(clientProvider.getInstallationClient(anyLong())).thenAnswer(invocationOnMock -> {throw new IllegalStateException(new HttpException(403, "This installation has been suspended", "https://docs.github.com/rest/reference/apps#create-an-installation-access-token-for-an-app", null));});
+                        }));
+        Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
+                        logRecord -> logRecord.getMessage().equals(
+                                "Your installation has been suspended. No events will be received until you unsuspend the github app installation.")));
+        Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
+                logRecord -> logRecord.getMessage().equals(
+                        "Unable to correctly start %s for following installation id [%d]")));
     }
 }

@@ -25,7 +25,7 @@ public class TitleCheck implements Check {
     public String check(GHPullRequest pullRequest) {
         Matcher matcher = pattern.matcher(pullRequest.getTitle());
         if (!matcher.matches()) {
-            return message;
+            return String.format(message, pattern.pattern());
         }
 
         return null;
