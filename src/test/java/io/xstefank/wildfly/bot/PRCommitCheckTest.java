@@ -5,7 +5,6 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.utils.GitHubJson;
 import io.xstefank.wildfly.bot.utils.Util;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHRepository;
@@ -15,15 +14,14 @@ import java.io.IOException;
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEFAULT_COMMIT_MESSAGE;
 import static io.xstefank.wildfly.bot.utils.TestConstants.INVALID_COMMIT_MESSAGE;
-import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
+import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 
 /**
  * Tests for the Wildfly -> Format -> Commit checks.
  */
 @QuarkusTest
 @GitHubAppTest
-@Disabled
 public class PRCommitCheckTest {
 
     private static String wildflyConfigFile;
@@ -49,8 +47,7 @@ public class PRCommitCheckTest {
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatFailure(repo, gitHubJson, "commit");
-                    Util.verifyFailedFormatComment(mocks, gitHubJson,
-                            String.format("- For commit: \"%s\" (%s) - " + DEFAULT_COMMIT_MESSAGE, INVALID_COMMIT_MESSAGE, gitHubJson.commitSHA()));
+                    Util.verifyFailedFormatComment(mocks, gitHubJson,"- " + String.format(DEFAULT_COMMIT_MESSAGE, "\\[WFLY-\\d+]\\s+.*|WFLY-\\d+\\s+.*"));
                 });
     }
 
@@ -65,6 +62,33 @@ public class PRCommitCheckTest {
 
         given()
                 .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Util.verifyFormatSuccess(repo, gitHubJson);
+                });
+    }
+
+    /**
+     * Issue detected on the following PR with a multiline commit https://github.com/wildfly/wildfly/pull/17092
+     */
+    @Test
+    void testSuccessfulMultilinedCommitCheck() throws IOException {
+        wildflyConfigFile = """
+            wildfly:
+              format:
+                commit:
+                  enabled: true
+            """;
+
+        given()
+                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, """
+                WFLY-18341 Restore incorrectly updated copyright dates in Jipijapa
+
+                This reverts incorrect changes from
+                096a516e745663a99fce0062ff4bb93a4ca1066f:
+                Upgrade to Hibernate Search 6.2.0.CR1"""))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -106,8 +130,7 @@ public class PRCommitCheckTest {
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatFailure(repo, gitHubJson, "commit");
-                    Util.verifyFailedFormatComment(mocks, gitHubJson,
-                            String.format("- For commit: \"%s\" (%s) - Lorem ipsum dolor sit amet", INVALID_COMMIT_MESSAGE, gitHubJson.commitSHA()));
+                    Util.verifyFailedFormatComment(mocks, gitHubJson,"- Lorem ipsum dolor sit amet");
                 });
     }
 }

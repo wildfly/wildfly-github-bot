@@ -50,10 +50,10 @@ public class PRDependabotTest {
                     "Please create a WFLY issue and add its ID to the title and its link to the description.");
                 GHRepository repo = mocks.repository(TEST_REPO);
                 Util.verifyFormatFailure(repo, gitHubJson, "description, title");
-                Util.verifyFailedFormatComment(mocks, gitHubJson, """
+                Util.verifyFailedFormatComment(mocks, gitHubJson, String.format("""
                         - Invalid description content
 
-                        - Wrong content of the title""");
+                        - %s""", String.format(RuntimeConstants.DEFAULT_TITLE_MESSAGE, "\\[WFLY-\\d+]\\s+.*|WFLY-\\d+\\s+.*")));
             });
     }
 }

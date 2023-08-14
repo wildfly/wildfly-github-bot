@@ -3,6 +3,7 @@ package io.xstefank.wildfly.bot;
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.GitHubClientProvider;
 import io.quarkiverse.githubapp.GitHubConfigFileProvider;
+import io.quarkiverse.githubapp.event.Installation;
 import io.quarkus.logging.Log;
 import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.Mailer;
@@ -17,8 +18,10 @@ import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHAppInstallation;
+import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
+import org.kohsuke.github.HttpException;
 
 import java.io.IOException;
 import java.util.List;
@@ -65,11 +68,10 @@ public class LifecycleProcessor {
             Log.info("Dry Run enabled. GitHub requests will only log statements and not send actual requests to GitHub.");
         }
 
+        long installationId = 0L;
         try {
             for (GHAppInstallation installation : clientProvider.getApplicationClient().getApp().listInstallations()) {
-                if (installation.getUrl() == null) {
-                    continue;
-                }
+                installationId = installation.getId();
                 GitHub app = clientProvider.getInstallationClient(installation.getId());
                 for (GHRepository repository : app.getInstallation().listRepositories()) {
                     try {
@@ -99,10 +101,28 @@ public class LifecycleProcessor {
                     }
                 }
             }
-        } catch (IOException e) {
-            LOG.warn("Unable to verify rules in repository. Use debug log level for more details.");
-            LOG.debug("Unable to verify rules in repository.", e);
+        } catch (IOException | IllegalStateException e) {
+            if (e instanceof IOException) {
+                LOG.warnf(e, "Unable to verify rules in repository.");
+            } else {
+                if (e.getCause() instanceof HttpException && e.getCause() != null && e.getCause().getMessage().contains("suspended")) {
+                    LOG.warnf("Your installation has been suspended. No events will be received until you unsuspend the github app installation.");
+                } else {
+                    LOG.errorf(e, "%s is unable to start.", wildFlyBotConfig.githubName());
+                }
+            }
+            LOG.errorf(e, "Unable to correctly start %s for following installation id [%d]", wildFlyBotConfig.githubName(), installationId);
         }
+    }
+
+    void suspendedInstallation(@Installation.Suspend GHEventPayload.Installation installationPayload) {
+        GHAppInstallation installation = installationPayload.getInstallation();
+        LOG.infof("%s has been suspended for following installation id: %d and will not be able to listen for any incoming Events.", wildFlyBotConfig.githubName(), installation.getAppId());
+    }
+
+    void unsuspendedInstallation(@Installation.Unsuspend GHEventPayload.Installation installationPayload) {
+        GHAppInstallation installation = installationPayload.getInstallation();
+        LOG.infof("%s has been unsuspended for following installation id: %d and has started to listen for new incoming Events.", wildFlyBotConfig.githubName(), installation.getAppId());
     }
 
     private String prettyString(List<String> problems) {

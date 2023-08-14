@@ -12,6 +12,7 @@ import org.kohsuke.github.GHRepository;
 import java.io.IOException;
 
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
+import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEFAULT_TITLE_MESSAGE;
 import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
 
@@ -62,7 +63,7 @@ public class PRFormatOverrideProjectKeyTest {
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatFailure(repo, gitHubJson, "title");
-                    Util.verifyFailedFormatComment(mocks, gitHubJson, "- Wrong content of the title");
+                    Util.verifyFailedFormatComment(mocks, gitHubJson, "- " + String.format(DEFAULT_TITLE_MESSAGE, "\\[WFCORE-\\d+]\\s+.*|WFCORE-\\d+\\s+.*"));
                 });
     }
 }

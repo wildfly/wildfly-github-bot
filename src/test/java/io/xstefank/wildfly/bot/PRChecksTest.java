@@ -110,7 +110,7 @@ public class PRChecksTest {
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatFailure(repo, gitHubJson, "description, title");
+                    Util.verifyFormatFailure(repo, gitHubJson, "commit, description, title");
                     GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
                     Mockito.verify(mockedPR, Mockito.never()).comment("/cc @7125767235, @3251142365");
                 });

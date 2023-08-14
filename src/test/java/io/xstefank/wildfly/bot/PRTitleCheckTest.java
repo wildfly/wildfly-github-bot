@@ -57,7 +57,7 @@ public class PRTitleCheckTest {
             .then().github(mocks -> {
                 GHRepository repo = mocks.repository(TEST_REPO);
                 Util.verifyFormatFailure(repo, gitHubJson, "title");
-                Util.verifyFailedFormatComment(mocks, gitHubJson, "- " + DEFAULT_TITLE_MESSAGE);
+                Util.verifyFailedFormatComment(mocks, gitHubJson, "- " + String.format(DEFAULT_TITLE_MESSAGE, "\\[WFLY-\\d+]\\s+.*|WFLY-\\d+\\s+.*"));
             });
     }
 
