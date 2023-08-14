@@ -30,7 +30,7 @@ public class Matcher {
         if (!rule.directories.isEmpty()) {
             for (GHPullRequestFileDetail changedFile : pullRequest.listFiles()) {
                 for (String directory : rule.directories) {
-                    if (changedFile.getFilename().startsWith(directory)) {
+                    if (changedFile.getFilename().startsWith(directory.endsWith("/") ? directory : directory + "/")) {
                         return true;
                     }
                 }
