@@ -182,4 +182,48 @@ public class PRRuleTitleBodyCheckTest {
                     Mockito.verify(mockedPR, Mockito.never()).comment(ArgumentMatchers.anyString());
                 });
     }
+
+    @Test
+    void testTitleBodyCheckTitleSubstringNoHit() throws IOException {
+        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+            .title("See the deep no hit").build();
+        wildflyConfigFile = """
+                wildfly:
+                  rules:
+                    - titleBody: "ee"
+                      notify: [7125767235]
+                  format:
+                    title:
+                      enabled: false
+                """;
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+            .when().payloadFromString(gitHubJson.jsonString())
+            .event(GHEvent.PULL_REQUEST)
+            .then().github(mocks -> {
+                GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
+                Mockito.verify(mockedPR, Mockito.never()).comment(ArgumentMatchers.anyString());
+            });
+    }
+
+    @Test
+    void testTitleBodyCheckTitleRegexSubstringNoHit() throws IOException {
+        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+            .title("See the deep no hit nor originated").build();
+        wildflyConfigFile = """
+                wildfly:
+                  rules:
+                    - titleBody: "ee|or"
+                      notify: [7125767235]
+                  format:
+                    title:
+                      enabled: false
+                """;
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+            .when().payloadFromString(gitHubJson.jsonString())
+            .event(GHEvent.PULL_REQUEST)
+            .then().github(mocks -> {
+                GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
+                Mockito.verify(mockedPR, Mockito.never()).comment(ArgumentMatchers.anyString());
+            });
+    }
 }
