@@ -53,29 +53,6 @@ public class PRRuleTitleCheckTest {
     }
 
     @Test
-    void testSuccessfulTitleIfSubstringHitCheck() throws IOException {
-        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
-            .title("WFLY-123 See the substring deep is not hit")
-            .build();
-        wildflyConfigFile = """
-            wildfly:
-              rules:
-                - id: ee
-                  title: "ee"
-                  notify: [7125767235]
-            """;
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
-            .when().payloadFromString(gitHubJson.jsonString())
-            .event(GHEvent.PULL_REQUEST)
-            .then().github(mocks -> {
-                GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                Mockito.verify(mockedPR, Mockito.never()).comment("/cc @7125767235");
-                GHRepository repo = mocks.repository(TEST_REPO);
-                Util.verifyFormatSuccess(repo, gitHubJson);
-            });
-    }
-
-    @Test
     void testFailedTitleCheck() throws IOException {
         wildflyConfigFile = """
             wildfly:

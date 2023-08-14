@@ -9,20 +9,20 @@ public class Matcher {
 
     public static boolean matches(GHPullRequest pullRequest, WildFlyRule rule) {
         if (Strings.isNotBlank(rule.title)) {
-            if (Patterns.find("\\b" + rule.title + "\\b", pullRequest.getTitle())) {
+            if (Patterns.find(regexWordWrap(rule.title), pullRequest.getTitle())) {
                 return true;
             }
         }
 
         if (Strings.isNotBlank(rule.body)) {
-            if (Patterns.find("\\b" + rule.body + "\\b", pullRequest.getBody())) {
+            if (Patterns.find(regexWordWrap(rule.body), pullRequest.getBody())) {
                 return true;
             }
         }
 
         if (Strings.isNotBlank(rule.titleBody)) {
-            if (Patterns.find("\\b" + rule.titleBody + "\\b", pullRequest.getTitle()) ||
-                Patterns.find("\\b" + rule.titleBody + "\\b", pullRequest.getBody())) {
+            if (Patterns.find(regexWordWrap(rule.titleBody), pullRequest.getTitle()) ||
+                Patterns.find(regexWordWrap(rule.titleBody), pullRequest.getBody())) {
                 return true;
             }
         }
@@ -38,5 +38,9 @@ public class Matcher {
         }
 
         return false;
+    }
+
+    private static String regexWordWrap(String word) {
+        return "\\b(" + word + ")\\b";
     }
 }
