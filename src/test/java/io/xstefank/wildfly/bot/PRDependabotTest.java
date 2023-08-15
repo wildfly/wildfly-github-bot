@@ -3,6 +3,7 @@ package io.xstefank.wildfly.bot;
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.model.RuntimeConstants;
+import io.xstefank.wildfly.bot.model.WildFlyConfigFile;
 import io.xstefank.wildfly.bot.utils.GitHubJson;
 import io.xstefank.wildfly.bot.utils.Util;
 import org.junit.jupiter.api.Test;
@@ -53,7 +54,8 @@ public class PRDependabotTest {
                 Util.verifyFailedFormatComment(mocks, gitHubJson, String.format("""
                         - Invalid description content
 
-                        - %s""", String.format(RuntimeConstants.DEFAULT_TITLE_MESSAGE, "\\[WFLY-\\d+]\\s+.*|WFLY-\\d+\\s+.*")));
+                        - %s""", String.format(RuntimeConstants.DEFAULT_TITLE_MESSAGE,
+                    WildFlyConfigFile.PROJECT_PATTERN_REGEX_PREFIXED.formatted("WFLY", "WFLY"))));
             });
     }
 }

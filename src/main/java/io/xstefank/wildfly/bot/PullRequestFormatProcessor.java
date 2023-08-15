@@ -147,7 +147,8 @@ public class PullRequestFormatProcessor {
         }
 
         if (wildflyConfigFile.wildfly.format.title.enabled) {
-            checks.add(new TitleCheck(new RegexDefinition(wildflyConfigFile.wildfly.getProjectPattern(), wildflyConfigFile.wildfly.format.title.message)));
+            checks.add(new TitleCheck(new RegexDefinition(wildflyConfigFile.wildfly.getProjectPatternAllowingPrefix(),
+                wildflyConfigFile.wildfly.format.title.message)));
         }
 
         if (wildflyConfigFile.wildfly.format.commit.enabled) {

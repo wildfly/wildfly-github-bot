@@ -4,6 +4,7 @@ import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.format.TitleCheck;
 import io.xstefank.wildfly.bot.model.RegexDefinition;
+import io.xstefank.wildfly.bot.model.WildFlyConfigFile;
 import io.xstefank.wildfly.bot.utils.GitHubJson;
 import io.xstefank.wildfly.bot.utils.Util;
 import org.junit.jupiter.api.Assertions;
@@ -57,7 +58,8 @@ public class PRTitleCheckTest {
             .then().github(mocks -> {
                 GHRepository repo = mocks.repository(TEST_REPO);
                 Util.verifyFormatFailure(repo, gitHubJson, "title");
-                Util.verifyFailedFormatComment(mocks, gitHubJson, "- " + String.format(DEFAULT_TITLE_MESSAGE, "\\[WFLY-\\d+]\\s+.*|WFLY-\\d+\\s+.*"));
+                Util.verifyFailedFormatComment(mocks, gitHubJson, "- " + String.format(DEFAULT_TITLE_MESSAGE,
+                    WildFlyConfigFile.PROJECT_PATTERN_REGEX_PREFIXED.formatted("WFLY", "WFLY")));
             });
     }
 
