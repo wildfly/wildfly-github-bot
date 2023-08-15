@@ -56,8 +56,8 @@ public class StartupEventTest {
     @Inject
     Event<StartupEvent> startupEvent;
 
-    // This injection causes problems with replaying events.
-    // However, it is needed for testing startup event
+    // This injection causes problems with replaying events, thus resulting
+    //  in usage of GHEvent.STAR event. However, the fired event is irrelevant
     @InjectMock
     GitHubClientProvider clientProvider;
 
