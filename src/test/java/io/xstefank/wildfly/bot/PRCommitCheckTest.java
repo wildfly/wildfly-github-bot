@@ -2,6 +2,7 @@ package io.xstefank.wildfly.bot;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
+import io.xstefank.wildfly.bot.model.WildFlyConfigFile;
 import io.xstefank.wildfly.bot.utils.GitHubJson;
 import io.xstefank.wildfly.bot.utils.Util;
 import org.junit.jupiter.api.BeforeAll;
@@ -47,7 +48,8 @@ public class PRCommitCheckTest {
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatFailure(repo, gitHubJson, "commit");
-                    Util.verifyFailedFormatComment(mocks, gitHubJson,"- " + String.format(DEFAULT_COMMIT_MESSAGE, "\\[WFLY-\\d+]\\s+.*|WFLY-\\d+\\s+.*"));
+                    Util.verifyFailedFormatComment(mocks, gitHubJson,"- " + String.format(DEFAULT_COMMIT_MESSAGE,
+                        WildFlyConfigFile.PROJECT_PATTERN_REGEX.formatted("WFLY", "WFLY")));
                 });
     }
 

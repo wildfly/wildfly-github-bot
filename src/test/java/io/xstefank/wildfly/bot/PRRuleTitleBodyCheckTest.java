@@ -226,4 +226,24 @@ public class PRRuleTitleBodyCheckTest {
                 Mockito.verify(mockedPR, Mockito.never()).comment(ArgumentMatchers.anyString());
             });
     }
+
+    @Test
+    void testTitleBodyCheckForTitleWithPrefix() throws IOException {
+        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+            .title("(30.x) WFLY-123 Test title").build();
+        wildflyConfigFile = """
+            wildfly:
+              rules:
+                - titleBody: "ee"
+            """;
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+            .when().payloadFromString(gitHubJson.jsonString())
+            .event(GHEvent.PULL_REQUEST)
+            .then().github(mocks -> {
+                GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
+                Mockito.verify(mockedPR, Mockito.never()).comment(Mockito.anyString());
+                GHRepository repo = mocks.repository(TEST_REPO);
+                Util.verifyFormatSuccess(repo, gitHubJson);
+            });
+    }
 }

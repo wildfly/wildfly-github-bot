@@ -9,27 +9,41 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.regex.Pattern;
 
+import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEFAULT_PROJECT_KEY;
+
 public class WildFlyConfigFile {
+
+    public static final String PROJECT_PATTERN_REGEX = "\\[%s-\\d+]\\s+.*|%s-\\d+\\s+.*";
+    public static final String PROJECT_PATTERN_REGEX_PREFIXED = ".*\\[%s-\\d+]\\s+.*|.*%s-\\d+\\s+.*";
 
     public WildFlyConfig wildfly;
 
     public static final class WildFlyConfig {
 
-        private Pattern projectPattern = Pattern.compile(String.format("\\[%s-\\d+]\\s+.*|%s-\\d+\\s+.*", RuntimeConstants.DEFAULT_PROJECT_KEY, RuntimeConstants.DEFAULT_PROJECT_KEY), Pattern.DOTALL);
+        private Pattern projectPattern = Pattern.compile(String.format(PROJECT_PATTERN_REGEX,
+            DEFAULT_PROJECT_KEY, DEFAULT_PROJECT_KEY), Pattern.DOTALL);
+
+        private Pattern projectPatternPrefixed = Pattern.compile(String.format(PROJECT_PATTERN_REGEX_PREFIXED,
+            DEFAULT_PROJECT_KEY, DEFAULT_PROJECT_KEY), Pattern.DOTALL);
 
         public List<WildFlyRule> rules;
 
         public Format format = new Format();
 
-        public String projectKey = RuntimeConstants.DEFAULT_PROJECT_KEY;
+        public String projectKey = DEFAULT_PROJECT_KEY;
 
         public void setProjectKey(String key) {
             projectKey = key;
-            projectPattern = Pattern.compile(String.format("\\[%s-\\d+]\\s+.*|%s-\\d+\\s+.*", key, key), Pattern.DOTALL);
+            projectPattern = Pattern.compile(String.format(PROJECT_PATTERN_REGEX, key, key), Pattern.DOTALL);
+            projectPatternPrefixed = Pattern.compile(String.format(PROJECT_PATTERN_REGEX_PREFIXED, key, key), Pattern.DOTALL);
         }
 
         public Pattern getProjectPattern() {
             return projectPattern;
+        }
+
+        public Pattern getProjectPatternAllowingPrefix() {
+            return projectPatternPrefixed;
         }
 
         public List<String> emails;
