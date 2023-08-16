@@ -1,5 +1,7 @@
 package io.xstefank.wildfly.bot.model;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import java.util.ArrayList;
@@ -16,7 +18,8 @@ public class WildFlyConfigFile {
     public static final String PROJECT_PATTERN_REGEX = "\\[%s-\\d+]\\s+.*|%s-\\d+\\s+.*";
     public static final String PROJECT_PATTERN_REGEX_PREFIXED = ".*\\[%s-\\d+]\\s+.*|.*%s-\\d+\\s+.*";
 
-    public WildFlyConfig wildfly;
+    @JsonSetter(nulls = Nulls.SKIP)
+    public WildFlyConfig wildfly = new WildFlyConfig();
 
     public static final class WildFlyConfig {
 
@@ -26,8 +29,10 @@ public class WildFlyConfigFile {
         private Pattern projectPatternPrefixed = Pattern.compile(String.format(PROJECT_PATTERN_REGEX_PREFIXED,
             DEFAULT_PROJECT_KEY, DEFAULT_PROJECT_KEY), Pattern.DOTALL);
 
-        public List<WildFlyRule> rules;
+        @JsonSetter(nulls = Nulls.SKIP)
+        public List<WildFlyRule> rules = new ArrayList<>();
 
+        @JsonSetter(nulls = Nulls.SKIP)
         public Format format = new Format();
 
         public String projectKey = DEFAULT_PROJECT_KEY;

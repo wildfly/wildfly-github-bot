@@ -35,15 +35,13 @@ public class TriagePullRequestProcessor {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
         List<String> mentions = new ArrayList<>();
 
-        if (wildflyBotConfigFile.wildfly.rules != null) {
-            for (WildFlyRule rule : wildflyBotConfigFile.wildfly.rules) {
-                if (Matcher.matches(pullRequest, rule)) {
-                    LOG.infof("Pull Request %s was matched with a rule with the id: %s.", pullRequest.getTitle(),
+        for (WildFlyRule rule : wildflyBotConfigFile.wildfly.rules) {
+            if (Matcher.matches(pullRequest, rule)) {
+                LOG.infof("Pull Request %s was matched with a rule with the id: %s.", pullRequest.getTitle(),
                         rule.id != null ? rule.id : "N/A");
-                    for (String nick : rule.notify) {
-                        if (!nick.equals(pullRequest.getUser().getLogin()) && !mentions.contains(nick)) {
-                            mentions.add(nick);
-                        }
+                for (String nick : rule.notify) {
+                    if (!nick.equals(pullRequest.getUser().getLogin()) && !mentions.contains(nick)) {
+                        mentions.add(nick);
                     }
                 }
             }
