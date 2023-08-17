@@ -1,15 +1,15 @@
 package io.xstefank.wildfly.bot.format;
 
 import io.xstefank.wildfly.bot.model.RegexDefinition;
+import io.xstefank.wildfly.bot.util.Patterns;
 import org.kohsuke.github.GHPullRequest;
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class TitleCheck implements Check {
 
-    private Pattern pattern;
-    private String message;
+    private final Pattern pattern;
+    private final String message;
 
     public TitleCheck(RegexDefinition title) {
         if (title.pattern == null) {
@@ -21,9 +21,8 @@ public class TitleCheck implements Check {
 
     @Override
     public String check(GHPullRequest pullRequest) {
-        Matcher matcher = pattern.matcher(pullRequest.getTitle());
-        if (!matcher.matches()) {
-            return String.format(message, pattern.pattern());
+        if (!Patterns.matches(pattern, pullRequest.getTitle())) {
+            return message.formatted(pattern.pattern());
         }
 
         return null;

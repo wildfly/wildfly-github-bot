@@ -1,19 +1,19 @@
 package io.xstefank.wildfly.bot.format;
 
 import io.xstefank.wildfly.bot.model.RegexDefinition;
+import io.xstefank.wildfly.bot.util.Patterns;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHPullRequestCommitDetail;
 import org.kohsuke.github.PagedIterable;
 import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 import java.io.IOException;
 
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEPENDABOT;
 
 public class CommitMessagesCheck implements Check {
 
-    private Pattern pattern;
-    private String message;
+    private final Pattern pattern;
+    private final String message;
 
     public CommitMessagesCheck(RegexDefinition description) {
         if (description.pattern == null) {
@@ -40,9 +40,7 @@ public class CommitMessagesCheck implements Check {
                         return commit.getSha() + ": Commit message is Empty";
                     }
 
-                    Matcher matcher = pattern.matcher(commitMessage);
-
-                    if (matcher.matches()) {
+                if (Patterns.matches(pattern, commitMessage)) {
                         oneMatched = true;
                         break;
                     }
@@ -50,8 +48,9 @@ public class CommitMessagesCheck implements Check {
             }
             if (!oneMatched) {
                 return String.format(this.message, pattern.pattern());
+                }
             }
-        }
+
         return null;
     }
 

@@ -3,7 +3,6 @@ package io.xstefank.wildfly.bot;
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.model.RuntimeConstants;
-import io.xstefank.wildfly.bot.model.WildFlyConfigFile;
 import io.xstefank.wildfly.bot.utils.GitHubJson;
 import io.xstefank.wildfly.bot.utils.Util;
 import org.junit.jupiter.api.Test;
@@ -15,6 +14,7 @@ import org.mockito.Mockito;
 import java.io.IOException;
 
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
+import static io.xstefank.wildfly.bot.model.RuntimeConstants.PROJECT_PATTERN_REGEX;
 import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
 import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 
@@ -55,7 +55,7 @@ public class PRDependabotTest {
                         - Invalid description content
 
                         - %s""", String.format(RuntimeConstants.DEFAULT_TITLE_MESSAGE,
-                    WildFlyConfigFile.PROJECT_PATTERN_REGEX_PREFIXED.formatted("WFLY", "WFLY"))));
+                    PROJECT_PATTERN_REGEX.formatted("WFLY"))));
             });
     }
 }

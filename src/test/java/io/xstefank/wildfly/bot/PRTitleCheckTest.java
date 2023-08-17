@@ -4,7 +4,6 @@ import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.format.TitleCheck;
 import io.xstefank.wildfly.bot.model.RegexDefinition;
-import io.xstefank.wildfly.bot.model.WildFlyConfigFile;
 import io.xstefank.wildfly.bot.utils.GitHubJson;
 import io.xstefank.wildfly.bot.utils.Util;
 import org.junit.jupiter.api.Assertions;
@@ -16,6 +15,7 @@ import java.io.IOException;
 
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEFAULT_TITLE_MESSAGE;
+import static io.xstefank.wildfly.bot.model.RuntimeConstants.PROJECT_PATTERN_REGEX;
 import static io.xstefank.wildfly.bot.utils.TestConstants.INVALID_TITLE;
 import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
 import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
@@ -59,7 +59,7 @@ public class PRTitleCheckTest {
                 GHRepository repo = mocks.repository(TEST_REPO);
                 Util.verifyFormatFailure(repo, gitHubJson, "title");
                 Util.verifyFailedFormatComment(mocks, gitHubJson, "- " + String.format(DEFAULT_TITLE_MESSAGE,
-                    WildFlyConfigFile.PROJECT_PATTERN_REGEX_PREFIXED.formatted("WFLY", "WFLY")));
+                    PROJECT_PATTERN_REGEX.formatted("WFLY")));
             });
     }
 
@@ -80,7 +80,7 @@ public class PRTitleCheckTest {
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatFailure(repo, gitHubJson, "title");
                     Util.verifyFailedFormatComment(mocks, gitHubJson, "- " + String.format(DEFAULT_TITLE_MESSAGE,
-                            WildFlyConfigFile.PROJECT_PATTERN_REGEX_PREFIXED.formatted("WFLY", "WFLY")));
+                            PROJECT_PATTERN_REGEX.formatted("WFLY", "WFLY")));
                 });
     }
 
@@ -120,7 +120,7 @@ public class PRTitleCheckTest {
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatFailure(repo, gitHubJson, "title");
                     Util.verifyFailedFormatComment(mocks, gitHubJson, "- " + String.format(DEFAULT_TITLE_MESSAGE,
-                            WildFlyConfigFile.PROJECT_PATTERN_REGEX_PREFIXED.formatted("WFLY", "WFLY")));
+                            PROJECT_PATTERN_REGEX.formatted("WFLY", "WFLY")));
                 });
     }
 
@@ -162,7 +162,7 @@ public class PRTitleCheckTest {
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatFailure(repo, gitHubJson, "title");
                     Util.verifyFailedFormatComment(mocks, gitHubJson, "- " + String.format(DEFAULT_TITLE_MESSAGE,
-                            WildFlyConfigFile.PROJECT_PATTERN_REGEX_PREFIXED.formatted("WFLY", "WFLY")));
+                            PROJECT_PATTERN_REGEX.formatted("WFLY", "WFLY")));
                 });
     }
 

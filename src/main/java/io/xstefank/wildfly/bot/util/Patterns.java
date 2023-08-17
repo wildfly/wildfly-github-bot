@@ -19,5 +19,13 @@ public class Patterns {
                 .find();
     }
 
+    public static boolean matches(Pattern pattern, String string) {
+        if (Strings.isBlank(string)) {
+            return false;
+        }
+
+        return pattern.matcher(string).find();
+    }
+
     private Patterns() {
     }}
