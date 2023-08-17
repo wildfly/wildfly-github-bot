@@ -2,7 +2,6 @@ package io.xstefank.wildfly.bot;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
-import io.xstefank.wildfly.bot.model.WildFlyConfigFile;
 import io.xstefank.wildfly.bot.utils.GitHubJson;
 import io.xstefank.wildfly.bot.utils.Util;
 import org.junit.jupiter.api.BeforeAll;
@@ -14,6 +13,7 @@ import java.io.IOException;
 
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEFAULT_COMMIT_MESSAGE;
+import static io.xstefank.wildfly.bot.model.RuntimeConstants.PROJECT_PATTERN_REGEX;
 import static io.xstefank.wildfly.bot.utils.TestConstants.INVALID_COMMIT_MESSAGE;
 import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
 import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
@@ -49,7 +49,7 @@ public class PRCommitCheckTest {
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatFailure(repo, gitHubJson, "commit");
                     Util.verifyFailedFormatComment(mocks, gitHubJson,"- " + String.format(DEFAULT_COMMIT_MESSAGE,
-                        WildFlyConfigFile.PROJECT_PATTERN_REGEX.formatted("WFLY", "WFLY")));
+                        PROJECT_PATTERN_REGEX.formatted("WFLY")));
                 });
     }
 
@@ -68,7 +68,7 @@ public class PRCommitCheckTest {
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatFailure(repo, gitHubJson, "commit");
                     Util.verifyFailedFormatComment(mocks, gitHubJson,"- " + String.format(DEFAULT_COMMIT_MESSAGE,
-                            WildFlyConfigFile.PROJECT_PATTERN_REGEX.formatted("WFLY", "WFLY")));
+                            PROJECT_PATTERN_REGEX.formatted("WFLY", "WFLY")));
                 });
     }
 

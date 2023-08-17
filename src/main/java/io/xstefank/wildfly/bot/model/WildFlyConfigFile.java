@@ -8,26 +8,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEFAULT_PROJECT_KEY;
+import static io.xstefank.wildfly.bot.model.RuntimeConstants.PROJECT_PATTERN_REGEX;
 
 public class WildFlyConfigFile {
-
-    public static final String PROJECT_PATTERN_REGEX = "\\[%s-\\d+]\\s+.*|%s-\\d+\\s+.*";
-    public static final String PROJECT_PATTERN_REGEX_PREFIXED = ".*\\[%s-\\d+]\\s+.*|.*%s-\\d+\\s+.*";
 
     @JsonSetter(nulls = Nulls.SKIP)
     public WildFlyConfig wildfly = new WildFlyConfig();
 
     public static final class WildFlyConfig {
 
-        private Pattern projectPattern = Pattern.compile(String.format(PROJECT_PATTERN_REGEX,
-            DEFAULT_PROJECT_KEY, DEFAULT_PROJECT_KEY), Pattern.DOTALL);
-
-        private Pattern projectPatternPrefixed = Pattern.compile(String.format(PROJECT_PATTERN_REGEX_PREFIXED,
-            DEFAULT_PROJECT_KEY, DEFAULT_PROJECT_KEY), Pattern.DOTALL);
+        private Pattern projectPattern = Pattern.compile(PROJECT_PATTERN_REGEX
+                .formatted(DEFAULT_PROJECT_KEY), Pattern.DOTALL);
 
         @JsonSetter(nulls = Nulls.SKIP)
         public List<WildFlyRule> rules = new ArrayList<>();
@@ -39,16 +34,11 @@ public class WildFlyConfigFile {
 
         public void setProjectKey(String key) {
             projectKey = key;
-            projectPattern = Pattern.compile(String.format(PROJECT_PATTERN_REGEX, key, key), Pattern.DOTALL);
-            projectPatternPrefixed = Pattern.compile(String.format(PROJECT_PATTERN_REGEX_PREFIXED, key, key), Pattern.DOTALL);
+            projectPattern = Pattern.compile(String.format(PROJECT_PATTERN_REGEX, key), Pattern.DOTALL);
         }
 
         public Pattern getProjectPattern() {
             return projectPattern;
-        }
-
-        public Pattern getProjectPatternAllowingPrefix() {
-            return projectPatternPrefixed;
         }
 
         public List<String> emails;

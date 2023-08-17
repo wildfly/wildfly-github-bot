@@ -2,7 +2,6 @@ package io.xstefank.wildfly.bot;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
-import io.xstefank.wildfly.bot.model.WildFlyConfigFile;
 import io.xstefank.wildfly.bot.utils.Action;
 import io.xstefank.wildfly.bot.utils.GitHubJson;
 import io.xstefank.wildfly.bot.utils.Util;
@@ -14,8 +13,9 @@ import java.io.IOException;
 
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEFAULT_TITLE_MESSAGE;
-import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
+import static io.xstefank.wildfly.bot.model.RuntimeConstants.PROJECT_PATTERN_REGEX;
 import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
+import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 
 /**
  * Tests for the Wildfly -> ProjectKey function.
@@ -65,7 +65,7 @@ public class PRFormatOverrideProjectKeyTest {
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatFailure(repo, gitHubJson, "title");
                     Util.verifyFailedFormatComment(mocks, gitHubJson, "- " + String.format(DEFAULT_TITLE_MESSAGE,
-                        WildFlyConfigFile.PROJECT_PATTERN_REGEX_PREFIXED.formatted("WFCORE", "WFCORE")));
+                        PROJECT_PATTERN_REGEX.formatted("WFCORE")));
                 });
     }
 }

@@ -32,5 +32,4 @@ public class MockedGHPullRequestProcessor {
     public static GHIssueComment[] mockEmptyComments() {
         return new GHIssueComment[]{};
     }
-
 }

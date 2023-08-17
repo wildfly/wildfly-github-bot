@@ -21,8 +21,8 @@ import java.io.IOException;
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 import static io.xstefank.wildfly.bot.helper.MockedGHPullRequestProcessor.mockEmptyComments;
 import static io.xstefank.wildfly.bot.helper.MockedGHPullRequestProcessor.processPullRequestMock;
-import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
+import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -54,11 +54,6 @@ public class PRConfigFileChangeTest {
                             - title: "test"
                             - body: "test"
                                notify: [The-non-existing-user]
-                          format:
-                            description:
-                              regexes:
-                                - pattern: "\\\\s+https://"
-                                  message: "The PR description must contain a link."
                           emails:
                             - foo@bar.baz
                             - address@email.com""",
@@ -95,14 +90,6 @@ public class PRConfigFileChangeTest {
                             - id: "another great id"
                               body: "test"
                               notify: [The-non-existing-user]
-                          format:
-                            title-check:
-                              pattern: "\\\\[TITLE-\\\\d+\\\\]\\\\s+.*|TITLE-\\\\d+\\\\s+.*"
-                              message: "Wrong content of the title"
-                            description:
-                              regexes:
-                                - pattern: "\\\\s+https://"
-                                  message: "The PR description must contain a link."
                           emails:
                             - foo@bar.baz
                             - address@email.com""",
