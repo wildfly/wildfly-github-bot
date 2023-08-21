@@ -11,6 +11,7 @@ import io.xstefank.wildfly.bot.model.RegexDefinition;
 import io.xstefank.wildfly.bot.model.RuntimeConstants;
 import io.xstefank.wildfly.bot.model.WildFlyConfigFile;
 import io.xstefank.wildfly.bot.util.GithubCommitProcessor;
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
@@ -24,6 +25,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEPENDABOT;
@@ -31,9 +33,6 @@ import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEPENDABOT;
 @RequestScoped
 public class PullRequestFormatProcessor {
 
-    private static final Logger LOG = Logger.getLogger(PullRequestFormatProcessor.class);
-
-    private static final String CHECK_NAME = "Format";
     public static final String FAILED_FORMAT_COMMENT = """
         Failed format check on this pull request:
 
@@ -41,6 +40,9 @@ public class PullRequestFormatProcessor {
 
         Please fix the format according to these guidelines.
         """;
+    private static final Logger LOG = Logger.getLogger(PullRequestFormatProcessor.class);
+    private static final String CHECK_NAME = "Format";
+    private Pattern SKIP_FORMAT_COMMAND;
 
     @Inject
     GithubCommitProcessor githubCommitProcessor;
@@ -51,13 +53,15 @@ public class PullRequestFormatProcessor {
     void verifyFormat(@PullRequest.Edited @PullRequest.Opened @PullRequest.Synchronize @PullRequest.Reopened
                       @PullRequest.ReadyForReview GHEventPayload.PullRequest pullRequestPayload,
                       @ConfigFile(RuntimeConstants.CONFIG_FILE_NAME) WildFlyConfigFile wildflyConfigFile) throws IOException {
-        if (wildflyConfigFile == null) {
-            LOG.error("No configuration file available. ");
+        GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
+
+        String message = skipPullRequestFormat(pullRequest, wildflyConfigFile);
+        if (message != null) {
+            LOG.infof("Pull Request [#%d] - %s -- Skipping format due to %s", pullRequest.getNumber(), pullRequest.getTitle(), message);
             return;
         }
-        List<Check> checks = initializeChecks(wildflyConfigFile);
 
-        GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
+        List<Check> checks = initializeChecks(wildflyConfigFile);
         Map<String, String> errors = new HashMap<>();
 
         for (Check check : checks) {
@@ -75,6 +79,11 @@ public class PullRequestFormatProcessor {
             formatComment(pullRequest, errors.values());
         }
 
+    }
+
+    @PostConstruct
+    void construct() {
+        SKIP_FORMAT_COMMAND = Pattern.compile("@%s skip format".formatted(wildFlyBotConfig.githubName()), Pattern.DOTALL | Pattern.LITERAL);
     }
 
     void postDependabotInfo(@PullRequest.Opened GHEventPayload.PullRequest pullRequestPayload,
@@ -160,5 +169,21 @@ public class PullRequestFormatProcessor {
         }
 
         return checks;
+    }
+
+    private String skipPullRequestFormat(GHPullRequest pullRequest, WildFlyConfigFile wildFlyConfigFile) throws IOException {
+        if (SKIP_FORMAT_COMMAND.matcher(pullRequest.getBody()).find()) {
+            return "skip format command found";
+        }
+
+        if (wildFlyConfigFile == null) {
+            return "no configuration file found";
+        }
+
+        if (pullRequest.isDraft()) {
+            return "pull request being a draft";
+        }
+
+        return null;
     }
 }

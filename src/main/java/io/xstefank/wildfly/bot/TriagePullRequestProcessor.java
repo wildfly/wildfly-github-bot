@@ -26,13 +26,14 @@ public class TriagePullRequestProcessor {
 
     void onPullRequestOpened(@PullRequest.Opened GHEventPayload.PullRequest pullRequestPayload,
                              @ConfigFile(RuntimeConstants.CONFIG_FILE_NAME) WildFlyConfigFile wildflyBotConfigFile) throws IOException {
+        GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
 
-        if (wildflyBotConfigFile == null) {
-            LOG.error("No configuration file available.");
+        String message = skipPullRequestRules(pullRequest, wildflyBotConfigFile);
+        if (message != null) {
+            LOG.infof("Pull Request [#%d] - %s -- Skipping format due to %s", pullRequest.getNumber(), pullRequest.getTitle(), message);
             return;
         }
 
-        GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
         List<String> mentions = new ArrayList<>();
 
         for (WildFlyRule rule : wildflyBotConfigFile.wildfly.rules) {
@@ -56,6 +57,18 @@ public class TriagePullRequestProcessor {
             }
         }
 
+    }
+
+    private String skipPullRequestRules(GHPullRequest pullRequest, WildFlyConfigFile wildflyBotConfigFile) throws IOException {
+        if (wildflyBotConfigFile == null) {
+            return "no configuration file found";
+        }
+
+        if (pullRequest.isDraft()) {
+            return "pull request being a draft";
+        }
+
+        return null;
     }
 }
 
