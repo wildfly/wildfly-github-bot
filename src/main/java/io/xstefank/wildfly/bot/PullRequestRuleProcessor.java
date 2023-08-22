@@ -2,11 +2,11 @@ package io.xstefank.wildfly.bot;
 
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.event.PullRequest;
-import io.xstefank.wildfly.bot.config.WildFlyBotConfig;
 import io.xstefank.wildfly.bot.model.RuntimeConstants;
 import io.xstefank.wildfly.bot.model.WildFlyConfigFile;
 import io.xstefank.wildfly.bot.util.GithubProcessor;
 import io.xstefank.wildfly.bot.util.Matcher;
+import io.xstefank.wildfly.bot.util.PullRequestLogger;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
@@ -21,10 +21,8 @@ import java.util.Set;
 
 @RequestScoped
 public class PullRequestRuleProcessor {
-    private static final Logger LOG = Logger.getLogger(PullRequestRuleProcessor.class);
-
-    @Inject
-    WildFlyBotConfig wildFlyBotConfig;
+    private static final Logger LOG_DELEGATE = Logger.getLogger(PullRequestRuleProcessor.class);
+    private final PullRequestLogger LOG = new PullRequestLogger(LOG_DELEGATE);
 
     @Inject
     GithubProcessor githubProcessor;
@@ -34,10 +32,12 @@ public class PullRequestRuleProcessor {
                               @ConfigFile(RuntimeConstants.CONFIG_FILE_NAME) WildFlyConfigFile wildflyBotConfigFile,
                               GitHub gitHub) throws IOException {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
+        LOG.setPullRequest(pullRequest);
+        githubProcessor.LOG.setPullRequest(pullRequest);
 
         String message = githubProcessor.skipPullRequest(pullRequest, wildflyBotConfigFile);
         if (message != null) {
-            LOG.infof("Pull Request [#%d] - %s -- Skipping format due to %s", pullRequest.getNumber(), pullRequest.getTitle(), message);
+            LOG.infof("Skipping format due to %s", message);
             return;
         }
 

@@ -11,13 +11,13 @@ import io.xstefank.wildfly.bot.model.RegexDefinition;
 import io.xstefank.wildfly.bot.model.RuntimeConstants;
 import io.xstefank.wildfly.bot.model.WildFlyConfigFile;
 import io.xstefank.wildfly.bot.util.GithubProcessor;
+import io.xstefank.wildfly.bot.util.PullRequestLogger;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHIssueComment;
 import org.kohsuke.github.GHPullRequest;
-import org.kohsuke.github.GitHub;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -39,7 +39,8 @@ public class PullRequestFormatProcessor {
 
         Please fix the format according to these guidelines.
         """;
-    private static final Logger LOG = Logger.getLogger(PullRequestFormatProcessor.class);
+    private static final Logger LOG_DELEGATE = Logger.getLogger(PullRequestFormatProcessor.class);
+    private final PullRequestLogger LOG = new PullRequestLogger(LOG_DELEGATE);
     private static final String CHECK_NAME = "Format";
 
     @Inject
@@ -50,13 +51,14 @@ public class PullRequestFormatProcessor {
 
     void pullRequestFormatCheck(@PullRequest.Edited @PullRequest.Opened @PullRequest.Synchronize @PullRequest.Reopened
                              @PullRequest.ReadyForReview GHEventPayload.PullRequest pullRequestPayload,
-                             @ConfigFile(RuntimeConstants.CONFIG_FILE_NAME) WildFlyConfigFile wildflyConfigFile,
-                             GitHub gitHub) throws IOException {
+                             @ConfigFile(RuntimeConstants.CONFIG_FILE_NAME) WildFlyConfigFile wildflyConfigFile) throws IOException {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
+        LOG.setPullRequest(pullRequest);
+        githubProcessor.LOG.setPullRequest(pullRequest);
 
         String message = githubProcessor.skipPullRequest(pullRequest, wildflyConfigFile);
         if (message != null) {
-            LOG.infof("Pull Request [#%d] - %s -- Skipping format due to %s", pullRequest.getNumber(), pullRequest.getTitle(), message);
+            LOG.infof("Skipping format due to %s", message);
             return;
         }
 
@@ -86,12 +88,15 @@ public class PullRequestFormatProcessor {
     void postDependabotInfo(@PullRequest.Opened GHEventPayload.PullRequest pullRequestPayload,
                             @ConfigFile(RuntimeConstants.CONFIG_FILE_NAME) WildFlyConfigFile wildflyConfigFile) throws IOException {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
+        LOG.setPullRequest(pullRequest);
+        githubProcessor.LOG.setPullRequest(pullRequest);
+
         if (pullRequest.getUser().getLogin().equals(DEPENDABOT)) {
-            LOG.infof("Dependabot Pull Request [#%d] detected.", pullRequest.getNumber());
+            LOG.infof("Dependabot detected.");
             String comment = ("WildFly Bot recognized this PR as dependabot dependency update. Please create a %s issue" +
                 " and add its ID to the title and its link to the description.").formatted(wildflyConfigFile.wildfly.projectKey);
             if (wildFlyBotConfig.isDryRun()) {
-                LOG.infof("Pull request #%d - Add new comment %s", pullRequest.getNumber(), comment);
+                LOG.infof("Add new comment %s", comment);
             } else {
                 pullRequest.comment(comment);
             }
@@ -110,7 +115,7 @@ public class PullRequestFormatProcessor {
                 && comment.getBody().startsWith("Failed format check")) {
                 if (errors == null) {
                     if (wildFlyBotConfig.isDryRun()) {
-                        LOG.infof("Pull request #%d - Delete comment %s", pullRequest.getNumber(), comment);
+                        LOG.infof("Delete comment %s", comment);
                     } else {
                         comment.delete();
                     }
@@ -123,8 +128,7 @@ public class PullRequestFormatProcessor {
                     .collect(Collectors.joining("\n\n")));
 
                 if (wildFlyBotConfig.isDryRun()) {
-                    LOG.infof("Pull request #%d - Update comment \"%s\" to \"%s\"", pullRequest.getNumber(),
-                        comment.getBody(), updatedBody);
+                    LOG.infof("Update comment \"%s\" to \"%s\"", comment.getBody(), updatedBody);
                 } else {
                     comment.update(updatedBody);
                 }
@@ -138,7 +142,7 @@ public class PullRequestFormatProcessor {
                 .map("- %s"::formatted)
                 .collect(Collectors.joining("\n\n")));
             if (wildFlyBotConfig.isDryRun()) {
-                LOG.infof("Pull request #%d - Add new comment %s", pullRequest.getNumber(), updatedBody);
+                LOG.infof("Add new comment %s", updatedBody);
             } else {
                 pullRequest.comment(updatedBody);
             }
