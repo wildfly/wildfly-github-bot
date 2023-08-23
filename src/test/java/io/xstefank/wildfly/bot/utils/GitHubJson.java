@@ -22,6 +22,7 @@ public class GitHubJson {
     private static final String TITLE = "title";
     private static final String USER = "user";
     private static final String LOGIN = "login";
+    private static final String NUMBER = "number";
 
     private static JsonNode file;
 
@@ -50,6 +51,10 @@ public class GitHubJson {
 
     public long id() {
         return file.get(PULL_REQUEST).get(ID).longValue();
+    }
+
+    public long number() {
+        return file.get(NUMBER).longValue();
     }
 
     public String status() {

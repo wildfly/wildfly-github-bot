@@ -14,6 +14,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestExtension;
 import io.xstefank.wildfly.bot.model.RuntimeConstants;
 import io.xstefank.wildfly.bot.utils.GitHubJson;
+import io.xstefank.wildfly.bot.utils.MockedContext;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import org.jboss.logmanager.Level;
@@ -43,7 +44,10 @@ import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
 import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -124,8 +128,9 @@ public class StartupEventTest {
             when(mockIterator.next()).thenReturn(repo);
             when(mockIterator.hasNext()).thenReturn(true).thenReturn(false);
 
-            startupEvent.fire(new StartupEvent());
+            MockedContext.builder(1371642823).mock(mocks);
 
+            startupEvent.fire(new StartupEvent());
         }
     }
 
@@ -261,5 +266,21 @@ public class StartupEventTest {
         Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
                 logRecord -> logRecord.getMessage().equals(
                         "Unable to correctly start %s for following installation id [%d]")));
+    }
+
+    @Test
+    public void testCreateRebaseThisLabel() throws IOException {
+        given().github(new CustomGithubMockSetup("""
+                wildfly:
+                  rules:
+                    - title: "Test"
+                      id: "test"
+                """))
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.STAR)
+                .then().github(mocks -> {
+                    GHRepository repository = mocks.repository("xstefank/wildfly");
+                    verify(repository).createLabel(eq(RuntimeConstants.LABEL_NEEDS_REBASE), anyString());
+                });
     }
 }

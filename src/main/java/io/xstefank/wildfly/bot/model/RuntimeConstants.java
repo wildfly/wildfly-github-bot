@@ -10,6 +10,8 @@ public class RuntimeConstants {
 
     public static final String DEFAULT_PROJECT_KEY = "WFLY";
 
+    public static final String LABEL_NEEDS_REBASE = "rebase-this";
+
     public static final String DEPENDABOT = "dependabot[bot]";
 
     public static final String PROJECT_PATTERN_REGEX = "%s-\\d+";

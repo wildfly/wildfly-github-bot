@@ -53,7 +53,7 @@ public class PRDescriptionCheckTest {
                 .description(INVALID_DESCRIPTION)
                 .build();
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
             .when().payloadFromString(gitHubJson.jsonString())
             .event(GHEvent.PULL_REQUEST)
             .then().github(mocks -> {
@@ -76,7 +76,7 @@ public class PRDescriptionCheckTest {
                 .description(INVALID_DESCRIPTION)
                 .build();
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -99,7 +99,7 @@ public class PRDescriptionCheckTest {
                 """;
         gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON).build();
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
             .when().payloadFromString(gitHubJson.jsonString())
             .event(GHEvent.PULL_REQUEST)
             .then().github(mocks -> {
@@ -117,7 +117,7 @@ public class PRDescriptionCheckTest {
                 """;
         gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON).build();
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -145,7 +145,7 @@ public class PRDescriptionCheckTest {
                         """)
                 .build();
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -170,7 +170,7 @@ public class PRDescriptionCheckTest {
                 .description("JIRA")
                 .build();
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -196,7 +196,7 @@ public class PRDescriptionCheckTest {
                 .description("https://issues.redhat.com/browse/WFLY-123")
                 .build();
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -222,7 +222,7 @@ public class PRDescriptionCheckTest {
                 .description(INVALID_DESCRIPTION)
                 .build();
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -246,7 +246,7 @@ public class PRDescriptionCheckTest {
                 """;
         gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON).build();
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {

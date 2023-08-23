@@ -41,7 +41,7 @@ public class PRRuleTitleCheckTest {
                   title: "Title"
                   notify: [7125767235]
             """;
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -61,7 +61,7 @@ public class PRRuleTitleCheckTest {
                   title: "NonValidTitle"
                   notify: [7125767235]
             """;
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -82,7 +82,7 @@ public class PRRuleTitleCheckTest {
                   notify: [7125767235]
             """;
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {

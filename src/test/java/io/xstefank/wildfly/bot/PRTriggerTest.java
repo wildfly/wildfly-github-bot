@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHRepository;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 import java.io.IOException;
@@ -176,12 +177,14 @@ public class PRTriggerTest {
      */
     private void checkValidRun(GitHubJson gitHubJson, Action action) throws IOException {
         Assertions.assertEquals(action.getValue().toLowerCase(), gitHubJson.status());
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatSuccess(repo, gitHubJson);
+                    Mockito.verify(repo, Mockito.atMostOnce()).listLabels();
+                    Mockito.verify(repo, Mockito.atMostOnce()).createLabel(ArgumentMatchers.anyString(), ArgumentMatchers.anyString());
                     Mockito.verifyNoMoreInteractions(repo);
                 });
     }
@@ -194,7 +197,7 @@ public class PRTriggerTest {
      */
     private void checkNoInteraction(GitHubJson gitHubJson, Action action) throws IOException {
         Assertions.assertEquals(action.getValue().toLowerCase(), gitHubJson.status());
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, null))
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {

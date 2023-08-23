@@ -4,6 +4,7 @@ import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.utils.Action;
 import io.xstefank.wildfly.bot.utils.GitHubJson;
+import io.xstefank.wildfly.bot.utils.MockedContext;
 import io.xstefank.wildfly.bot.utils.Util;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
@@ -29,7 +30,7 @@ public class PRFormatOverrideProjectKeyTest {
                   projectKey: WFCORE
                 """;
     private static GitHubJson gitHubJson;
-
+    private static MockedContext mockedContext;
 
     @Test
     public void testOverridingProjectKeyCorrectTitle() throws IOException {
@@ -37,10 +38,11 @@ public class PRFormatOverrideProjectKeyTest {
                 .action(Action.EDITED)
                 .title("WFCORE-00000 title")
                 .build();
-        String commitMessage = "[WFCORE-123] Valid commit message";
+        mockedContext = MockedContext.builder(gitHubJson.id())
+                .commit("[WFCORE-123] Valid commit message");
 
         given()
-                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, commitMessage))
+                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -53,12 +55,12 @@ public class PRFormatOverrideProjectKeyTest {
     public void testOverridingProjectKeyIncorrectTitle() throws IOException {
         gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
                 .action(Action.EDITED)
-                .title("WFLY-00000 title")
                 .build();
-        String commitMessage = "[WFCORE-123] Valid commit message";
+        mockedContext = MockedContext.builder(gitHubJson.id())
+                .commit("[WFCORE-123] Valid commit message");
 
         given()
-                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, commitMessage))
+                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
