@@ -5,12 +5,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkiverse.githubapp.event.PullRequest;
 import io.quarkiverse.githubapp.runtime.UtilsProducer;
 import io.quarkiverse.githubapp.runtime.github.GitHubConfigFileProviderImpl;
-import io.quarkus.logging.Log;
 import io.xstefank.wildfly.bot.model.RuntimeConstants;
 import io.xstefank.wildfly.bot.model.WildFlyConfigFile;
 import io.xstefank.wildfly.bot.util.GithubProcessor;
+import io.xstefank.wildfly.bot.util.PullRequestLogger;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
+import org.jboss.logging.Logger;
 import org.kohsuke.github.GHContent;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHFileNotFoundException;
@@ -32,6 +33,8 @@ import java.util.stream.Collectors;
 public class ConfigFileChangeProcessor {
 
     private static final String CHECK_NAME = "Configuration File";
+    private static final Logger LOG_DELEGATE = Logger.getLogger(ConfigFileChangeProcessor.class);
+    private final PullRequestLogger LOG = new PullRequestLogger(LOG_DELEGATE);
 
     @Inject
     GitHubConfigFileProviderImpl fileProvider;
@@ -45,6 +48,8 @@ public class ConfigFileChangeProcessor {
 
     void onFileChanged(@PullRequest.Opened @PullRequest.Edited @PullRequest.Synchronize @PullRequest.Reopened @PullRequest.ReadyForReview GHEventPayload.PullRequest pullRequestPayload, GitHub gitHub) throws IOException {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
+        LOG.setPullRequest(pullRequest);
+
         GHRepository repository = pullRequest.getRepository();
         for (GHPullRequestFileDetail changedFile : pullRequest.listFiles()) {
             if (changedFile.getFilename().equals(fileProvider.getFilePath(RuntimeConstants.CONFIG_FILE_NAME))) {
@@ -58,19 +63,18 @@ public class ConfigFileChangeProcessor {
                         List<String> problems = validateFile(file.get(), repository);
                         if (problems.isEmpty()) {
                             githubProcessor.commitStatusSuccess(pullRequest, CHECK_NAME, "Valid");
-                            Log.debug("Configuration File check successful");
+                            LOG.debug("Configuration File check successful");
                         } else {
                             githubProcessor.commitStatusError(pullRequest, CHECK_NAME, "Rule is missing an id or multiple rules have the same id.");
-                            Log.warnf("Configuration File check unsuccessful. %s", String.join(",", problems));
+                            LOG.warnf("Configuration File check unsuccessful. %s", String.join(",", problems));
                         }
                     } else {
                         String message = "Configuration File check unsuccessful. Unable to correctly map loaded file to YAML.";
                         githubProcessor.commitStatusError(pullRequest, CHECK_NAME, message);
-                        Log.debugf(message);
+                        LOG.debugf(message);
                     }
                 } catch (JsonProcessingException e) {
-                    Log.errorf(e, "Unable to parse the configuration file from the repository %s on the following Pull Request [%s]: %s",
-                        pullRequest.getHead().getRepository().getFullName(), pullRequest.getId(), pullRequest.getTitle());
+                    LOG.errorf(e, "Unable to parse the configuration file from the repository %s", pullRequest.getHead().getRepository().getFullName());
                     githubProcessor.commitStatusError(pullRequest, CHECK_NAME, "Unable to parse the configuration file. " +
                         "Make sure it can be loaded to model at https://github.com/xstefank/wildfly-github-bot/blob/main/CONFIGURATION.yml");
                 } catch (IOException e) {
@@ -114,7 +118,7 @@ public class ConfigFileChangeProcessor {
                         if (e instanceof GHFileNotFoundException ||
                                 (e instanceof HttpException && !e.getMessage().startsWith("Server returned HTTP response code: 200, message: 'null' for URL: https://api.github.com/repos/"))) {
                             problems.add("Rule [" + rule.toPrettyString() + "] has the following non-existing directory specified: " + directory);
-                            Log.debugf(e, "Exception on directories check caught");
+                            LOG.debugf(e, "Exception on directories check caught");
                         }
                     }
                 }

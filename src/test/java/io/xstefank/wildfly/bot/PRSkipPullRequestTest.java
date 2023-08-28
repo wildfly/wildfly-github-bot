@@ -56,7 +56,6 @@ public class PRSkipPullRequestTest {
                     verify(mocks.pullRequest(gitHubJson.id())).listFiles();
                     // Following invocations are used for logging
                     verify(mocks.pullRequest(gitHubJson.id()), times(2)).getNumber();
-                    verify(mocks.pullRequest(gitHubJson.id()), times(2)).getTitle();
                     verifyNoMoreInteractions(mocks.pullRequest(gitHubJson.id()));
                 });
     }
@@ -74,9 +73,6 @@ public class PRSkipPullRequestTest {
                     verify(mocks.pullRequest(gitHubJson.id()), times(2)).getBody();
                     verify(mocks.pullRequest(gitHubJson.id())).listFiles();
                     verify(mocks.pullRequest(gitHubJson.id()), times(2)).isDraft();
-                    // Following invocations are used for logging
-                    verify(mocks.pullRequest(gitHubJson.id()), times(2)).getNumber();
-                    verify(mocks.pullRequest(gitHubJson.id()), times(2)).getTitle();
                     verifyNoMoreInteractions(mocks.pullRequest(gitHubJson.id()));
                 });
     }

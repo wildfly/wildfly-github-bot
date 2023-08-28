@@ -86,8 +86,8 @@ public class PRReviewAssignmentTest {
                     Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.never())
                             .comment(ArgumentMatchers.anyString());
                     Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
-                            logRecord -> logRecord.getMessage().equals(
-                                    "Following people are not collaborators in this repository [%s] and can not be requested for PR review: %s")));
+                            logRecord -> logRecord.getMessage().contains(
+                                    "Following people are not collaborators in this repository [wildfly] and can not be requested for PR review: [user1, user2]")));
 
                     List<Mail> sent = mailbox.getMailsSentTo("foo@bar.baz");
                     Assertions.assertEquals(sent.size(), 1);
@@ -135,8 +135,8 @@ public class PRReviewAssignmentTest {
                             .map(GHPerson::getLogin)
                             .toList(), Matchers.containsInAnyOrder("user1"));
                     Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
-                            logRecord -> logRecord.getMessage().equals(
-                                    "Following people are not collaborators in this repository [%s] and can not be requested for PR review: %s")));
+                            logRecord -> logRecord.getMessage().contains(
+                                    "Following people are not collaborators in this repository [wildfly] and can not be requested for PR review: [user2]")));
 
                     List<Mail> sent = mailbox.getMailsSentTo("foo@bar.baz");
                     Assertions.assertEquals(sent.size(), 1);

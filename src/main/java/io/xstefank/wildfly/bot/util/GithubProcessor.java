@@ -47,7 +47,8 @@ public class GithubProcessor {
         ---
         This is generated message, please do not respond.""";
 
-    private static final Logger LOG = Logger.getLogger(GithubProcessor.class);
+    private static final Logger LOG_DELEGATE = Logger.getLogger(GithubProcessor.class);
+    public final PullRequestLogger LOG = new PullRequestLogger(LOG_DELEGATE);
     private Pattern SKIP_FORMAT_COMMAND;
 
     @Inject
