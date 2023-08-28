@@ -49,7 +49,7 @@ public class PRLabelTest {
         mockedContext = MockedContext.builder(gitHubJson.id())
                 .labels(Set.of("label1"));
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-               .when().payloadFromString(gitHubJson.jsonString())
+                .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     Mockito.verify(mocks.pullRequest(gitHubJson.id())).addLabels("label1");
@@ -97,7 +97,8 @@ public class PRLabelTest {
                     Mockito.verify(repository).createLabel(ArgumentMatchers.eq("label3"), ArgumentMatchers.anyString());
                     final ArgumentCaptor<String[]> argumentCaptor = ArgumentCaptor.forClass(String[].class);
                     Mockito.verify(mocks.pullRequest(gitHubJson.id())).addLabels(argumentCaptor.capture());
-                    MatcherAssert.assertThat(Arrays.asList(argumentCaptor.getValue()), Matchers.containsInAnyOrder("label1", "label2", "label3", "label4"));
+                    MatcherAssert.assertThat(Arrays.asList(argumentCaptor.getValue()),
+                            Matchers.containsInAnyOrder("label1", "label2", "label3", "label4"));
                 });
     }
 
@@ -112,7 +113,8 @@ public class PRLabelTest {
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.never()).addLabels(ArgumentMatchers.anyString()));
+                .then().github(mocks -> Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.never())
+                        .addLabels(ArgumentMatchers.anyString()));
     }
 
     @Test
@@ -124,14 +126,15 @@ public class PRLabelTest {
                       title: WFLY
                        """;
         mockedContext = MockedContext.builder(gitHubJson.id())
-                        .mergeable(Boolean.FALSE);
+                .mergeable(Boolean.FALSE);
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     final ArgumentCaptor<String[]> argumentCaptor = ArgumentCaptor.forClass(String[].class);
                     Mockito.verify(mocks.pullRequest(gitHubJson.id())).addLabels(argumentCaptor.capture());
-                    MatcherAssert.assertThat(Arrays.asList(argumentCaptor.getValue()), Matchers.containsInAnyOrder(RuntimeConstants.LABEL_NEEDS_REBASE));
+                    MatcherAssert.assertThat(Arrays.asList(argumentCaptor.getValue()),
+                            Matchers.containsInAnyOrder(RuntimeConstants.LABEL_NEEDS_REBASE));
                 });
     }
 }

@@ -15,14 +15,16 @@ import java.io.IOException;
  */
 public class Util {
 
-    public static void mockRepo(GitHubMockSetupContext mocks, String wildflyConfigFile, GitHubJson gitHubJson) throws IOException {
+    public static void mockRepo(GitHubMockSetupContext mocks, String wildflyConfigFile, GitHubJson gitHubJson)
+            throws IOException {
         mocks.configFile(RuntimeConstants.CONFIG_FILE_NAME).fromString(wildflyConfigFile);
         MockedContext context = MockedContext.builder(gitHubJson.id())
                 .commit("[WFLY-123] Valid commit message");
         context.mock(mocks);
     }
 
-    public static void mockRepo(GitHubMockSetupContext mocks, String wildflyConfigFile, GitHubJson gitHubJson, MockedContext context) throws IOException {
+    public static void mockRepo(GitHubMockSetupContext mocks, String wildflyConfigFile, GitHubJson gitHubJson,
+            MockedContext context) throws IOException {
         mocks.configFile(RuntimeConstants.CONFIG_FILE_NAME).fromString(wildflyConfigFile);
         context.mock(mocks);
     }
@@ -37,7 +39,9 @@ public class Util {
                 GHCommitState.ERROR, "", "Failed checks: " + failedChecks, "Format");
     }
 
-    public static void verifyFailedFormatComment(GitHubMockVerificationContext mocks, GitHubJson gitHubJson, String comment) throws IOException {
-        Mockito.verify(mocks.pullRequest(gitHubJson.id())).comment(PullRequestFormatProcessor.FAILED_FORMAT_COMMENT.formatted(comment));
+    public static void verifyFailedFormatComment(GitHubMockVerificationContext mocks, GitHubJson gitHubJson, String comment)
+            throws IOException {
+        Mockito.verify(mocks.pullRequest(gitHubJson.id()))
+                .comment(PullRequestFormatProcessor.FAILED_FORMAT_COMMENT.formatted(comment));
     }
 }

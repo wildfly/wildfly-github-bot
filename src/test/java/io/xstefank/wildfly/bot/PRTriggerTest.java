@@ -184,7 +184,8 @@ public class PRTriggerTest {
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatSuccess(repo, gitHubJson);
                     Mockito.verify(repo, Mockito.atMostOnce()).listLabels();
-                    Mockito.verify(repo, Mockito.atMostOnce()).createLabel(ArgumentMatchers.anyString(), ArgumentMatchers.anyString());
+                    Mockito.verify(repo, Mockito.atMostOnce()).createLabel(ArgumentMatchers.anyString(),
+                            ArgumentMatchers.anyString());
                     Mockito.verifyNoMoreInteractions(repo);
                 });
     }

@@ -38,31 +38,31 @@ public class PRTitleCheckTest {
         RegexDefinition regexDefinition = new RegexDefinition();
 
         IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
-            () -> new TitleCheck(regexDefinition));
+                () -> new TitleCheck(regexDefinition));
         Assertions.assertEquals("Input argument cannot be null", thrown.getMessage());
     }
 
     @Test
     void incorrectTitleCheckFailTest() throws IOException {
         wildflyConfigFile = """
-            wildfly:
-              format:
-                title:
-                  enabled: true
-            """;
+                wildfly:
+                  format:
+                    title:
+                      enabled: true
+                """;
         gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
                 .title(INVALID_TITLE)
                 .build();
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-            .when().payloadFromString(gitHubJson.jsonString())
-            .event(GHEvent.PULL_REQUEST)
-            .then().github(mocks -> {
-                GHRepository repo = mocks.repository(TEST_REPO);
-                Util.verifyFormatFailure(repo, gitHubJson, "title");
-                Util.verifyFailedFormatComment(mocks, gitHubJson, "- " + String.format(DEFAULT_TITLE_MESSAGE,
-                    PROJECT_PATTERN_REGEX.formatted("WFLY")));
-            });
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Util.verifyFormatFailure(repo, gitHubJson, "title");
+                    Util.verifyFailedFormatComment(mocks, gitHubJson, "- " + String.format(DEFAULT_TITLE_MESSAGE,
+                            PROJECT_PATTERN_REGEX.formatted("WFLY")));
+                });
     }
 
     @Test
@@ -191,30 +191,30 @@ public class PRTitleCheckTest {
     @Test
     void correctTitleCheckSuccessTest() throws IOException {
         wildflyConfigFile = """
-            wildfly:
-              format:
-                title:
-                  enabled: true
-            """;
+                wildfly:
+                  format:
+                    title:
+                      enabled: true
+                """;
         gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON).build();
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-            .when().payloadFromString(gitHubJson.jsonString())
-            .event(GHEvent.PULL_REQUEST)
-            .then().github(mocks -> {
-                GHRepository repo = mocks.repository(TEST_REPO);
-                Util.verifyFormatSuccess(repo, gitHubJson);
-            });
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Util.verifyFormatSuccess(repo, gitHubJson);
+                });
     }
 
     @Test
     void testDisabledTitleCheck() throws IOException {
         wildflyConfigFile = """
-            wildfly:
-              format:
-                title:
-                  enabled: false
-            """;
+                wildfly:
+                  format:
+                    title:
+                      enabled: false
+                """;
         gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
                 .title(INVALID_TITLE)
                 .build();

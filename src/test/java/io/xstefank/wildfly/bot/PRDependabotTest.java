@@ -31,31 +31,31 @@ public class PRDependabotTest {
     @Test
     void testDependabotPR() throws IOException {
         wildflyConfigFile = """
-            wildfly:
-                  format:
-                    description:
-                      regexes:
-                        - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
-            """;
+                wildfly:
+                      format:
+                        description:
+                          regexes:
+                            - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
+                """;
         gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
-            .userLogin(RuntimeConstants.DEPENDABOT)
-            .title("Bump some version from x.y to x.y+1")
-            .description("Very detailed description of this upgrade.")
-            .build();
+                .userLogin(RuntimeConstants.DEPENDABOT)
+                .title("Bump some version from x.y to x.y+1")
+                .description("Very detailed description of this upgrade.")
+                .build();
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-            .when().payloadFromString(gitHubJson.jsonString())
-            .event(GHEvent.PULL_REQUEST)
-            .then().github(mocks -> {
-                GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
-                Mockito.verify(mockedPR).comment("WildFly Bot recognized this PR as dependabot dependency update. " +
-                    "Please create a WFLY issue and add its ID to the title and its link to the description.");
-                GHRepository repo = mocks.repository(TEST_REPO);
-                Util.verifyFormatFailure(repo, gitHubJson, "description, title");
-                Util.verifyFailedFormatComment(mocks, gitHubJson, String.format("""
-                        - Invalid description content
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
+                    Mockito.verify(mockedPR).comment("WildFly Bot recognized this PR as dependabot dependency update. " +
+                            "Please create a WFLY issue and add its ID to the title and its link to the description.");
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Util.verifyFormatFailure(repo, gitHubJson, "description, title");
+                    Util.verifyFailedFormatComment(mocks, gitHubJson, String.format("""
+                            - Invalid description content
 
-                        - %s""", String.format(RuntimeConstants.DEFAULT_TITLE_MESSAGE,
-                    PROJECT_PATTERN_REGEX.formatted("WFLY"))));
-            });
+                            - %s""", String.format(RuntimeConstants.DEFAULT_TITLE_MESSAGE,
+                            PROJECT_PATTERN_REGEX.formatted("WFLY"))));
+                });
     }
 }

@@ -43,18 +43,18 @@ public class PRRuleDirectoryHitTest {
     @Test
     void testDirectoriesNotifyNewFileInDiff() throws IOException {
         wildflyConfigFile = """
-            wildfly:
-              rules:
-                - id: "Directory Test"
-                  directories:
-                   - appclient
-                  notify: [7125767235]
-              format:
-                commit:
-                  enabled: false
-                title:
-                  enabled: false
-            """;
+                wildfly:
+                  rules:
+                    - id: "Directory Test"
+                      directories:
+                       - appclient
+                      notify: [7125767235]
+                  format:
+                    commit:
+                      enabled: false
+                    title:
+                      enabled: false
+                """;
         mockedContext = MockedContext.builder(gitHubJson.id())
                 .collaborators("7125767235")
                 .prFiles("appclient/test.txt",
@@ -75,13 +75,13 @@ public class PRRuleDirectoryHitTest {
     @Test
     void testDirectoriesNotifyChangeInSubdirectoryDiff() throws IOException {
         wildflyConfigFile = """
-            wildfly:
-              rules:
-                - id: "Directory Test"
-                  directories:
-                   - microprofile/health-smallrye
-                  notify: [7125767235]
-            """;
+                wildfly:
+                  rules:
+                    - id: "Directory Test"
+                      directories:
+                       - microprofile/health-smallrye
+                      notify: [7125767235]
+                """;
         mockedContext = MockedContext.builder(gitHubJson.id())
                 .collaborators("7125767235")
                 .prFiles("appclient/test.txt",
@@ -107,13 +107,13 @@ public class PRRuleDirectoryHitTest {
     @Test
     void testDirectoriesNotifyChangeInSubdirectoryOfConfiguredDirectoryDiff() throws IOException {
         wildflyConfigFile = """
-            wildfly:
-              rules:
-                - id: "Directory Test"
-                  directories:
-                   - testsuite/integration
-                  notify: [7125767235]
-            """;
+                wildfly:
+                  rules:
+                    - id: "Directory Test"
+                      directories:
+                       - testsuite/integration
+                      notify: [7125767235]
+                """;
         mockedContext = MockedContext.builder(gitHubJson.id())
                 .collaborators("7125767235")
                 .prFiles("appclient/test.txt",
@@ -139,13 +139,13 @@ public class PRRuleDirectoryHitTest {
     @Test
     void testDirectoriesNotifyNoHitInDiff() throws IOException {
         wildflyConfigFile = """
-            wildfly:
-              rules:
-                - id: "Directory Test"
-                  directories:
-                   - transactions
-                  notify: [7125767235]
-            """;
+                wildfly:
+                  rules:
+                    - id: "Directory Test"
+                      directories:
+                       - transactions
+                      notify: [7125767235]
+                """;
         mockedContext = MockedContext.builder(gitHubJson.id())
                 .prFiles("appclient/test.txt",
                         "microprofile/health-smallrye/pom.xml",
@@ -157,7 +157,8 @@ public class PRRuleDirectoryHitTest {
                 .then().github(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
                     Mockito.verify(mockedPR, Mockito.times(2)).listFiles();
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.never()).requestReviewers(ArgumentMatchers.any());
+                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.never())
+                            .requestReviewers(ArgumentMatchers.any());
                     Mockito.verify(mockedPR, Mockito.times(2)).listComments();
                 });
     }

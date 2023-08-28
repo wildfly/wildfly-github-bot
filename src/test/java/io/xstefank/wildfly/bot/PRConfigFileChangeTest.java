@@ -41,72 +41,74 @@ public class PRConfigFileChangeTest {
     @Test
     void testUpdateIncorrectlyIndentedFile() throws IOException {
         given().github(mocks -> {
-                GHRepository repo = mocks.repository(TEST_REPO);
-                GHContent mockGHContent = mock(GHContent.class);
-                when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, gitHubJson.commitSHA())).thenReturn(mockGHContent);
-                when(mockGHContent.read()).thenReturn(IOUtils.toInputStream("""
-                        wildfly:
-                          rules:
-                            - title: "test"
-                            - body: "test"
-                               notify: [The-non-existing-user]
-                          emails:
-                            - foo@bar.baz
-                            - address@email.com""",
+            GHRepository repo = mocks.repository(TEST_REPO);
+            GHContent mockGHContent = mock(GHContent.class);
+            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, gitHubJson.commitSHA()))
+                    .thenReturn(mockGHContent);
+            when(mockGHContent.read()).thenReturn(IOUtils.toInputStream("""
+                    wildfly:
+                      rules:
+                        - title: "test"
+                        - body: "test"
+                           notify: [The-non-existing-user]
+                      emails:
+                        - foo@bar.baz
+                        - address@email.com""",
                     "UTF-8"));
 
-                    MockedContext.builder(gitHubJson.id())
-                            .prFiles(".github/wildfly-bot.yml")
-                            .mock(mocks);
-            })
-            .when().payloadFromString(gitHubJson.jsonString())
-            .event(GHEvent.PULL_REQUEST)
-            .then().github(mocks -> {
-                verify(mocks.pullRequest(gitHubJson.id())).listFiles();
-                GHRepository repo = mocks.repository(TEST_REPO);
-                verify(repo).getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, gitHubJson.commitSHA());
-                Mockito.verify(repo).createCommitStatus(gitHubJson.commitSHA(),
-                    GHCommitState.ERROR, "", "Unable to parse the configuration file. " +
-                        "Make sure it can be loaded to model at https://github.com/xstefank/wildfly-github-bot/blob/main/CONFIGURATION.yml",
-                    "Configuration File");
+            MockedContext.builder(gitHubJson.id())
+                    .prFiles(".github/wildfly-bot.yml")
+                    .mock(mocks);
+        })
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    verify(mocks.pullRequest(gitHubJson.id())).listFiles();
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    verify(repo).getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, gitHubJson.commitSHA());
+                    Mockito.verify(repo).createCommitStatus(gitHubJson.commitSHA(),
+                            GHCommitState.ERROR, "", "Unable to parse the configuration file. " +
+                                    "Make sure it can be loaded to model at https://github.com/xstefank/wildfly-github-bot/blob/main/CONFIGURATION.yml",
+                            "Configuration File");
 
-                verifyNoMoreInteractions(mocks.pullRequest(gitHubJson.id()));
-            });
+                    verifyNoMoreInteractions(mocks.pullRequest(gitHubJson.id()));
+                });
     }
 
     @Test
     void testUpdateToCorrectFile() throws IOException {
         given().github(mocks -> {
-                GHRepository repo = mocks.repository(TEST_REPO);
-                GHContent mockGHContent = mock(GHContent.class);
-                when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, gitHubJson.commitSHA())).thenReturn(mockGHContent);
-                when(mockGHContent.read()).thenReturn(IOUtils.toInputStream("""
-                        wildfly:
-                          rules:
-                            - title: "test"
-                              id: "some test id"
-                            - id: "another great id"
-                              body: "test"
-                              notify: [The-non-existing-user]
-                          emails:
-                            - foo@bar.baz
-                            - address@email.com""",
+            GHRepository repo = mocks.repository(TEST_REPO);
+            GHContent mockGHContent = mock(GHContent.class);
+            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, gitHubJson.commitSHA()))
+                    .thenReturn(mockGHContent);
+            when(mockGHContent.read()).thenReturn(IOUtils.toInputStream("""
+                    wildfly:
+                      rules:
+                        - title: "test"
+                          id: "some test id"
+                        - id: "another great id"
+                          body: "test"
+                          notify: [The-non-existing-user]
+                      emails:
+                        - foo@bar.baz
+                        - address@email.com""",
                     "UTF-8"));
 
-                MockedContext.builder(gitHubJson.id())
-                        .prFiles(".github/wildfly-bot.yml")
-                        .mock(mocks);
-            })
-            .when().payloadFromString(gitHubJson.jsonString())
-            .event(GHEvent.PULL_REQUEST)
-            .then().github(mocks -> {
-                verify(mocks.pullRequest(gitHubJson.id())).listFiles();
-                GHRepository repo = mocks.repository(TEST_REPO);
-                verify(repo).getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, gitHubJson.commitSHA());
-                Mockito.verify(repo).createCommitStatus(gitHubJson.commitSHA(),
-                    GHCommitState.SUCCESS, "", "Valid", "Configuration File");
+            MockedContext.builder(gitHubJson.id())
+                    .prFiles(".github/wildfly-bot.yml")
+                    .mock(mocks);
+        })
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    verify(mocks.pullRequest(gitHubJson.id())).listFiles();
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    verify(repo).getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, gitHubJson.commitSHA());
+                    Mockito.verify(repo).createCommitStatus(gitHubJson.commitSHA(),
+                            GHCommitState.SUCCESS, "", "Valid", "Configuration File");
 
-                verifyNoMoreInteractions(mocks.pullRequest(gitHubJson.id()));
-            });
+                    verifyNoMoreInteractions(mocks.pullRequest(gitHubJson.id()));
+                });
     }
 }

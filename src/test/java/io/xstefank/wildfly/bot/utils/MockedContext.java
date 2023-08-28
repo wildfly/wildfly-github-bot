@@ -75,8 +75,8 @@ public class MockedContext {
 
     /**
      * Creates List with one empty GHContent as response to the specified `directories`
-     *  Otherwise an `GHFileNotFoundException` is thrown. To override the default
-     *  behavior you have to mock it before calling `mock` method.
+     * Otherwise an `GHFileNotFoundException` is thrown. To override the default
+     * behavior you have to mock it before calling `mock` method.
      */
     public MockedContext repoDirectories(String... directories) {
         this.repositoryDirectories.addAll(new HashSet<>(Arrays.asList(directories)));
@@ -133,7 +133,8 @@ public class MockedContext {
             Mockito.when(mocked.getFilename()).thenReturn(filename);
             mockedFileDetails.add(mocked);
         }
-        PagedSearchIterable<GHPullRequestFileDetail> fileDetails = GitHubAppMockito.mockPagedIterable(mockedFileDetails.toArray(GHPullRequestFileDetail[]::new));
+        PagedSearchIterable<GHPullRequestFileDetail> fileDetails = GitHubAppMockito
+                .mockPagedIterable(mockedFileDetails.toArray(GHPullRequestFileDetail[]::new));
         Mockito.when(pullRequest.listFiles()).thenReturn(fileDetails);
 
         List<GHIssueComment> mockedComments = new ArrayList<>();
@@ -149,9 +150,9 @@ public class MockedContext {
 
             mockedComments.add(comment);
         }
-        PagedSearchIterable<GHIssueComment> comments = GitHubAppMockito.mockPagedIterable(mockedComments.toArray(GHIssueComment[]::new));
+        PagedSearchIterable<GHIssueComment> comments = GitHubAppMockito
+                .mockPagedIterable(mockedComments.toArray(GHIssueComment[]::new));
         Mockito.when(pullRequest.listComments()).thenReturn(comments);
-
 
         List<GHPullRequestCommitDetail> mockedCommits = new ArrayList<>();
         for (MockedCommit commit : commits) {
@@ -160,14 +161,14 @@ public class MockedContext {
             Mockito.when(mockCommitDetail.getCommit()).thenReturn(mockCommit);
             GHUser user = mocks.ghObject(GHUser.class, id.incrementAndGet());
 
-
             Mockito.when(mockCommit.getMessage()).thenReturn(commit.message);
             Mockito.when(mockCommitDetail.getSha()).thenReturn(commit.sha);
             Mockito.when(user.getLogin()).thenReturn(commit.author);
             mockedCommits.add(mockCommitDetail);
         }
 
-        PagedSearchIterable<GHPullRequestCommitDetail> commitDetails = GitHubAppMockito.mockPagedIterable(mockedCommits.toArray(GHPullRequestCommitDetail[]::new));
+        PagedSearchIterable<GHPullRequestCommitDetail> commitDetails = GitHubAppMockito
+                .mockPagedIterable(mockedCommits.toArray(GHPullRequestCommitDetail[]::new));
         Mockito.when(pullRequest.listCommits()).thenReturn(commitDetails);
 
         GHRepository repository = mocks.repository(this.repository);
@@ -206,7 +207,8 @@ public class MockedContext {
         Mockito.when(pullRequest.isDraft()).thenReturn(isDraft);
     }
 
-    private List<GHContent> getDirectoryContentMock(InvocationOnMock invocationOnMock) throws HttpException, GHFileNotFoundException {
+    private List<GHContent> getDirectoryContentMock(InvocationOnMock invocationOnMock)
+            throws HttpException, GHFileNotFoundException {
         if (repositoryDirectories.contains((String) invocationOnMock.getArgument(0))) {
             return List.of(new GHContent());
         } else if (repositoryFiles.contains((String) invocationOnMock.getArgument(0))) {

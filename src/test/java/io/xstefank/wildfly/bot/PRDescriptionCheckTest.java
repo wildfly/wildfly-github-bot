@@ -34,7 +34,7 @@ public class PRDescriptionCheckTest {
         Description description = new Description();
 
         IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
-            () -> new DescriptionCheck(description));
+                () -> new DescriptionCheck(description));
         assertEquals("Input argument cannot be null", thrown.getMessage());
     }
 
@@ -54,13 +54,14 @@ public class PRDescriptionCheckTest {
                 .build();
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-            .when().payloadFromString(gitHubJson.jsonString())
-            .event(GHEvent.PULL_REQUEST)
-            .then().github(mocks -> {
-                GHRepository repo = mocks.repository(TEST_REPO);
-                Util.verifyFormatFailure(repo, gitHubJson, "description");
-                Util.verifyFailedFormatComment(mocks, gitHubJson, "- The PR description must contain a link to the JIRA issue");
-            });
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Util.verifyFormatFailure(repo, gitHubJson, "description");
+                    Util.verifyFailedFormatComment(mocks, gitHubJson,
+                            "- The PR description must contain a link to the JIRA issue");
+                });
     }
 
     @Test
@@ -100,12 +101,12 @@ public class PRDescriptionCheckTest {
         gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON).build();
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-            .when().payloadFromString(gitHubJson.jsonString())
-            .event(GHEvent.PULL_REQUEST)
-            .then().github(mocks -> {
-                GHRepository repo = mocks.repository(TEST_REPO);
-                Util.verifyFormatSuccess(repo, gitHubJson);
-            });
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Util.verifyFormatSuccess(repo, gitHubJson);
+                });
     }
 
     @Test
@@ -176,7 +177,8 @@ public class PRDescriptionCheckTest {
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatFailure(repo, gitHubJson, "description");
-                    Util.verifyFailedFormatComment(mocks, gitHubJson, "- The PR description must contain a link to the JIRA issue");
+                    Util.verifyFailedFormatComment(mocks, gitHubJson,
+                            "- The PR description must contain a link to the JIRA issue");
                 });
     }
 
@@ -228,7 +230,8 @@ public class PRDescriptionCheckTest {
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatFailure(repo, gitHubJson, "description");
-                    Util.verifyFailedFormatComment(mocks, gitHubJson, "- The PR description must contain a link to the JIRA issue");
+                    Util.verifyFailedFormatComment(mocks, gitHubJson,
+                            "- The PR description must contain a link to the JIRA issue");
                 });
     }
 

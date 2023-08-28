@@ -29,9 +29,8 @@ public class InstallationEventTest {
     public void testUnsuspendingApp() throws IOException {
         given().when().payloadFromClasspath("/installation.json")
                 .event(GHEvent.INSTALLATION)
-                .then().github(mocks ->
-                        Assertions.assertTrue(inMemoryLogHandler.getRecords().stream()
-                                .anyMatch(logRecord -> logRecord.getMessage().equals("%s has been unsuspended for following installation id: %d and has started to listen for new incoming Events."))
-                        ));
+                .then().github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream()
+                        .anyMatch(logRecord -> logRecord.getMessage().equals(
+                                "%s has been unsuspended for following installation id: %d and has started to listen for new incoming Events."))));
     }
 }

@@ -90,7 +90,8 @@ public class PRMentionsReviewsCombinationTest {
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     Mockito.verify(mocks.pullRequest(gitHubJson.id())).comment("/cc @user1, @user2");
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.never()).requestReviewers(ArgumentMatchers.anyList());
+                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.never())
+                            .requestReviewers(ArgumentMatchers.anyList());
                 });
     }
 

@@ -21,6 +21,7 @@
     <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
     <version.checkstyle>3.3.0</version.checkstyle>
     <version.org.wildfly.checkstyle>1.0.8.Final</version.org.wildfly.checkstyle>
+    <format.skip>false</format.skip>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -142,6 +143,34 @@
           <suppressionsLocation>wildfly-checkstyle/suppressions.xml</suppressionsLocation>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>net.revelc.code.formatter</groupId>
+        <artifactId>formatter-maven-plugin</artifactId>
+        <version>2.23.0</version>
+        <executions>
+          <execution>
+            <phase>process-sources</phase>
+            <goals>
+              <goal>format</goal>
+            </goals>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <artifactId>quarkus-ide-config</artifactId>
+            <groupId>io.quarkus</groupId>
+            <version>${quarkus.platform.version}</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <!-- store outside of target to speed up formatting when mvn clean is used -->
+          <cachedir>.cache/formatter-maven-plugin-${formatter-maven-plugin.version}</cachedir>
+          <configFile>eclipse-format.xml</configFile>
+          <lineEnding>LF</lineEnding>
+          <skip>${format.skip}</skip>
+        </configuration>
+      </plugin>
+
     </plugins>
   </build>
   <profiles>

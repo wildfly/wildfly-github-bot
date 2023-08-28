@@ -27,10 +27,10 @@ public class PullRequestRuleProcessor {
     @Inject
     GithubProcessor githubProcessor;
 
-    void pullRequestRuleCheck(@PullRequest.Edited @PullRequest.Opened @PullRequest.Synchronize @PullRequest.Reopened
-                             @PullRequest.ReadyForReview GHEventPayload.PullRequest pullRequestPayload,
-                              @ConfigFile(RuntimeConstants.CONFIG_FILE_NAME) WildFlyConfigFile wildflyBotConfigFile,
-                              GitHub gitHub) throws IOException {
+    void pullRequestRuleCheck(
+            @PullRequest.Edited @PullRequest.Opened @PullRequest.Synchronize @PullRequest.Reopened @PullRequest.ReadyForReview GHEventPayload.PullRequest pullRequestPayload,
+            @ConfigFile(RuntimeConstants.CONFIG_FILE_NAME) WildFlyConfigFile wildflyBotConfigFile,
+            GitHub gitHub) throws IOException {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
         LOG.setPullRequest(pullRequest);
         githubProcessor.LOG.setPullRequest(pullRequest);
@@ -46,17 +46,18 @@ public class PullRequestRuleProcessor {
         Set<String> reviewers = new HashSet<>();
         Set<String> labels = new HashSet<>();
 
-
         for (WildFlyConfigFile.WildFlyRule rule : wildflyBotConfigFile.wildfly.rules) {
             if (Matcher.notifyRequestReview(pullRequest, rule)) {
                 if (!rule.notify.isEmpty()) {
-                    LOG.infof("Pull Request %s was matched with a rule, containing notify, with the id: %s.", pullRequest.getTitle(), rule.id != null ? rule.id : "N/A");
+                    LOG.infof("Pull Request %s was matched with a rule, containing notify, with the id: %s.",
+                            pullRequest.getTitle(), rule.id != null ? rule.id : "N/A");
                     reviewers.addAll(rule.notify);
                 }
                 labels.addAll(rule.labels);
             } else if (Matcher.notifyComment(pullRequest, rule)) {
                 if (!rule.notify.isEmpty()) {
-                    LOG.infof("Pull Request %s was matched with a rule, containing notify, with the id: %s.", pullRequest.getTitle(), rule.id != null ? rule.id : "N/A");
+                    LOG.infof("Pull Request %s was matched with a rule, containing notify, with the id: %s.",
+                            pullRequest.getTitle(), rule.id != null ? rule.id : "N/A");
                     ccMentions.addAll(rule.notify);
                 }
                 labels.addAll(rule.labels);
@@ -76,4 +77,3 @@ public class PullRequestRuleProcessor {
         githubProcessor.processNotifies(pullRequest, gitHub, ccMentions, reviewers, wildflyBotConfigFile.wildfly.emails);
     }
 }
-

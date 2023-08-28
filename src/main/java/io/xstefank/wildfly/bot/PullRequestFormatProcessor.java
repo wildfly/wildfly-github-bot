@@ -33,12 +33,12 @@ import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEPENDABOT;
 public class PullRequestFormatProcessor {
 
     public static final String FAILED_FORMAT_COMMENT = """
-        Failed format check on this pull request:
+            Failed format check on this pull request:
 
-        %s
+            %s
 
-        Please fix the format according to these guidelines.
-        """;
+            Please fix the format according to these guidelines.
+            """;
     private static final Logger LOG_DELEGATE = Logger.getLogger(PullRequestFormatProcessor.class);
     private final PullRequestLogger LOG = new PullRequestLogger(LOG_DELEGATE);
     private static final String CHECK_NAME = "Format";
@@ -49,9 +49,9 @@ public class PullRequestFormatProcessor {
     @Inject
     WildFlyBotConfig wildFlyBotConfig;
 
-    void pullRequestFormatCheck(@PullRequest.Edited @PullRequest.Opened @PullRequest.Synchronize @PullRequest.Reopened
-                             @PullRequest.ReadyForReview GHEventPayload.PullRequest pullRequestPayload,
-                             @ConfigFile(RuntimeConstants.CONFIG_FILE_NAME) WildFlyConfigFile wildflyConfigFile) throws IOException {
+    void pullRequestFormatCheck(
+            @PullRequest.Edited @PullRequest.Opened @PullRequest.Synchronize @PullRequest.Reopened @PullRequest.ReadyForReview GHEventPayload.PullRequest pullRequestPayload,
+            @ConfigFile(RuntimeConstants.CONFIG_FILE_NAME) WildFlyConfigFile wildflyConfigFile) throws IOException {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
         LOG.setPullRequest(pullRequest);
         githubProcessor.LOG.setPullRequest(pullRequest);
@@ -86,7 +86,7 @@ public class PullRequestFormatProcessor {
     }
 
     void postDependabotInfo(@PullRequest.Opened GHEventPayload.PullRequest pullRequestPayload,
-                            @ConfigFile(RuntimeConstants.CONFIG_FILE_NAME) WildFlyConfigFile wildflyConfigFile) throws IOException {
+            @ConfigFile(RuntimeConstants.CONFIG_FILE_NAME) WildFlyConfigFile wildflyConfigFile) throws IOException {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
         LOG.setPullRequest(pullRequest);
         githubProcessor.LOG.setPullRequest(pullRequest);
@@ -94,7 +94,8 @@ public class PullRequestFormatProcessor {
         if (pullRequest.getUser().getLogin().equals(DEPENDABOT)) {
             LOG.infof("Dependabot detected.");
             String comment = ("WildFly Bot recognized this PR as dependabot dependency update. Please create a %s issue" +
-                " and add its ID to the title and its link to the description.").formatted(wildflyConfigFile.wildfly.projectKey);
+                    " and add its ID to the title and its link to the description.")
+                    .formatted(wildflyConfigFile.wildfly.projectKey);
             if (wildFlyBotConfig.isDryRun()) {
                 LOG.infof("Add new comment %s", comment);
             } else {
@@ -112,7 +113,7 @@ public class PullRequestFormatProcessor {
         boolean update = false;
         for (GHIssueComment comment : pullRequest.listComments()) {
             if (comment.getUser().getLogin().equals(wildFlyBotConfig.githubName())
-                && comment.getBody().startsWith("Failed format check")) {
+                    && comment.getBody().startsWith("Failed format check")) {
                 if (errors == null) {
                     if (wildFlyBotConfig.isDryRun()) {
                         LOG.infof("Delete comment %s", comment);
@@ -124,8 +125,8 @@ public class PullRequestFormatProcessor {
                 }
 
                 String updatedBody = FAILED_FORMAT_COMMENT.formatted(errors.stream()
-                    .map("- %s"::formatted)
-                    .collect(Collectors.joining("\n\n")));
+                        .map("- %s"::formatted)
+                        .collect(Collectors.joining("\n\n")));
 
                 if (wildFlyBotConfig.isDryRun()) {
                     LOG.infof("Update comment \"%s\" to \"%s\"", comment.getBody(), updatedBody);
@@ -139,8 +140,8 @@ public class PullRequestFormatProcessor {
 
         if (!update && errors != null) {
             String updatedBody = FAILED_FORMAT_COMMENT.formatted(errors.stream()
-                .map("- %s"::formatted)
-                .collect(Collectors.joining("\n\n")));
+                    .map("- %s"::formatted)
+                    .collect(Collectors.joining("\n\n")));
             if (wildFlyBotConfig.isDryRun()) {
                 LOG.infof("Add new comment %s", updatedBody);
             } else {
@@ -158,11 +159,12 @@ public class PullRequestFormatProcessor {
 
         if (wildflyConfigFile.wildfly.format.title.enabled) {
             checks.add(new TitleCheck(new RegexDefinition(wildflyConfigFile.wildfly.getProjectPattern(),
-                wildflyConfigFile.wildfly.format.title.message)));
+                    wildflyConfigFile.wildfly.format.title.message)));
         }
 
         if (wildflyConfigFile.wildfly.format.commit.enabled) {
-            checks.add(new CommitMessagesCheck(new RegexDefinition(wildflyConfigFile.wildfly.getProjectPattern(), wildflyConfigFile.wildfly.format.commit.message)));
+            checks.add(new CommitMessagesCheck(new RegexDefinition(wildflyConfigFile.wildfly.getProjectPattern(),
+                    wildflyConfigFile.wildfly.format.commit.message)));
         }
 
         if (wildflyConfigFile.wildfly.format.description != null) {

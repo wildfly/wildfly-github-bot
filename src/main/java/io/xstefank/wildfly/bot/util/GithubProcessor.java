@@ -38,14 +38,14 @@ public class GithubProcessor {
     public static final String COLLABORATOR_MISSING_SUBJECT = "Missing collaborator in the %s repository";
 
     public static final String COLLABORATOR_MISSING_BODY = """
-        Hello,
+            Hello,
 
-        The following people are not collaborators in the repository %s, however they were requested to review Pull Request number #%d
+            The following people are not collaborators in the repository %s, however they were requested to review Pull Request number #%d
 
-        %s
+            %s
 
-        ---
-        This is generated message, please do not respond.""";
+            ---
+            This is generated message, please do not respond.""";
 
     private static final Logger LOG_DELEGATE = Logger.getLogger(GithubProcessor.class);
     public final PullRequestLogger LOG = new PullRequestLogger(LOG_DELEGATE);
@@ -62,14 +62,16 @@ public class GithubProcessor {
 
     @PostConstruct
     void construct() {
-        SKIP_FORMAT_COMMAND = Pattern.compile("@%s skip format".formatted(wildFlyBotConfig.githubName()), Pattern.DOTALL | Pattern.LITERAL);
+        SKIP_FORMAT_COMMAND = Pattern.compile("@%s skip format".formatted(wildFlyBotConfig.githubName()),
+                Pattern.DOTALL | Pattern.LITERAL);
     }
 
     public void commitStatusSuccess(GHPullRequest pullRequest, String checkName, String description) throws IOException {
         String sha = pullRequest.getHead().getSha();
 
         if (wildFlyBotConfig.isDryRun()) {
-            LOG.infof("Pull request #%d - Commit status success {%s, %s, %s}", pullRequest.getNumber(), sha, checkName, description);
+            LOG.infof("Pull request #%d - Commit status success {%s, %s, %s}", pullRequest.getNumber(), sha, checkName,
+                    description);
         } else {
             pullRequest.getRepository().createCommitStatus(sha, GHCommitState.SUCCESS, "", description, checkName);
         }
@@ -79,13 +81,15 @@ public class GithubProcessor {
         String sha = pullRequest.getHead().getSha();
 
         if (wildFlyBotConfig.isDryRun()) {
-            LOG.infof("Pull request #%d - Commit status failure {%s, %s, %s}", pullRequest.getNumber(), sha, checkName, description);
+            LOG.infof("Pull request #%d - Commit status failure {%s, %s, %s}", pullRequest.getNumber(), sha, checkName,
+                    description);
         } else {
             pullRequest.getRepository().createCommitStatus(sha, GHCommitState.ERROR, "", description, checkName);
         }
     }
 
-    public void processNotifies(GHPullRequest pullRequest, GitHub gitHub, Set<String> ccMentions, Set<String> reviewers, List<String> emails) throws IOException {
+    public void processNotifies(GHPullRequest pullRequest, GitHub gitHub, Set<String> ccMentions, Set<String> reviewers,
+            List<String> emails) throws IOException {
         if (ccMentions.isEmpty() && reviewers.isEmpty()) {
             updateCCMentions(pullRequest, Collections.emptySet());
             return;
@@ -99,14 +103,14 @@ public class GithubProcessor {
                 .toList();
 
         if (!notCollaborators.isEmpty()) {
-            LOG.infof("Following people are not collaborators in this repository [%s] and can not be requested for PR review: %s",
+            LOG.infof(
+                    "Following people are not collaborators in this repository [%s] and can not be requested for PR review: %s",
                     pullRequest.getRepository().getName(), notCollaborators);
             GHRepository repository = pullRequest.getRepository();
             sendEmail(
                     COLLABORATOR_MISSING_SUBJECT.formatted(repository.getFullName()),
                     COLLABORATOR_MISSING_BODY.formatted(repository.getFullName(), pullRequest.getNumber(), notCollaborators),
-                    emails
-            );
+                    emails);
             reviewers.removeAll(notCollaborators);
         }
 
@@ -121,7 +125,8 @@ public class GithubProcessor {
 
         if (!reviewers.isEmpty()) {
             if (wildFlyBotConfig.isDryRun()) {
-                LOG.infof("Pull request #%d - PR review requested from \"%s\"", pullRequest.getNumber(), String.join(",", reviewers));
+                LOG.infof("Pull request #%d - PR review requested from \"%s\"", pullRequest.getNumber(),
+                        String.join(",", reviewers));
             } else {
                 try {
                     List<GHUser> ghReviewers = reviewers.stream()
@@ -162,7 +167,7 @@ public class GithubProcessor {
                             .collect(Collectors.toList());
 
                     if (!new HashSet<>(commentMentions).containsAll(newMentions) ||
-                        commentMentions.size() != newMentions.size()) {
+                            commentMentions.size() != newMentions.size()) {
 
                         // We preserve order of already mentioned people and append new people
                         commentMentions.removeIf(s -> !newMentions.contains(s));
@@ -171,7 +176,8 @@ public class GithubProcessor {
 
                         String updatedBody = "/cc @" + String.join(", @", commentMentions);
                         if (wildFlyBotConfig.isDryRun()) {
-                            LOG.infof("Pull request %d - Update comment %s to %s", pullRequest.getNumber(), comment.getBody(), updatedBody);
+                            LOG.infof("Pull request %d - Update comment %s to %s", pullRequest.getNumber(), comment.getBody(),
+                                    updatedBody);
                         } else {
                             comment.update(updatedBody);
                         }
@@ -184,7 +190,6 @@ public class GithubProcessor {
         if (newMentions.isEmpty()) {
             return;
         }
-
 
         String updatedBody = "/cc @" + String.join(", @", newMentions);
         if (wildFlyBotConfig.isDryRun()) {
@@ -200,12 +205,13 @@ public class GithubProcessor {
                 .map(GHLabel::getName)
                 .filter(labels::contains)
                 .toList();
-        List<String> missingLabels =labels.stream()
+        List<String> missingLabels = labels.stream()
                 .filter(s -> !inRepoLabels.contains(s))
                 .toList();
 
         if (!missingLabels.isEmpty()) {
-            LOG.debugf("The following labels will be created as they are not in the repository [%s] %s.", repository.getName(), missingLabels);
+            LOG.debugf("The following labels will be created as they are not in the repository [%s] %s.", repository.getName(),
+                    missingLabels);
             for (String name : missingLabels) {
                 String color = String.format("%06x", new Random().nextInt(0xffffff + 1));
                 repository.createLabel(name, color);
@@ -220,8 +226,7 @@ public class GithubProcessor {
                     new Mail()
                             .setSubject(subject)
                             .setText(body)
-                            .setTo(emails)
-            );
+                            .setTo(emails));
         } else {
             LOG.debug("No emails setup to receive warnings or no email address setup to send emails from.");
         }

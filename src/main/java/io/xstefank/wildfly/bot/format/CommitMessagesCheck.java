@@ -35,12 +35,12 @@ public class CommitMessagesCheck implements Check {
             boolean oneMatched = false;
             for (GHPullRequestCommitDetail commit : commits) {
                 if (commit.getCommit() != null) {
-                    String commitMessage =  commit.getCommit().getMessage();
+                    String commitMessage = commit.getCommit().getMessage();
                     if (commitMessage.isEmpty()) {
                         return commit.getSha() + ": Commit message is Empty";
                     }
 
-                if (Patterns.matches(pattern, commitMessage)) {
+                    if (Patterns.matches(pattern, commitMessage)) {
                         oneMatched = true;
                         break;
                     }
@@ -48,8 +48,8 @@ public class CommitMessagesCheck implements Check {
             }
             if (!oneMatched) {
                 return String.format(this.message, pattern.pattern());
-                }
             }
+        }
 
         return null;
     }

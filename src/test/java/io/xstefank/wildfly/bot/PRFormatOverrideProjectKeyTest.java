@@ -26,9 +26,9 @@ import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON
 public class PRFormatOverrideProjectKeyTest {
 
     private static final String wildflyConfigFile = """
-                wildfly:
-                  projectKey: WFCORE
-                """;
+            wildfly:
+              projectKey: WFCORE
+            """;
     private static GitHubJson gitHubJson;
     private static MockedContext mockedContext;
 
@@ -67,7 +67,7 @@ public class PRFormatOverrideProjectKeyTest {
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatFailure(repo, gitHubJson, "title");
                     Util.verifyFailedFormatComment(mocks, gitHubJson, "- " + String.format(DEFAULT_TITLE_MESSAGE,
-                        PROJECT_PATTERN_REGEX.formatted("WFCORE")));
+                            PROJECT_PATTERN_REGEX.formatted("WFCORE")));
                 });
     }
 }
