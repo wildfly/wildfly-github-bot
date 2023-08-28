@@ -41,13 +41,13 @@ public class PRUpdateCommentOnEditTest {
     @Test
     void testUpdateToValid() throws IOException {
         wildflyConfigFile = """
-            wildfly:
-              format:
-                title:
-                  enabled: false
-                commit:
-                  enabled: false
-            """;
+                wildfly:
+                  format:
+                    title:
+                      enabled: false
+                    commit:
+                      enabled: false
+                """;
         gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
                 .title(INVALID_TITLE)
                 .description(INVALID_DESCRIPTION)
@@ -56,8 +56,7 @@ public class PRUpdateCommentOnEditTest {
                 .comment(FAILED_FORMAT_COMMENT.formatted(Stream.of(
                         DEFAULT_COMMIT_MESSAGE.formatted(PROJECT_PATTERN_REGEX.formatted("WFLY")),
                         DEFAULT_TITLE_MESSAGE.formatted(PROJECT_PATTERN_REGEX.formatted("WFLY")),
-                        "The PR description must contain a link to the JIRA issue"
-                )
+                        "The PR description must contain a link to the JIRA issue")
                         .map("- %s"::formatted)
                         .collect(Collectors.joining("\n\n"))), wildFlyBotConfig.githubName());
 

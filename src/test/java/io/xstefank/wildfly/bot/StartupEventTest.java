@@ -72,7 +72,7 @@ public class StartupEventTest {
 
     private static final java.util.logging.Logger rootLogger = LogManager.getLogManager().getLogger("io.xstefank.wildfly.bot");
     private static final InMemoryLogHandler inMemoryLogHandler = new InMemoryLogHandler(
-        record -> record.getLevel().intValue() >= Level.ALL.intValue());
+            record -> record.getLevel().intValue() >= Level.ALL.intValue());
 
     static {
         rootLogger.addHandler(inMemoryLogHandler);
@@ -80,7 +80,6 @@ public class StartupEventTest {
 
     @RegisterExtension
     static QuarkusTestExtension TEST = new QuarkusTestExtension();
-
 
     private class CustomGithubMockSetup implements GitHubMockSetup {
 
@@ -102,7 +101,7 @@ public class StartupEventTest {
             GitHub mockGitHub = mock(GitHub.class);
             GHApp mockGHApp = mock(GHApp.class);
             PagedIterable<GHAppInstallation> mockGHAppInstallations = GitHubAppMockito.mockPagedIterable(
-                mocks.ghObject(GHAppInstallation.class, 0L));
+                    mocks.ghObject(GHAppInstallation.class, 0L));
             GHAppInstallation mockGHAppInstallation = mock(GHAppInstallation.class);
             GHAuthenticatedAppInstallation mockGHAuthenticatedAppInstallation = mock(GHAuthenticatedAppInstallation.class);
             PagedSearchIterable<GHRepository> mockGHRepositories = mock(PagedSearchIterable.class);
@@ -154,11 +153,11 @@ public class StartupEventTest {
                   emails:
                     - foo@bar.baz
                 """))
-            .when().payloadFromString(gitHubJson.jsonString())
-            .event(GHEvent.STAR)
-            .then().github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
-                logRecord -> logRecord.getMessage().equals(
-                    "The configuration file from the repository %s was not parsed successfully due to following problems: %s"))));
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.STAR)
+                .then().github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
+                        logRecord -> logRecord.getMessage().equals(
+                                "The configuration file from the repository %s was not parsed successfully due to following problems: %s"))));
     }
 
     @Test
@@ -171,18 +170,18 @@ public class StartupEventTest {
                   emails:
                     - foo@bar.baz
                 """))
-            .when().payloadFromString(gitHubJson.jsonString())
-            .event(GHEvent.STAR)
-            .then().github(mocks -> {
-                GHRepository repository = mocks.repository(TEST_REPO);
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.STAR)
+                .then().github(mocks -> {
+                    GHRepository repository = mocks.repository(TEST_REPO);
 
-                List<Mail> sent = mailbox.getMailsSentTo("foo@bar.baz");
-                Assertions.assertEquals(sent.size(), 1);
-                Assertions.assertEquals(sent.get(0).getSubject(), LifecycleProcessor.EMAIL_SUBJECT);
-                Assertions.assertEquals(sent.get(0).getText(), LifecycleProcessor.EMAIL_TEXT.formatted(
-                    RuntimeConstants.CONFIG_FILE_NAME, repository.getHttpTransportUrl(),
-                    "- Rule [title=Test, notify=[7125767235, 0979986727]] is missing an id"));
-            });
+                    List<Mail> sent = mailbox.getMailsSentTo("foo@bar.baz");
+                    Assertions.assertEquals(sent.size(), 1);
+                    Assertions.assertEquals(sent.get(0).getSubject(), LifecycleProcessor.EMAIL_SUBJECT);
+                    Assertions.assertEquals(sent.get(0).getText(), LifecycleProcessor.EMAIL_TEXT.formatted(
+                            RuntimeConstants.CONFIG_FILE_NAME, repository.getHttpTransportUrl(),
+                            "- Rule [title=Test, notify=[7125767235, 0979986727]] is missing an id"));
+                });
     }
 
     @Test
@@ -196,11 +195,11 @@ public class StartupEventTest {
                   emails:
                     - foo@bar.baz
                 """))
-            .when().payloadFromString(gitHubJson.jsonString())
-            .event(GHEvent.STAR)
-            .then().github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
-                logRecord -> logRecord.getMessage().equals(
-                    "The configuration file from the repository %s was parsed successfully."))));
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.STAR)
+                .then().github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
+                        logRecord -> logRecord.getMessage().equals(
+                                "The configuration file from the repository %s was parsed successfully."))));
     }
 
     @Test
@@ -215,20 +214,21 @@ public class StartupEventTest {
                   emails:
                     - foo@bar.baz
                 """))
-            .when().payloadFromString(gitHubJson.jsonString())
-            .event(GHEvent.STAR)
-            .then().github(mocks -> {
-                GHRepository repository = mocks.repository(TEST_REPO);
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.STAR)
+                .then().github(mocks -> {
+                    GHRepository repository = mocks.repository(TEST_REPO);
 
-                Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(logRecord -> logRecord.getMessage().equals("The configuration file from the repository %s was not parsed successfully due to following problems: %s")));
+                    Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(logRecord -> logRecord.getMessage()
+                            .equals("The configuration file from the repository %s was not parsed successfully due to following problems: %s")));
 
-                List<Mail> sent = mailbox.getMailsSentTo("foo@bar.baz");
-                Assertions.assertEquals(sent.size(), 1);
-                Assertions.assertEquals(sent.get(0).getSubject(), LifecycleProcessor.EMAIL_SUBJECT);
-                Assertions.assertEquals(sent.get(0).getText(), LifecycleProcessor.EMAIL_TEXT.formatted(
-                    RuntimeConstants.CONFIG_FILE_NAME, repository.getHttpTransportUrl(),
-                    "- Rule [id=Test, title=Test] and [id=Test, body=Test] have the same id"));
-            });
+                    List<Mail> sent = mailbox.getMailsSentTo("foo@bar.baz");
+                    Assertions.assertEquals(sent.size(), 1);
+                    Assertions.assertEquals(sent.get(0).getSubject(), LifecycleProcessor.EMAIL_SUBJECT);
+                    Assertions.assertEquals(sent.get(0).getText(), LifecycleProcessor.EMAIL_TEXT.formatted(
+                            RuntimeConstants.CONFIG_FILE_NAME, repository.getHttpTransportUrl(),
+                            "- Rule [id=Test, title=Test] and [id=Test, body=Test] have the same id"));
+                });
     }
 
     @Test
@@ -243,26 +243,31 @@ public class StartupEventTest {
                   emails:
                     - foo@bar.baz
                 """))
-            .when().payloadFromString(gitHubJson.jsonString())
-            .event(GHEvent.STAR)
-            .then().github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(logRecord -> logRecord.getMessage().equals("The configuration file from the repository %s was parsed successfully."))));
+                .when().payloadFromString(gitHubJson.jsonString())
+                .event(GHEvent.STAR)
+                .then()
+                .github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(logRecord -> logRecord
+                        .getMessage().equals("The configuration file from the repository %s was parsed successfully."))));
     }
 
     @Test
     public void testStartingSuspendedApp() throws IOException {
         given().github(new CustomGithubMockSetup("""
-                        wildfly:
-                          rules:
-                            - title: "Test"
-                              notify: [7125767235,0979986727]
-                          emails:
-                            - foo@bar.baz
-                        """, (mocks) -> {
-                            when(clientProvider.getInstallationClient(anyLong())).thenAnswer(invocationOnMock -> {throw new IllegalStateException(new HttpException(403, "This installation has been suspended", "https://docs.github.com/rest/reference/apps#create-an-installation-access-token-for-an-app", null));});
-                        }));
+                wildfly:
+                  rules:
+                    - title: "Test"
+                      notify: [7125767235,0979986727]
+                  emails:
+                    - foo@bar.baz
+                """, (mocks) -> {
+            when(clientProvider.getInstallationClient(anyLong())).thenAnswer(invocationOnMock -> {
+                throw new IllegalStateException(new HttpException(403, "This installation has been suspended",
+                        "https://docs.github.com/rest/reference/apps#create-an-installation-access-token-for-an-app", null));
+            });
+        }));
         Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
-                        logRecord -> logRecord.getMessage().equals(
-                                "Your installation has been suspended. No events will be received until you unsuspend the github app installation.")));
+                logRecord -> logRecord.getMessage().equals(
+                        "Your installation has been suspended. No events will be received until you unsuspend the github app installation.")));
         Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
                 logRecord -> logRecord.getMessage().equals(
                         "Unable to correctly start %s for following installation id [%d]")));

@@ -45,19 +45,19 @@ public class PRReviewAssignmentTest {
     }
 
     private static final String wildflyConfigFile = """
-                wildfly:
-                  rules:
-                    - id: "test"
-                      directories: [src]
-                      notify: [user1, user2]
-                  format:
-                    title:
-                      enabled: false
-                    commit:
-                      enabled: false
-                  emails:
-                    - foo@bar.baz
-                """;
+            wildfly:
+              rules:
+                - id: "test"
+                  directories: [src]
+                  notify: [user1, user2]
+              format:
+                title:
+                  enabled: false
+                commit:
+                  enabled: false
+              emails:
+                - foo@bar.baz
+            """;
 
     private static GitHubJson gitHubJson;
     private MockedContext mockedContext;
@@ -91,7 +91,8 @@ public class PRReviewAssignmentTest {
 
                     List<Mail> sent = mailbox.getMailsSentTo("foo@bar.baz");
                     Assertions.assertEquals(sent.size(), 1);
-                    Assertions.assertEquals(sent.get(0).getSubject(), GithubProcessor.COLLABORATOR_MISSING_SUBJECT.formatted(TEST_REPO));
+                    Assertions.assertEquals(sent.get(0).getSubject(),
+                            GithubProcessor.COLLABORATOR_MISSING_SUBJECT.formatted(TEST_REPO));
                     Assertions.assertEquals(sent.get(0).getText(), GithubProcessor.COLLABORATOR_MISSING_BODY.formatted(
                             TEST_REPO, gitHubJson.number(), List.of("user1", "user2")));
                 });
@@ -140,7 +141,8 @@ public class PRReviewAssignmentTest {
 
                     List<Mail> sent = mailbox.getMailsSentTo("foo@bar.baz");
                     Assertions.assertEquals(sent.size(), 1);
-                    Assertions.assertEquals(sent.get(0).getSubject(), GithubProcessor.COLLABORATOR_MISSING_SUBJECT.formatted(TEST_REPO));
+                    Assertions.assertEquals(sent.get(0).getSubject(),
+                            GithubProcessor.COLLABORATOR_MISSING_SUBJECT.formatted(TEST_REPO));
                     Assertions.assertEquals(sent.get(0).getText(), GithubProcessor.COLLABORATOR_MISSING_BODY.formatted(
                             TEST_REPO, gitHubJson.number(), List.of("user2")));
                 });

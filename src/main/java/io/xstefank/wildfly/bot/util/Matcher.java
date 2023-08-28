@@ -4,7 +4,6 @@ import io.xstefank.wildfly.bot.model.WildFlyConfigFile.WildFlyRule;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHPullRequestFileDetail;
 
-
 public class Matcher {
 
     public static boolean notifyComment(GHPullRequest pullRequest, WildFlyRule rule) {
@@ -22,7 +21,7 @@ public class Matcher {
 
         if (Strings.isNotBlank(rule.titleBody)) {
             if (Patterns.find(regexWordWrap(rule.titleBody), pullRequest.getTitle()) ||
-                Patterns.find(regexWordWrap(rule.titleBody), pullRequest.getBody())) {
+                    Patterns.find(regexWordWrap(rule.titleBody), pullRequest.getBody())) {
                 return true;
             }
         }

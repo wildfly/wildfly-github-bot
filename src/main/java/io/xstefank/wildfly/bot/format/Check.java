@@ -16,10 +16,9 @@ public interface Check {
      *
      * @param payload pull request JSON as received from GitHub
      * @return null if check passed, error message otherwise (error message
-     * is limited by GitHub status to 140 characters)
+     *         is limited by GitHub status to 140 characters)
      */
     String check(GHPullRequest pullRequest) throws IOException;
-
 
     String getName();
 }

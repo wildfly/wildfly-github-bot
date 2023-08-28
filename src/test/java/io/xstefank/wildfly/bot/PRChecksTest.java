@@ -34,19 +34,19 @@ public class PRChecksTest {
     @Test
     void testNoConfigFile() throws IOException {
         wildflyConfigFile = """
-            wildfly:
-              format:
-                title:
-                  enabled: false
-                commit:
-                  enabled: false
-            """;
+                wildfly:
+                  format:
+                    title:
+                      enabled: false
+                    commit:
+                      enabled: false
+                """;
         gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
                 .title(INVALID_TITLE)
                 .description(INVALID_DESCRIPTION)
                 .build();
         mockedContext = MockedContext.builder(gitHubJson.id())
-                        .commit(INVALID_COMMIT_MESSAGE);
+                .commit(INVALID_COMMIT_MESSAGE);
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
@@ -60,20 +60,20 @@ public class PRChecksTest {
     @Test
     void testAllChecksPass() throws IOException {
         wildflyConfigFile = """
-            wildfly:
-              rules:
-                - id: "Title"
-                  title: "Title"
-                  notify: [7125767235]
-                - id: "Description"
-                  body: "issues.redhat.com"
-                  notify: [3251142365]
-              format:
-                description:
-                     regexes:
-                       - pattern: "JIRA:\\\\s+https://issues.redhat.com/browse/WFLY-\\\\d+|https://issues.redhat.com/browse/WFLY-\\\\d+"
-                         message: "The PR description must contain a link to the JIRA issue"
-            """;
+                wildfly:
+                  rules:
+                    - id: "Title"
+                      title: "Title"
+                      notify: [7125767235]
+                    - id: "Description"
+                      body: "issues.redhat.com"
+                      notify: [3251142365]
+                  format:
+                    description:
+                         regexes:
+                           - pattern: "JIRA:\\\\s+https://issues.redhat.com/browse/WFLY-\\\\d+|https://issues.redhat.com/browse/WFLY-\\\\d+"
+                             message: "The PR description must contain a link to the JIRA issue"
+                """;
         gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON).build();
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
@@ -90,20 +90,20 @@ public class PRChecksTest {
     @Test
     void testAllChecksFail() throws IOException {
         wildflyConfigFile = """
-            wildfly:
-              rules:
-                - id: "Title"
-                  title: "Title"
-                  notify: [7125767235]
-                - id: "Description"
-                  body: "JIRA"
-                  notify: [3251142365]
-              format:
-                description:
-                     regexes:
-                       - pattern: "JIRA:\\\\s+https://issues.redhat.com/browse/WFLY-\\\\d+|https://issues.redhat.com/browse/WFLY-\\\\d+"
-                         message: "The PR description must contain a link to the JIRA issue"
-            """;
+                wildfly:
+                  rules:
+                    - id: "Title"
+                      title: "Title"
+                      notify: [7125767235]
+                    - id: "Description"
+                      body: "JIRA"
+                      notify: [3251142365]
+                  format:
+                    description:
+                         regexes:
+                           - pattern: "JIRA:\\\\s+https://issues.redhat.com/browse/WFLY-\\\\d+|https://issues.redhat.com/browse/WFLY-\\\\d+"
+                             message: "The PR description must contain a link to the JIRA issue"
+                """;
         gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
                 .title(INVALID_TITLE)
                 .description(INVALID_DESCRIPTION)

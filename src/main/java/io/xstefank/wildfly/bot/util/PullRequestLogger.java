@@ -3,7 +3,6 @@ package io.xstefank.wildfly.bot.util;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHPullRequest;
 
-
 public class PullRequestLogger {
     private final Logger delegate;
     private GHPullRequest pullRequest;

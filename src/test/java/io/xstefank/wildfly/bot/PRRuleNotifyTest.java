@@ -35,15 +35,15 @@ public class PRRuleNotifyTest {
     @Test
     void testMentionsCCComment() throws IOException {
         wildflyConfigFile = """
-            wildfly:
-              rules:
-                - id: "Title"
-                  title: "Title"
-                  notify: [7125767235,0979986727]
-                - id: "Description"
-                  title: "Description"
-                  notify: [3251142365,4533458845]
-            """;
+                wildfly:
+                  rules:
+                    - id: "Title"
+                      title: "Title"
+                      notify: [7125767235,0979986727]
+                    - id: "Description"
+                      title: "Description"
+                      notify: [3251142365,4533458845]
+                """;
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
@@ -58,15 +58,15 @@ public class PRRuleNotifyTest {
     @Test
     void testMentionsCCCommentSeveralHits() throws IOException {
         wildflyConfigFile = """
-            wildfly:
-              rules:
-                - id: "WFLY"
-                  title: "WFLY"
-                  notify: [7125767235,0979986727]
-                - id: "Title"
-                  title: "Title"
-                  notify: [3251142365,4533458845]
-            """;
+                wildfly:
+                  rules:
+                    - id: "WFLY"
+                      title: "WFLY"
+                      notify: [7125767235,0979986727]
+                    - id: "Title"
+                      title: "Title"
+                      notify: [3251142365,4533458845]
+                """;
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
@@ -81,15 +81,15 @@ public class PRRuleNotifyTest {
     @Test
     void testMentionsCCCommentForDuplicateMentions() throws IOException {
         wildflyConfigFile = """
-            wildfly:
-              rules:
-                - id: "Title"
-                  title: "Title"
-                  notify: [7125767235,0979986727]
-                - id: "Description"
-                  body: "issues.redhat.com"
-                  notify: [7125767235,4533458845]
-            """;
+                wildfly:
+                  rules:
+                    - id: "Title"
+                      title: "Title"
+                      notify: [7125767235,0979986727]
+                    - id: "Description"
+                      body: "issues.redhat.com"
+                      notify: [7125767235,4533458845]
+                """;
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)

@@ -38,11 +38,11 @@ public class PRCommitCheckTest {
     @Test
     void testFailedCommitCheck() throws IOException {
         wildflyConfigFile = """
-            wildfly:
-              format:
-                commit:
-                  enabled: true
-            """;
+                wildfly:
+                  format:
+                    commit:
+                      enabled: true
+                """;
         mockedContext = MockedContext.builder(gitHubJson.id())
                 .commit(INVALID_COMMIT_MESSAGE);
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
@@ -51,20 +51,20 @@ public class PRCommitCheckTest {
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatFailure(repo, gitHubJson, "commit");
-                    Util.verifyFailedFormatComment(mocks, gitHubJson,"- " + String.format(DEFAULT_COMMIT_MESSAGE,
-                        PROJECT_PATTERN_REGEX.formatted("WFLY")));
+                    Util.verifyFailedFormatComment(mocks, gitHubJson, "- " + String.format(DEFAULT_COMMIT_MESSAGE,
+                            PROJECT_PATTERN_REGEX.formatted("WFLY")));
                 });
     }
 
     @Test
     void testFailedCommitCheckCommitConfigNull() throws IOException {
         wildflyConfigFile = """
-            wildfly:
-              format:
-                commit:
-            """;
+                wildfly:
+                  format:
+                    commit:
+                """;
         mockedContext = MockedContext.builder(gitHubJson.id())
-                        .commit(INVALID_COMMIT_MESSAGE);
+                .commit(INVALID_COMMIT_MESSAGE);
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
@@ -72,7 +72,7 @@ public class PRCommitCheckTest {
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatFailure(repo, gitHubJson, "commit");
-                    Util.verifyFailedFormatComment(mocks, gitHubJson,"- " + String.format(DEFAULT_COMMIT_MESSAGE,
+                    Util.verifyFailedFormatComment(mocks, gitHubJson, "- " + String.format(DEFAULT_COMMIT_MESSAGE,
                             PROJECT_PATTERN_REGEX.formatted("WFLY", "WFLY")));
                 });
     }
@@ -80,11 +80,11 @@ public class PRCommitCheckTest {
     @Test
     void testSuccessfulCommitCheck() throws IOException {
         wildflyConfigFile = """
-            wildfly:
-              format:
-                commit:
-                  enabled: true
-            """;
+                wildfly:
+                  format:
+                    commit:
+                      enabled: true
+                """;
 
         given()
                 .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
@@ -102,19 +102,19 @@ public class PRCommitCheckTest {
     @Test
     void testSuccessfulMultilinedCommitCheck() throws IOException {
         wildflyConfigFile = """
-            wildfly:
-              format:
-                commit:
-                  enabled: true
-            """;
+                wildfly:
+                  format:
+                    commit:
+                      enabled: true
+                """;
 
         mockedContext = MockedContext.builder(gitHubJson.id())
-                        .commit("""
-                WFLY-18341 Restore incorrectly updated copyright dates in Jipijapa
+                .commit("""
+                        WFLY-18341 Restore incorrectly updated copyright dates in Jipijapa
 
-                This reverts incorrect changes from
-                096a516e745663a99fce0062ff4bb93a4ca1066f:
-                Upgrade to Hibernate Search 6.2.0.CR1""");
+                        This reverts incorrect changes from
+                        096a516e745663a99fce0062ff4bb93a4ca1066f:
+                        Upgrade to Hibernate Search 6.2.0.CR1""");
         given()
                 .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
@@ -128,10 +128,10 @@ public class PRCommitCheckTest {
     @Test
     void testSuccessfulCommitCheckCommitConfigNull() throws IOException {
         wildflyConfigFile = """
-            wildfly:
-              format:
-                commit:
-            """;
+                wildfly:
+                  format:
+                    commit:
+                """;
 
         given()
                 .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
@@ -146,13 +146,13 @@ public class PRCommitCheckTest {
     @Test
     void testDisabledCommitCheck() throws IOException {
         wildflyConfigFile = """
-            wildfly:
-              format:
-                commit:
-                  enabled: false
-            """;
+                wildfly:
+                  format:
+                    commit:
+                      enabled: false
+                """;
         mockedContext = MockedContext.builder(gitHubJson.id())
-                        .commit(INVALID_COMMIT_MESSAGE);
+                .commit(INVALID_COMMIT_MESSAGE);
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
@@ -181,7 +181,7 @@ public class PRCommitCheckTest {
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatFailure(repo, gitHubJson, "commit");
-                    Util.verifyFailedFormatComment(mocks, gitHubJson,"- Lorem ipsum dolor sit amet");
+                    Util.verifyFailedFormatComment(mocks, gitHubJson, "- Lorem ipsum dolor sit amet");
                 });
     }
 }

@@ -46,7 +46,9 @@ public class ConfigFileChangeProcessor {
     @Inject
     GithubProcessor githubProcessor;
 
-    void onFileChanged(@PullRequest.Opened @PullRequest.Edited @PullRequest.Synchronize @PullRequest.Reopened @PullRequest.ReadyForReview GHEventPayload.PullRequest pullRequestPayload, GitHub gitHub) throws IOException {
+    void onFileChanged(
+            @PullRequest.Opened @PullRequest.Edited @PullRequest.Synchronize @PullRequest.Reopened @PullRequest.ReadyForReview GHEventPayload.PullRequest pullRequestPayload,
+            GitHub gitHub) throws IOException {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
         LOG.setPullRequest(pullRequest);
 
@@ -54,10 +56,12 @@ public class ConfigFileChangeProcessor {
         for (GHPullRequestFileDetail changedFile : pullRequest.listFiles()) {
             if (changedFile.getFilename().equals(fileProvider.getFilePath(RuntimeConstants.CONFIG_FILE_NAME))) {
                 try {
-                    GHContent updatedFile = gitHub.getRepository(pullRequest.getHead().getRepository().getFullName()).getFileContent(".github/"
-                        + RuntimeConstants.CONFIG_FILE_NAME, pullRequest.getHead().getSha());
-                    String updatedFileContent = new String( updatedFile.read().readAllBytes() );
-                    Optional<WildFlyConfigFile> file = Optional.ofNullable(yamlObjectMapper.readValue(updatedFileContent, WildFlyConfigFile.class));
+                    GHContent updatedFile = gitHub.getRepository(pullRequest.getHead().getRepository().getFullName())
+                            .getFileContent(".github/"
+                                    + RuntimeConstants.CONFIG_FILE_NAME, pullRequest.getHead().getSha());
+                    String updatedFileContent = new String(updatedFile.read().readAllBytes());
+                    Optional<WildFlyConfigFile> file = Optional
+                            .ofNullable(yamlObjectMapper.readValue(updatedFileContent, WildFlyConfigFile.class));
 
                     if (file.isPresent()) {
                         List<String> problems = validateFile(file.get(), repository);
@@ -65,7 +69,8 @@ public class ConfigFileChangeProcessor {
                             githubProcessor.commitStatusSuccess(pullRequest, CHECK_NAME, "Valid");
                             LOG.debug("Configuration File check successful");
                         } else {
-                            githubProcessor.commitStatusError(pullRequest, CHECK_NAME, "Rule is missing an id or multiple rules have the same id.");
+                            githubProcessor.commitStatusError(pullRequest, CHECK_NAME,
+                                    "Rule is missing an id or multiple rules have the same id.");
                             LOG.warnf("Configuration File check unsuccessful. %s", String.join(",", problems));
                         }
                     } else {
@@ -74,9 +79,10 @@ public class ConfigFileChangeProcessor {
                         LOG.debugf(message);
                     }
                 } catch (JsonProcessingException e) {
-                    LOG.errorf(e, "Unable to parse the configuration file from the repository %s", pullRequest.getHead().getRepository().getFullName());
+                    LOG.errorf(e, "Unable to parse the configuration file from the repository %s",
+                            pullRequest.getHead().getRepository().getFullName());
                     githubProcessor.commitStatusError(pullRequest, CHECK_NAME, "Unable to parse the configuration file. " +
-                        "Make sure it can be loaded to model at https://github.com/xstefank/wildfly-github-bot/blob/main/CONFIGURATION.yml");
+                            "Make sure it can be loaded to model at https://github.com/xstefank/wildfly-github-bot/blob/main/CONFIGURATION.yml");
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -97,14 +103,15 @@ public class ConfigFileChangeProcessor {
             for (WildFlyConfigFile.WildFlyRule rule : file.wildfly.rules) {
                 rules.stream()
                         .filter(wildFlyRule -> wildFlyRule.id.equals(rule.id))
-                        .forEach(wildFlyRule -> problems.add("Rule [" + wildFlyRule.toPrettyString() + "] and [" + rule.toPrettyString() + "] have the same id"));
+                        .forEach(wildFlyRule -> problems.add("Rule [" + wildFlyRule.toPrettyString() + "] and ["
+                                + rule.toPrettyString() + "] have the same id"));
                 if (rule.id == null) {
                     problems.add("Rule [" + rule.toPrettyString() + "] is missing an id");
                 } else {
                     rules.add(rule);
                 }
 
-                for (String label: rule.labels) {
+                for (String label : rule.labels) {
                     if (!repoLabels.contains(label)) {
                         problems.add("Rule [" + rule.toPrettyString() + "] points to non-existing label: " + label);
                     }
@@ -116,8 +123,10 @@ public class ConfigFileChangeProcessor {
                     } catch (IOException e) {
                         // non-existing directory or it is not a file
                         if (e instanceof GHFileNotFoundException ||
-                                (e instanceof HttpException && !e.getMessage().startsWith("Server returned HTTP response code: 200, message: 'null' for URL: https://api.github.com/repos/"))) {
-                            problems.add("Rule [" + rule.toPrettyString() + "] has the following non-existing directory specified: " + directory);
+                                (e instanceof HttpException && !e.getMessage().startsWith(
+                                        "Server returned HTTP response code: 200, message: 'null' for URL: https://api.github.com/repos/"))) {
+                            problems.add("Rule [" + rule.toPrettyString()
+                                    + "] has the following non-existing directory specified: " + directory);
                             LOG.debugf(e, "Exception on directories check caught");
                         }
                     }

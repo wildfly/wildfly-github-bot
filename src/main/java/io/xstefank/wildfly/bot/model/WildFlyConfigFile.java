@@ -69,19 +69,18 @@ public class WildFlyConfigFile {
         @Override
         public String toString() {
             return "id=" + stringify(id) + " title=" + stringify(title) + " body=" + stringify(body) + " titleBody="
-                + stringify(titleBody) + " directories=" + directories + " notify=" + notify + " labels=" + labels;
+                    + stringify(titleBody) + " directories=" + directories + " notify=" + notify + " labels=" + labels;
         }
 
         public String toPrettyString() {
-            return String.join(", ", Stream.<Supplier<String>>of(
-                () -> id != null ? "id=" + id : null,
-                () -> title != null ? "title=" + title : null,
-                () -> body != null ? "body=" + body : null,
-                () -> titleBody != null ? "titleBody=" + titleBody : null,
-                () -> !directories.isEmpty() ? "directories=" + directories : null,
-                () -> !notify.isEmpty() ? "notify=" + notify : null,
-                () -> !labels.isEmpty() ? "labels=" + labels : null
-            ).map(Supplier::get).filter(Objects::nonNull).toList());
+            return String.join(", ", Stream.<Supplier<String>> of(
+                    () -> id != null ? "id=" + id : null,
+                    () -> title != null ? "title=" + title : null,
+                    () -> body != null ? "body=" + body : null,
+                    () -> titleBody != null ? "titleBody=" + titleBody : null,
+                    () -> !directories.isEmpty() ? "directories=" + directories : null,
+                    () -> !notify.isEmpty() ? "notify=" + notify : null,
+                    () -> !labels.isEmpty() ? "labels=" + labels : null).map(Supplier::get).filter(Objects::nonNull).toList());
 
         }
 

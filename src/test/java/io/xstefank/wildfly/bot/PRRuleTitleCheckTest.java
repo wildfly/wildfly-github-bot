@@ -35,12 +35,12 @@ public class PRRuleTitleCheckTest {
     @Test
     void testSuccessfulTitleCheck() throws IOException {
         wildflyConfigFile = """
-            wildfly:
-              rules:
-                - id: "Title"
-                  title: "Title"
-                  notify: [7125767235]
-            """;
+                wildfly:
+                  rules:
+                    - id: "Title"
+                      title: "Title"
+                      notify: [7125767235]
+                """;
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
@@ -55,12 +55,12 @@ public class PRRuleTitleCheckTest {
     @Test
     void testFailedTitleCheck() throws IOException {
         wildflyConfigFile = """
-            wildfly:
-              rules:
-                - id: "Title"
-                  title: "NonValidTitle"
-                  notify: [7125767235]
-            """;
+                wildfly:
+                  rules:
+                    - id: "Title"
+                      title: "NonValidTitle"
+                      notify: [7125767235]
+                """;
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
@@ -75,12 +75,12 @@ public class PRRuleTitleCheckTest {
     @Test
     void testTitleBodyCheckForTitleCaseInsensitive() throws IOException {
         wildflyConfigFile = """
-            wildfly:
-              rules:
-                - id: "Title"
-                  title: "TiTle"
-                  notify: [7125767235]
-            """;
+                wildfly:
+                  rules:
+                    - id: "Title"
+                      title: "TiTle"
+                      notify: [7125767235]
+                """;
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
@@ -92,8 +92,5 @@ public class PRRuleTitleCheckTest {
                     Util.verifyFormatSuccess(repo, gitHubJson);
                 });
     }
-
-
-
 
 }

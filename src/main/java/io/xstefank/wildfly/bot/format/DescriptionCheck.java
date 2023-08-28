@@ -28,7 +28,6 @@ public class DescriptionCheck implements Check {
         }
     }
 
-
     @Override
     public String check(GHPullRequest pullRequest) {
         try {

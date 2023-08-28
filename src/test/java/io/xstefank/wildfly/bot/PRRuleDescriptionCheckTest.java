@@ -31,12 +31,12 @@ public class PRRuleDescriptionCheckTest {
     void testSuccessfulBodyCheck() throws IOException {
         gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON).build();
         wildflyConfigFile = """
-            wildfly:
-              rules:
-                - id: "Description"
-                  body: "issues.redhat.com"
-                  notify: [7125767235]
-            """;
+                wildfly:
+                  rules:
+                    - id: "Description"
+                      body: "issues.redhat.com"
+                      notify: [7125767235]
+                """;
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
@@ -55,12 +55,12 @@ public class PRRuleDescriptionCheckTest {
                 .description(INVALID_DESCRIPTION)
                 .build();
         wildflyConfigFile = """
-            wildfly:
-              rules:
-                - id: "Description"
-                  body: "issues.redhat.com"
-                  notify: [7125767235]
-            """;
+                wildfly:
+                  rules:
+                    - id: "Description"
+                      body: "issues.redhat.com"
+                      notify: [7125767235]
+                """;
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
@@ -77,12 +77,12 @@ public class PRRuleDescriptionCheckTest {
     void testTitleBodyCheckForBodyCaseInsensitive() throws IOException {
         gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON).build();
         wildflyConfigFile = """
-            wildfly:
-              rules:
-                - id: "Description"
-                  body: "ISSUES.REDHAT.COM"
-                  notify: [7125767235]
-            """;
+                wildfly:
+                  rules:
+                    - id: "Description"
+                      body: "ISSUES.REDHAT.COM"
+                      notify: [7125767235]
+                """;
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
                 .when().payloadFromString(gitHubJson.jsonString())
