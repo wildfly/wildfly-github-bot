@@ -49,14 +49,14 @@ public class PullRequestRuleProcessor {
         for (WildFlyConfigFile.WildFlyRule rule : wildflyBotConfigFile.wildfly.rules) {
             if (Matcher.notifyRequestReview(pullRequest, rule)) {
                 if (!rule.notify.isEmpty()) {
-                    LOG.infof("Pull Request %s was matched with a rule, containing notify, with the id: %s.",
+                    LOG.infof("Pull Request \"%s\" was matched with a rule, containing notify, with the id: %s.",
                             pullRequest.getTitle(), rule.id != null ? rule.id : "N/A");
                     reviewers.addAll(rule.notify);
                 }
                 labels.addAll(rule.labels);
             } else if (Matcher.notifyComment(pullRequest, rule)) {
                 if (!rule.notify.isEmpty()) {
-                    LOG.infof("Pull Request %s was matched with a rule, containing notify, with the id: %s.",
+                    LOG.infof("Pull Request \"%s\" was matched with a rule, containing notify, with the id: %s.",
                             pullRequest.getTitle(), rule.id != null ? rule.id : "N/A");
                     ccMentions.addAll(rule.notify);
                 }
