@@ -3,12 +3,43 @@ package io.xstefank.wildfly.bot.util;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHPullRequest;
 
+import java.util.EnumSet;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+
 public class PullRequestLogger {
+    private final Set<FormatFlag> formatFlags;
     private final Logger delegate;
     private GHPullRequest pullRequest;
 
+    /**
+     * Creates custom wrapper for logger, prepending pull request info before message.
+     * By default only `Pull Request [#%d] - ` is prepended with number of the Pull Request.
+     * To change prepended logged info see {@link PullRequestLogger#flags(EnumSet)}
+     *
+     * @param delegate Logger to delegate the messages to
+     */
     public PullRequestLogger(Logger delegate) {
+        this(delegate, EnumSet.of(FormatFlag.NUMBER));
+    }
+
+    // We want to enforce usage of EnumSet instead of Set, which might internally use long for bit operations
+    public PullRequestLogger(Logger delegate, EnumSet<FormatFlag> formatFlags) {
         this.delegate = delegate;
+        this.formatFlags = formatFlags;
+    }
+
+    /**
+     * @param formatFlags new format flags for prepended logged info
+     * @return new instance for Logger with changed format flags
+     */
+    // We want to enforce usage of EnumSet instead of Set, which might internally use long for bit operations
+    public PullRequestLogger flags(EnumSet<FormatFlag> formatFlags) {
+        PullRequestLogger logger = new PullRequestLogger(delegate, formatFlags);
+        logger.setPullRequest(this.pullRequest);
+        return logger;
     }
 
     public void setPullRequest(GHPullRequest pullRequest) {
@@ -88,8 +119,27 @@ public class PullRequestLogger {
         delegate.log(level, prependPullRequest(format).formatted(params), t);
     }
 
+    /**
+     * generates prepended string to every log message based on used flags
+     *
+     * @param message logged message
+     * @return prepended info concatenated with logged message
+     */
     private String prependPullRequest(String message) {
-        return this.pullRequest == null ? message
-                : "Pull Request [#%d] - %s".formatted(this.pullRequest.getNumber(), message);
+        if (this.pullRequest == null) {
+            return message;
+        }
+        return String.join(" ", Stream.<Supplier<String>> of(
+                () -> "Pull Request",
+                () -> formatFlags.contains(FormatFlag.NUMBER) ? "[#%d]".formatted(this.pullRequest.getNumber()) : null,
+                () -> formatFlags.contains(FormatFlag.ID) ? "[id - #%d]".formatted(this.pullRequest.getId()) : null,
+                () -> formatFlags.contains(FormatFlag.TITLE) ? "[title - \"%s\"]".formatted(this.pullRequest.getTitle()) : null,
+                () -> "- %s".formatted(message)).map(Supplier::get).filter(Objects::nonNull).toList());
+    }
+
+    public enum FormatFlag {
+        NUMBER,
+        TITLE,
+        ID
     }
 }

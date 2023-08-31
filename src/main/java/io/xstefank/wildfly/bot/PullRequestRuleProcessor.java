@@ -16,8 +16,12 @@ import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 
 import java.io.IOException;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
+
+import static io.xstefank.wildfly.bot.util.PullRequestLogger.FormatFlag.NUMBER;
+import static io.xstefank.wildfly.bot.util.PullRequestLogger.FormatFlag.TITLE;
 
 @RequestScoped
 public class PullRequestRuleProcessor {
@@ -49,15 +53,15 @@ public class PullRequestRuleProcessor {
         for (WildFlyConfigFile.WildFlyRule rule : wildflyBotConfigFile.wildfly.rules) {
             if (Matcher.notifyRequestReview(pullRequest, rule)) {
                 if (!rule.notify.isEmpty()) {
-                    LOG.infof("Pull Request \"%s\" was matched with a rule, containing notify, with the id: %s.",
-                            pullRequest.getTitle(), rule.id != null ? rule.id : "N/A");
+                    LOG.flags(EnumSet.of(NUMBER, TITLE)).infof("was matched with a rule, containing notify, with the id: %s.",
+                            rule.id != null ? rule.id : "N/A");
                     reviewers.addAll(rule.notify);
                 }
                 labels.addAll(rule.labels);
             } else if (Matcher.notifyComment(pullRequest, rule)) {
                 if (!rule.notify.isEmpty()) {
-                    LOG.infof("Pull Request \"%s\" was matched with a rule, containing notify, with the id: %s.",
-                            pullRequest.getTitle(), rule.id != null ? rule.id : "N/A");
+                    LOG.flags(EnumSet.of(NUMBER, TITLE)).infof("was matched with a rule, containing notify, with the id: %s.",
+                            rule.id != null ? rule.id : "N/A");
                     ccMentions.addAll(rule.notify);
                 }
                 labels.addAll(rule.labels);
@@ -70,7 +74,7 @@ public class PullRequestRuleProcessor {
         githubProcessor.createLabelsIfMissing(repository, labels);
 
         if (!labels.isEmpty()) {
-            LOG.debugf("Adding following labels to Pull Request %s: %s.", pullRequest.getTitle(), labels);
+            LOG.debugf("Adding following labels: %s.", labels);
             pullRequest.addLabels(labels.toArray(String[]::new));
         }
 

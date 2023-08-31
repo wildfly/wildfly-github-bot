@@ -70,8 +70,7 @@ public class GithubProcessor {
         String sha = pullRequest.getHead().getSha();
 
         if (wildFlyBotConfig.isDryRun()) {
-            LOG.infof("Pull request #%d - Commit status success {%s, %s, %s}", pullRequest.getNumber(), sha, checkName,
-                    description);
+            LOG.infof("Commit status success {%s, %s, %s}", sha, checkName, description);
         } else {
             pullRequest.getRepository().createCommitStatus(sha, GHCommitState.SUCCESS, "", description, checkName);
         }
@@ -81,8 +80,7 @@ public class GithubProcessor {
         String sha = pullRequest.getHead().getSha();
 
         if (wildFlyBotConfig.isDryRun()) {
-            LOG.infof("Pull request #%d - Commit status failure {%s, %s, %s}", pullRequest.getNumber(), sha, checkName,
-                    description);
+            LOG.infof("Commit status failure {%s, %s, %s}", sha, checkName, description);
         } else {
             pullRequest.getRepository().createCommitStatus(sha, GHCommitState.ERROR, "", description, checkName);
         }
@@ -125,8 +123,7 @@ public class GithubProcessor {
 
         if (!reviewers.isEmpty()) {
             if (wildFlyBotConfig.isDryRun()) {
-                LOG.infof("Pull request #%d - PR review requested from \"%s\"", pullRequest.getNumber(),
-                        String.join(",", reviewers));
+                LOG.infof("PR review requested from \"%s\"", String.join(",", reviewers));
             } else {
                 try {
                     List<GHUser> ghReviewers = reviewers.stream()
@@ -154,7 +151,7 @@ public class GithubProcessor {
                     && comment.getBody().startsWith("/cc")) {
                 if (newMentions.isEmpty()) {
                     if (wildFlyBotConfig.isDryRun()) {
-                        LOG.infof("Pull request #%d - Delete comment %s", pullRequest.getNumber(), comment);
+                        LOG.infof("Delete comment %s", comment);
                     } else {
                         comment.delete();
                     }
@@ -176,7 +173,7 @@ public class GithubProcessor {
 
                         String updatedBody = "/cc @" + String.join(", @", commentMentions);
                         if (wildFlyBotConfig.isDryRun()) {
-                            LOG.infof("Pull request %d - Update comment %s to %s", pullRequest.getNumber(), comment.getBody(),
+                            LOG.infof("Update comment %s to %s", comment.getBody(),
                                     updatedBody);
                         } else {
                             comment.update(updatedBody);
@@ -193,7 +190,7 @@ public class GithubProcessor {
 
         String updatedBody = "/cc @" + String.join(", @", newMentions);
         if (wildFlyBotConfig.isDryRun()) {
-            LOG.infof("Pull request %d - Add new comment %s", pullRequest.getNumber(), updatedBody);
+            LOG.infof("Add new comment %s", updatedBody);
         } else {
             pullRequest.comment(updatedBody);
         }
