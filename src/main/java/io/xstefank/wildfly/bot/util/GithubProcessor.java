@@ -5,7 +5,7 @@ import io.quarkus.mailer.Mailer;
 import io.xstefank.wildfly.bot.config.WildFlyBotConfig;
 import io.xstefank.wildfly.bot.model.WildFlyConfigFile;
 import jakarta.annotation.PostConstruct;
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
@@ -32,7 +32,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-@ApplicationScoped
+@Dependent
 public class GithubProcessor {
 
     public static final String COLLABORATOR_MISSING_SUBJECT = "Missing collaborator in the %s repository";
