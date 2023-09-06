@@ -32,6 +32,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEPENDABOT;
+
 @Dependent
 public class GithubProcessor {
 
@@ -243,6 +245,10 @@ public class GithubProcessor {
 
         if (pullRequest.isDraft()) {
             return "pull request being a draft";
+        }
+
+        if (pullRequest.getUser().getLogin().equals(DEPENDABOT)) {
+            return "Dependabot detected";
         }
 
         return null;
