@@ -22,6 +22,7 @@ import org.mockito.invocation.InvocationOnMock;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -29,6 +30,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static io.xstefank.wildfly.bot.utils.TestConstants.INSTALLATION_ID;
+import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
 
 public class MockedContext {
 
@@ -37,11 +39,12 @@ public class MockedContext {
     private final List<Tuple2<String, String>> comments = new ArrayList<>();
     private Set<String> users = new LinkedHashSet<>();
     private Set<String> reviewers = new LinkedHashSet<>();
-    private Set<String> labels = new LinkedHashSet<>();
+    private Set<String> repoLabels = new LinkedHashSet<>();
+    private Set<String> prLabels = new LinkedHashSet<>();
     private final List<MockedCommit> commits = new ArrayList<>();
     private final Set<String> repositoryDirectories = new LinkedHashSet<>();
     private final Set<String> repositoryFiles = new LinkedHashSet<>();
-    private String repository = "xstefank/wildfly";
+    private String repository = TEST_REPO;
     private Boolean mergeable = Boolean.TRUE;
     private boolean isDraft = false;
 
@@ -98,8 +101,13 @@ public class MockedContext {
         return this;
     }
 
-    public MockedContext labels(Set<String> labels) {
-        this.labels = labels;
+    public MockedContext repoLabels(Set<String> labels) {
+        this.repoLabels = labels;
+        return this;
+    }
+
+    public MockedContext prLabels(String... labels) {
+        this.prLabels.addAll(Arrays.asList(labels));
         return this;
     }
 
@@ -189,12 +197,20 @@ public class MockedContext {
         List<GHLabel> ghLabels = new ArrayList<>();
         PagedIterable<GHLabel> allGHLabels = Mockito.mock(PagedIterable.class);
         Mockito.when(repository.listLabels()).thenReturn(allGHLabels);
-        for (String label : labels) {
+        for (String label : repoLabels) {
             GHLabel ghLabel = Mockito.mock(GHLabel.class);
             Mockito.when(ghLabel.getName()).thenReturn(label);
             ghLabels.add(ghLabel);
         }
         Mockito.when(allGHLabels.toList()).thenReturn(ghLabels);
+
+        Collection<GHLabel> pullRequestLabels = new ArrayList<>();
+        for (String label : this.prLabels) {
+            GHLabel ghLabel = Mockito.mock(GHLabel.class);
+            Mockito.when(ghLabel.getName()).thenReturn(label);
+            pullRequestLabels.add(ghLabel);
+        }
+        Mockito.when(pullRequest.getLabels()).thenReturn(pullRequestLabels);
 
         Mockito.when(pullRequest.getMergeable()).thenReturn(mergeable);
 

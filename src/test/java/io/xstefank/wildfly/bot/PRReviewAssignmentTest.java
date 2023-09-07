@@ -6,8 +6,8 @@ import io.quarkus.mailer.MockMailbox;
 import io.quarkus.test.InMemoryLogHandler;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.util.GithubProcessor;
-import io.xstefank.wildfly.bot.utils.GitHubJson;
 import io.xstefank.wildfly.bot.utils.MockedContext;
+import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.TestConstants;
 import io.xstefank.wildfly.bot.utils.Util;
 import jakarta.inject.Inject;
@@ -61,7 +61,7 @@ public class PRReviewAssignmentTest {
                 - foo@bar.baz
             """;
 
-    private static GitHubJson gitHubJson;
+    private static PullRequestJson pullRequestJson;
     private MockedContext mockedContext;
 
     @Inject
@@ -69,7 +69,7 @@ public class PRReviewAssignmentTest {
 
     @BeforeAll
     static void setupTests() throws IOException {
-        gitHubJson = GitHubJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
+        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
     }
 
     @BeforeEach
@@ -79,13 +79,13 @@ public class PRReviewAssignmentTest {
 
     @Test
     public void testOnlyMissingCollaboratorsNoReviewAssignment() throws IOException {
-        mockedContext = MockedContext.builder(gitHubJson.id())
+        mockedContext = MockedContext.builder(pullRequestJson.id())
                 .prFiles("src/main/java/resource/application.properties");
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.never())
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never())
                             .comment(ArgumentMatchers.anyString());
                     Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
                             logRecord -> logRecord.getMessage().contains(
@@ -96,23 +96,24 @@ public class PRReviewAssignmentTest {
                     Assertions.assertEquals(sent.get(0).getSubject(),
                             GithubProcessor.COLLABORATOR_MISSING_SUBJECT.formatted(TEST_REPO));
                     Assertions.assertEquals(sent.get(0).getText(), GithubProcessor.COLLABORATOR_MISSING_BODY.formatted(
-                            TEST_REPO, gitHubJson.number(), List.of("user1", "user2")));
+                            TEST_REPO, pullRequestJson.number(), List.of("user1", "user2")));
                 });
     }
 
     @Test
     public void testNoCommentOnlyReviewAssignment() throws IOException {
-        mockedContext = MockedContext.builder(gitHubJson.id())
+        mockedContext = MockedContext.builder(pullRequestJson.id())
                 .prFiles("src/main/java/resource/application.properties")
                 .users("user1", "user2");
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.never())
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never())
                             .comment(ArgumentMatchers.anyString());
                     ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.times(2)).requestReviewers(captor.capture());
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.times(2))
+                            .requestReviewers(captor.capture());
                     List<GHUser> requestedReviewers = captor.getAllValues().stream().flatMap(List::stream).toList();
                     Set<String> requestedReviewersLogins = requestedReviewers.stream().map(GHUser::getLogin)
                             .collect(Collectors.toSet());
@@ -122,17 +123,17 @@ public class PRReviewAssignmentTest {
 
     @Test
     public void testCommentAndReviewAssignmentCombination() throws IOException {
-        mockedContext = MockedContext.builder(gitHubJson.id())
+        mockedContext = MockedContext.builder(pullRequestJson.id())
                 .prFiles("src/main/java/resource/application.properties")
                 .users("user1");
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.never())
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never())
                             .comment(ArgumentMatchers.anyString());
                     ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id())).requestReviewers(captor.capture());
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).requestReviewers(captor.capture());
                     Assertions.assertEquals(captor.getValue().size(), 1);
                     MatcherAssert.assertThat(captor.getValue().stream()
                             .map(GHPerson::getLogin)
@@ -146,7 +147,7 @@ public class PRReviewAssignmentTest {
                     Assertions.assertEquals(sent.get(0).getSubject(),
                             GithubProcessor.COLLABORATOR_MISSING_SUBJECT.formatted(TEST_REPO));
                     Assertions.assertEquals(sent.get(0).getText(), GithubProcessor.COLLABORATOR_MISSING_BODY.formatted(
-                            TEST_REPO, gitHubJson.number(), List.of("user2")));
+                            TEST_REPO, pullRequestJson.number(), List.of("user2")));
                 });
     }
 }

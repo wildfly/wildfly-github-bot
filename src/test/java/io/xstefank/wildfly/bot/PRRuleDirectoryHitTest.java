@@ -2,7 +2,7 @@ package io.xstefank.wildfly.bot;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
-import io.xstefank.wildfly.bot.utils.GitHubJson;
+import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.MockedContext;
 import io.xstefank.wildfly.bot.utils.Util;
 import org.hamcrest.MatcherAssert;
@@ -32,12 +32,12 @@ import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON
 public class PRRuleDirectoryHitTest {
 
     private static String wildflyConfigFile;
-    private static GitHubJson gitHubJson;
+    private static PullRequestJson pullRequestJson;
     private MockedContext mockedContext;
 
     @BeforeAll
     static void setUpGitHubJson() throws IOException {
-        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON).build();
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON).build();
     }
 
     @Test
@@ -55,19 +55,19 @@ public class PRRuleDirectoryHitTest {
                     title:
                       enabled: false
                 """;
-        mockedContext = MockedContext.builder(gitHubJson.id())
+        mockedContext = MockedContext.builder(pullRequestJson.id())
                 .users("7125767235")
                 .prFiles("appclient/test.txt",
                         "microprofile/health-smallrye/pom.xml",
                         "testsuite/integration/basic/pom.xml");
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
+                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
                     Mockito.verify(mockedPR, Mockito.times(2)).listFiles();
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id())).requestReviewers(ArgumentMatchers.anyList());
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).requestReviewers(ArgumentMatchers.anyList());
                     Mockito.verify(mockedPR, Mockito.times(2)).listComments();
                 });
     }
@@ -82,20 +82,20 @@ public class PRRuleDirectoryHitTest {
                        - microprofile/health-smallrye
                       notify: [7125767235]
                 """;
-        mockedContext = MockedContext.builder(gitHubJson.id())
+        mockedContext = MockedContext.builder(pullRequestJson.id())
                 .users("7125767235")
                 .prFiles("appclient/test.txt",
                         "microprofile/health-smallrye/pom.xml",
                         "testsuite/integration/basic/pom.xml");
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
+                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
                     Mockito.verify(mockedPR, Mockito.times(2)).listFiles();
                     ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id())).requestReviewers(captor.capture());
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).requestReviewers(captor.capture());
                     Assertions.assertEquals(captor.getValue().size(), 1);
                     MatcherAssert.assertThat(captor.getValue().stream()
                             .map(GHPerson::getLogin)
@@ -114,20 +114,20 @@ public class PRRuleDirectoryHitTest {
                        - testsuite/integration
                       notify: [7125767235]
                 """;
-        mockedContext = MockedContext.builder(gitHubJson.id())
+        mockedContext = MockedContext.builder(pullRequestJson.id())
                 .users("7125767235")
                 .prFiles("appclient/test.txt",
                         "microprofile/health-smallrye/pom.xml",
                         "testsuite/integration/basic/pom.xml");
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
+                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
                     Mockito.verify(mockedPR, Mockito.times(2)).listFiles();
                     ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id())).requestReviewers(captor.capture());
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).requestReviewers(captor.capture());
                     Assertions.assertEquals(captor.getValue().size(), 1);
                     MatcherAssert.assertThat(captor.getValue().stream()
                             .map(GHPerson::getLogin)
@@ -146,18 +146,18 @@ public class PRRuleDirectoryHitTest {
                        - transactions
                       notify: [7125767235]
                 """;
-        mockedContext = MockedContext.builder(gitHubJson.id())
+        mockedContext = MockedContext.builder(pullRequestJson.id())
                 .prFiles("appclient/test.txt",
                         "microprofile/health-smallrye/pom.xml",
                         "testsuite/integration/basic/pom.xml");
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    GHPullRequest mockedPR = mocks.pullRequest(gitHubJson.id());
+                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
                     Mockito.verify(mockedPR, Mockito.times(2)).listFiles();
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.never())
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never())
                             .requestReviewers(ArgumentMatchers.any());
                     Mockito.verify(mockedPR, Mockito.times(2)).listComments();
                 });

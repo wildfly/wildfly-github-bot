@@ -71,8 +71,7 @@ public class GithubProcessor {
         String sha = pullRequest.getHead().getSha();
 
         if (wildFlyBotConfig.isDryRun()) {
-            LOG.infof("Pull request #%d - Commit status success {%s, %s, %s}", pullRequest.getNumber(), sha, checkName,
-                    description);
+            LOG.infof("Commit status success {%s, %s, %s}", sha, checkName, description);
         } else {
             pullRequest.getRepository().createCommitStatus(sha, GHCommitState.SUCCESS, "", description, checkName);
         }
@@ -82,8 +81,7 @@ public class GithubProcessor {
         String sha = pullRequest.getHead().getSha();
 
         if (wildFlyBotConfig.isDryRun()) {
-            LOG.infof("Pull request #%d - Commit status failure {%s, %s, %s}", pullRequest.getNumber(), sha, checkName,
-                    description);
+            LOG.infof("Commit status failure {%s, %s, %s}", sha, checkName, description);
         } else {
             pullRequest.getRepository().createCommitStatus(sha, GHCommitState.ERROR, "", description, checkName);
         }
@@ -109,8 +107,7 @@ public class GithubProcessor {
 
         if (!reviewers.isEmpty()) {
             if (wildFlyBotConfig.isDryRun()) {
-                LOG.infof("Pull request #%d - PR review requested from \"%s\"", pullRequest.getNumber(),
-                        String.join(",", reviewers));
+                LOG.infof("PR review requested from \"%s\"", String.join(",", reviewers));
             } else {
                 List<String> failedReviewers = new ArrayList<>();
                 for (String requestedReviewer : reviewers) {
@@ -144,7 +141,7 @@ public class GithubProcessor {
                     && comment.getBody().startsWith("/cc")) {
                 if (newMentions.isEmpty()) {
                     if (wildFlyBotConfig.isDryRun()) {
-                        LOG.infof("Pull request #%d - Delete comment %s", pullRequest.getNumber(), comment);
+                        LOG.infof("Delete comment %s", comment);
                     } else {
                         comment.delete();
                     }
@@ -166,7 +163,7 @@ public class GithubProcessor {
 
                         String updatedBody = "/cc @" + String.join(", @", commentMentions);
                         if (wildFlyBotConfig.isDryRun()) {
-                            LOG.infof("Pull request %d - Update comment %s to %s", pullRequest.getNumber(), comment.getBody(),
+                            LOG.infof("Update comment %s to %s", comment.getBody(),
                                     updatedBody);
                         } else {
                             comment.update(updatedBody);
@@ -183,7 +180,7 @@ public class GithubProcessor {
 
         String updatedBody = "/cc @" + String.join(", @", newMentions);
         if (wildFlyBotConfig.isDryRun()) {
-            LOG.infof("Pull request %d - Add new comment %s", pullRequest.getNumber(), updatedBody);
+            LOG.infof("Add new comment %s", updatedBody);
         } else {
             pullRequest.comment(updatedBody);
         }
@@ -222,13 +219,10 @@ public class GithubProcessor {
         }
     }
 
-    public String skipPullRequest(GHPullRequest pullRequest, WildFlyConfigFile wildFlyConfigFile) throws IOException {
-        if (pullRequest.getBody() != null && SKIP_FORMAT_COMMAND.matcher(pullRequest.getBody()).find()) {
+    public String skipPullRequest(GHPullRequest pullRequest) throws IOException {
+        String body = pullRequest.getBody();
+        if (body != null && SKIP_FORMAT_COMMAND.matcher(body).find()) {
             return "skip format command found";
-        }
-
-        if (wildFlyConfigFile == null) {
-            return "no configuration file found";
         }
 
         if (pullRequest.isDraft()) {
@@ -236,5 +230,55 @@ public class GithubProcessor {
         }
 
         return null;
+    }
+
+    public String skipPullRequest(GHPullRequest pullRequest, WildFlyConfigFile wildFlyConfigFile) throws IOException {
+        if (wildFlyConfigFile == null) {
+            return "no configuration file found";
+        }
+
+        return skipPullRequest(pullRequest);
+    }
+
+    /**
+     * This method might get executed in parallel, thus we prepend Pull Request specific info
+     * instead of relying on the {@code io.xstefank.wildfly.bot.util.PullRequestLogger#setPullRequest}
+     * being called. The logger class was not designed for parallel execution, so this is somewhat
+     * of a workaround compensating this short-coming.
+     */
+    public void updateLabels(GHPullRequest pullRequest, List<String> labelsToAdd, List<String> labelsToRemove)
+            throws IOException {
+        List<String> currentLabels = pullRequest.getLabels().stream()
+                .map(GHLabel::getName)
+                .toList();
+
+        labelsToAdd.removeIf(currentLabels::contains);
+        labelsToRemove.removeIf(label -> !currentLabels.contains(label));
+
+        if (!labelsToAdd.isEmpty()) {
+            String logMessage = "Adding the following labels: %s".formatted(labelsToAdd);
+            if (!LOG.isPullRequestSet()) {
+                logMessage = "Pull Request [#%d] - %s".formatted(pullRequest.getNumber(), logMessage);
+            }
+            LOG.info(logMessage);
+            if (wildFlyBotConfig.isDryRun()) {
+                LOG.infof("Added the following labels: %s", labelsToAdd);
+            } else {
+                pullRequest.addLabels(labelsToAdd.toArray(String[]::new));
+            }
+        }
+
+        if (!labelsToRemove.isEmpty()) {
+            String logMessage = "Removing the following labels: %s".formatted(labelsToAdd);
+            if (!LOG.isPullRequestSet()) {
+                logMessage = "Pull Request [#%d] - %s".formatted(pullRequest.getNumber(), logMessage);
+            }
+            LOG.info(logMessage);
+            if (wildFlyBotConfig.isDryRun()) {
+                LOG.infof("Removed the following labels: %s", labelsToRemove);
+            } else {
+                pullRequest.removeLabels(labelsToRemove.toArray(String[]::new));
+            }
+        }
     }
 }

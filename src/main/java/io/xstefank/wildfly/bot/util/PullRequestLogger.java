@@ -15,6 +15,10 @@ public class PullRequestLogger {
         this.pullRequest = pullRequest;
     }
 
+    public boolean isPullRequestSet() {
+        return pullRequest == null;
+    }
+
     public void debug(String message) {
         delegate.debug(prependPullRequest(message));
     }

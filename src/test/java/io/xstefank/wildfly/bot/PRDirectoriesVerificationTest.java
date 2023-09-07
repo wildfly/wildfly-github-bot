@@ -3,8 +3,8 @@ package io.xstefank.wildfly.bot;
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.model.RuntimeConstants;
-import io.xstefank.wildfly.bot.utils.GitHubJson;
 import io.xstefank.wildfly.bot.utils.MockedContext;
+import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.TestConstants;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeAll;
@@ -18,6 +18,7 @@ import org.mockito.Mockito;
 import java.io.IOException;
 
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
+import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -25,25 +26,25 @@ import static org.mockito.Mockito.when;
 @GitHubAppTest
 public class PRDirectoriesVerificationTest {
 
-    private static GitHubJson gitHubJson;
+    private static PullRequestJson pullRequestJson;
     private MockedContext mockedContext;
 
     @BeforeAll
     public static void setupTests() throws IOException {
-        gitHubJson = GitHubJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .build();
     }
 
     @Test
     public void existingDirectoryTest() throws IOException {
-        mockedContext = MockedContext.builder(gitHubJson.id())
+        mockedContext = MockedContext.builder(pullRequestJson.id())
                 .prFiles(".github/wildfly-bot.yml")
                 .repoDirectories("src");
         given().github(mocks -> {
             mockedContext.mock(mocks);
             GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
             GHContent mockGHContent = mock(GHContent.class);
-            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, gitHubJson.commitSHA()))
+            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, pullRequestJson.commitSHA()))
                     .thenReturn(mockGHContent);
             when(mockGHContent.read()).thenReturn(IOUtils.toInputStream("""
                     wildfly:
@@ -53,25 +54,25 @@ public class PRDirectoriesVerificationTest {
                     "UTF-8"));
 
         })
-                .when().payloadFromString(gitHubJson.jsonString())
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     Mockito.verify(repo).getDirectoryContent("src");
-                    Mockito.verify(repo).createCommitStatus(gitHubJson.commitSHA(),
+                    Mockito.verify(repo).createCommitStatus(pullRequestJson.commitSHA(),
                             GHCommitState.SUCCESS, "", "Valid", "Configuration File");
                 });
     }
 
     @Test
     public void nonExistingDirectoryTest() throws IOException {
-        mockedContext = MockedContext.builder(gitHubJson.id())
+        mockedContext = MockedContext.builder(pullRequestJson.id())
                 .prFiles(".github/wildfly-bot.yml");
         given().github(mocks -> {
             mockedContext.mock(mocks);
             GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
             GHContent mockGHContent = mock(GHContent.class);
-            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, gitHubJson.commitSHA()))
+            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, pullRequestJson.commitSHA()))
                     .thenReturn(mockGHContent);
             when(mockGHContent.read()).thenReturn(IOUtils.toInputStream("""
                     wildfly:
@@ -81,12 +82,12 @@ public class PRDirectoriesVerificationTest {
                     "UTF-8"));
 
         })
-                .when().payloadFromString(gitHubJson.jsonString())
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     Mockito.verify(repo).getDirectoryContent("src");
-                    Mockito.verify(repo).createCommitStatus(gitHubJson.commitSHA(),
+                    Mockito.verify(repo).createCommitStatus(pullRequestJson.commitSHA(),
                             GHCommitState.ERROR, "", "Rule is missing an id or multiple rules have the same id.",
                             "Configuration File");
                 });
@@ -94,14 +95,14 @@ public class PRDirectoriesVerificationTest {
 
     @Test
     public void existingFileTest() throws IOException {
-        mockedContext = MockedContext.builder(gitHubJson.id())
+        mockedContext = MockedContext.builder(pullRequestJson.id())
                 .prFiles(".github/wildfly-bot.yml")
                 .repoFiles("pom.xml");
         given().github(mocks -> {
             mockedContext.mock(mocks);
             GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
             GHContent mockGHContent = mock(GHContent.class);
-            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, gitHubJson.commitSHA()))
+            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, pullRequestJson.commitSHA()))
                     .thenReturn(mockGHContent);
             when(mockGHContent.read()).thenReturn(IOUtils.toInputStream("""
                     wildfly:
@@ -111,7 +112,7 @@ public class PRDirectoriesVerificationTest {
                     "UTF-8"));
 
         })
-                .when().payloadFromString(gitHubJson.jsonString())
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
@@ -121,14 +122,14 @@ public class PRDirectoriesVerificationTest {
 
     @Test
     public void oneExistingSubdirectoryTest() throws IOException {
-        mockedContext = MockedContext.builder(gitHubJson.id())
+        mockedContext = MockedContext.builder(pullRequestJson.id())
                 .prFiles(".github/wildfly-bot.yml")
                 .repoDirectories("src", "src/main", "src/main/java");
         given().github(mocks -> {
             mockedContext.mock(mocks);
             GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
             GHContent mockGHContent = mock(GHContent.class);
-            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, gitHubJson.commitSHA()))
+            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, pullRequestJson.commitSHA()))
                     .thenReturn(mockGHContent);
             when(mockGHContent.read()).thenReturn(IOUtils.toInputStream("""
                     wildfly:
@@ -138,13 +139,13 @@ public class PRDirectoriesVerificationTest {
                     "UTF-8"));
 
         })
-                .when().payloadFromString(gitHubJson.jsonString())
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     Mockito.verify(repo).getDirectoryContent("src/main");
                     Mockito.verify(repo).getDirectoryContent("src/test");
-                    Mockito.verify(repo).createCommitStatus(gitHubJson.commitSHA(),
+                    Mockito.verify(repo).createCommitStatus(pullRequestJson.commitSHA(),
                             GHCommitState.ERROR, "", "Rule is missing an id or multiple rules have the same id.",
                             "Configuration File");
                 });
@@ -152,7 +153,7 @@ public class PRDirectoriesVerificationTest {
 
     @Test
     public void oneExistingFileInSubdirectoryTest() throws IOException {
-        mockedContext = MockedContext.builder(gitHubJson.id())
+        mockedContext = MockedContext.builder(pullRequestJson.id())
                 .prFiles(".github/wildfly-bot.yml")
                 .repoDirectories("src", "src/main", "src/main/java")
                 .repoFiles("src/main/resources/application.properties");
@@ -160,7 +161,7 @@ public class PRDirectoriesVerificationTest {
             mockedContext.mock(mocks);
             GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
             GHContent mockGHContent = mock(GHContent.class);
-            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, gitHubJson.commitSHA()))
+            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, pullRequestJson.commitSHA()))
                     .thenReturn(mockGHContent);
             when(mockGHContent.read()).thenReturn(IOUtils.toInputStream("""
                     wildfly:
@@ -172,13 +173,13 @@ public class PRDirectoriesVerificationTest {
                     "UTF-8"));
 
         })
-                .when().payloadFromString(gitHubJson.jsonString())
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    GHRepository repo = mocks.repository("xstefank/wildfly");
+                    GHRepository repo = mocks.repository(TEST_REPO);
                     Mockito.verify(repo).getDirectoryContent("src/main");
                     Mockito.verify(repo).getDirectoryContent("src/main/resources/application.properties");
-                    Mockito.verify(repo).createCommitStatus(gitHubJson.commitSHA(),
+                    Mockito.verify(repo).createCommitStatus(pullRequestJson.commitSHA(),
                             GHCommitState.SUCCESS, "", "Valid", "Configuration File");
                 });
     }
