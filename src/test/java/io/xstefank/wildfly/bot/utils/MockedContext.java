@@ -35,7 +35,7 @@ public class MockedContext {
     private final long pullRequest;
     private Set<String> prFiles = new LinkedHashSet<>();
     private final List<Tuple2<String, String>> comments = new ArrayList<>();
-    private Set<String> collaborators = new LinkedHashSet<>();
+    private Set<String> users = new LinkedHashSet<>();
     private Set<String> reviewers = new LinkedHashSet<>();
     private Set<String> labels = new LinkedHashSet<>();
     private final List<MockedCommit> commits = new ArrayList<>();
@@ -79,26 +79,22 @@ public class MockedContext {
      * behavior you have to mock it before calling `mock` method.
      */
     public MockedContext repoDirectories(String... directories) {
-        this.repositoryDirectories.addAll(new HashSet<>(Arrays.asList(directories)));
+        this.repositoryDirectories.addAll(Arrays.asList(directories));
         return this;
     }
 
     public MockedContext repoFiles(String... files) {
-        this.repositoryFiles.addAll(new HashSet<>(Arrays.asList(files)));
+        this.repositoryFiles.addAll(Arrays.asList(files));
         return this;
     }
 
-    /**
-     * Sets the collaborators for the Pull Request and creates `GHUser`s for retrieval
-     * See GitHub#getUser()
-     */
-    public MockedContext collaborators(String... collaborators) {
-        this.collaborators.addAll(new HashSet<>(Arrays.asList(collaborators)));
+    public MockedContext users(String... users) {
+        this.users.addAll(Arrays.asList(users));
         return this;
     }
 
     public MockedContext reviewers(String... reviewers) {
-        this.reviewers.addAll(new HashSet<>(Arrays.asList(reviewers)));
+        this.reviewers.addAll(Arrays.asList(reviewers));
         return this;
     }
 
@@ -173,9 +169,9 @@ public class MockedContext {
 
         GHRepository repository = mocks.repository(this.repository);
 
-        Mockito.when(repository.getCollaboratorNames()).thenReturn(this.collaborators);
+        Mockito.when(repository.getCollaboratorNames()).thenReturn(this.users);
 
-        for (String collaborator : collaborators) {
+        for (String collaborator : users) {
             GHUser user = mocks.ghObject(GHUser.class, id.incrementAndGet());
             Mockito.when(mocks.installationClient(INSTALLATION_ID).getUser(collaborator)).thenReturn(user);
             Mockito.when(user.getLogin()).thenReturn(collaborator);

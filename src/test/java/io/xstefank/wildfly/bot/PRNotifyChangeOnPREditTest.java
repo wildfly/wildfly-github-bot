@@ -58,7 +58,7 @@ public class PRNotifyChangeOnPREditTest {
         MockedContext mockedContext = MockedContext.builder(gitHubJson.id())
                 .commit("WFLY-123 commit")
                 .prFiles("src/pom.xml", "app/pom.xml")
-                .collaborators("user1", "user2")
+                .users("user1", "user2")
                 .reviewers("user1");
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
@@ -91,7 +91,7 @@ public class PRNotifyChangeOnPREditTest {
                 .comment("/cc @user3", wildFlyBotConfig.githubName())
                 .commit("WFLY-123 commit")
                 .prFiles("src/pom.xml", "app/pom.xml")
-                .collaborators("user1", "user2")
+                .users("user1", "user2")
                 .reviewers("user1");
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
@@ -123,7 +123,7 @@ public class PRNotifyChangeOnPREditTest {
         MockedContext mockedContext = MockedContext.builder(gitHubJson.id())
                 .commit("WFLY-123 commit")
                 .prFiles("src/pom.xml", "app/pom.xml")
-                .collaborators("user1", "user2")
+                .users("user1", "user2")
                 .reviewers("user1");
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
@@ -177,7 +177,7 @@ public class PRNotifyChangeOnPREditTest {
         MockedContext mockedContext = MockedContext.builder(gitHubJson.id())
                 .commit("WFLY-123 commit")
                 .prFiles("src/pom.xml", "app/pom.xml")
-                .collaborators("user1", "user2")
+                .users("user1", "user2")
                 .reviewers("user1", "user2");
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())

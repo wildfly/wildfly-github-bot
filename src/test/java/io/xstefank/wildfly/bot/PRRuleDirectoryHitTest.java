@@ -56,7 +56,7 @@ public class PRRuleDirectoryHitTest {
                       enabled: false
                 """;
         mockedContext = MockedContext.builder(gitHubJson.id())
-                .collaborators("7125767235")
+                .users("7125767235")
                 .prFiles("appclient/test.txt",
                         "microprofile/health-smallrye/pom.xml",
                         "testsuite/integration/basic/pom.xml");
@@ -83,7 +83,7 @@ public class PRRuleDirectoryHitTest {
                       notify: [7125767235]
                 """;
         mockedContext = MockedContext.builder(gitHubJson.id())
-                .collaborators("7125767235")
+                .users("7125767235")
                 .prFiles("appclient/test.txt",
                         "microprofile/health-smallrye/pom.xml",
                         "testsuite/integration/basic/pom.xml");
@@ -115,7 +115,7 @@ public class PRRuleDirectoryHitTest {
                       notify: [7125767235]
                 """;
         mockedContext = MockedContext.builder(gitHubJson.id())
-                .collaborators("7125767235")
+                .users("7125767235")
                 .prFiles("appclient/test.txt",
                         "microprofile/health-smallrye/pom.xml",
                         "testsuite/integration/basic/pom.xml");

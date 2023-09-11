@@ -6,12 +6,9 @@ import io.xstefank.wildfly.bot.utils.GitHubJson;
 import io.xstefank.wildfly.bot.utils.MockedContext;
 import io.xstefank.wildfly.bot.utils.TestConstants;
 import io.xstefank.wildfly.bot.utils.Util;
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
-import org.kohsuke.github.GHPerson;
 import org.kohsuke.github.GHUser;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
@@ -19,6 +16,8 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 import static io.xstefank.wildfly.bot.utils.TestConstants.INVALID_TITLE;
@@ -49,7 +48,7 @@ public class PRMentionsReviewsCombinationTest {
         gitHubJson = GitHubJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
         mockedContext = MockedContext.builder(gitHubJson.id())
                 .prFiles("src/main/java/resource/application.properties")
-                .collaborators("user1", "user2");
+                .users("user1", "user2");
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
@@ -58,11 +57,11 @@ public class PRMentionsReviewsCombinationTest {
                     Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.never())
                             .comment(ArgumentMatchers.anyString());
                     ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id())).requestReviewers(captor.capture());
-                    Assertions.assertEquals(captor.getValue().size(), 2);
-                    MatcherAssert.assertThat(captor.getValue().stream()
-                            .map(GHPerson::getLogin)
-                            .toList(), Matchers.containsInAnyOrder("user1", "user2"));
+                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.times(2)).requestReviewers(captor.capture());
+                    List<GHUser> requestedReviewers = captor.getAllValues().stream().flatMap(List::stream).toList();
+                    Set<String> requestedReviewersLogins = requestedReviewers.stream().map(GHUser::getLogin)
+                            .collect(Collectors.toSet());
+                    Assertions.assertEquals(requestedReviewersLogins, Set.of("user1", "user2"));
                 });
     }
 
@@ -83,7 +82,7 @@ public class PRMentionsReviewsCombinationTest {
                 """;
         gitHubJson = GitHubJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
         mockedContext = MockedContext.builder(gitHubJson.id())
-                .collaborators("user1", "user2");
+                .users("user1", "user2");
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
@@ -115,7 +114,7 @@ public class PRMentionsReviewsCombinationTest {
                 .build();
         mockedContext = MockedContext.builder(gitHubJson.id())
                 .prFiles("src/main/java/resource/application.properties")
-                .collaborators("user1", "user2");
+                .users("user1", "user2");
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
@@ -124,11 +123,11 @@ public class PRMentionsReviewsCombinationTest {
                     Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.never())
                             .comment(ArgumentMatchers.anyString());
                     ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id())).requestReviewers(captor.capture());
-                    Assertions.assertEquals(captor.getValue().size(), 2);
-                    MatcherAssert.assertThat(captor.getValue().stream()
-                            .map(GHPerson::getLogin)
-                            .toList(), Matchers.containsInAnyOrder("user1", "user2"));
+                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.times(2)).requestReviewers(captor.capture());
+                    List<GHUser> requestedReviewers = captor.getAllValues().stream().flatMap(List::stream).toList();
+                    Set<String> requestedReviewersLogins = requestedReviewers.stream().map(GHUser::getLogin)
+                            .collect(Collectors.toSet());
+                    Assertions.assertEquals(requestedReviewersLogins, Set.of("user1", "user2"));
                 });
     }
 
@@ -155,7 +154,7 @@ public class PRMentionsReviewsCombinationTest {
                 .build();
         mockedContext = MockedContext.builder(gitHubJson.id())
                 .prFiles("src/main/java/resource/application.properties")
-                .collaborators("user1", "user2");
+                .users("user1", "user2");
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
@@ -164,11 +163,11 @@ public class PRMentionsReviewsCombinationTest {
                     Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.never())
                             .comment(ArgumentMatchers.anyString());
                     ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id())).requestReviewers(captor.capture());
-                    Assertions.assertEquals(captor.getValue().size(), 2);
-                    MatcherAssert.assertThat(captor.getValue().stream()
-                            .map(GHPerson::getLogin)
-                            .toList(), Matchers.containsInAnyOrder("user1", "user2"));
+                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.times(2)).requestReviewers(captor.capture());
+                    List<GHUser> requestedReviewers = captor.getAllValues().stream().flatMap(List::stream).toList();
+                    Set<String> requestedReviewersLogins = requestedReviewers.stream().map(GHUser::getLogin)
+                            .collect(Collectors.toSet());
+                    Assertions.assertEquals(requestedReviewersLogins, Set.of("user1", "user2"));
                 });
     }
 
@@ -194,7 +193,7 @@ public class PRMentionsReviewsCombinationTest {
                 .build();
         mockedContext = MockedContext.builder(gitHubJson.id())
                 .prFiles("src/main/java/resource/application.properties")
-                .collaborators("user1", "user2");
+                .users("user1", "user2");
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
@@ -202,11 +201,11 @@ public class PRMentionsReviewsCombinationTest {
                 .then().github(mocks -> {
                     Mockito.verify(mocks.pullRequest(gitHubJson.id())).comment("/cc @user3");
                     ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id())).requestReviewers(captor.capture());
-                    Assertions.assertEquals(captor.getValue().size(), 2);
-                    MatcherAssert.assertThat(captor.getValue().stream()
-                            .map(GHPerson::getLogin)
-                            .toList(), Matchers.containsInAnyOrder("user1", "user2"));
+                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.times(2)).requestReviewers(captor.capture());
+                    List<GHUser> requestedReviewers = captor.getAllValues().stream().flatMap(List::stream).toList();
+                    Set<String> requestedReviewersLogins = requestedReviewers.stream().map(GHUser::getLogin)
+                            .collect(Collectors.toSet());
+                    Assertions.assertEquals(requestedReviewersLogins, Set.of("user1", "user2"));
                 });
     }
 }

@@ -27,7 +27,9 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.LogManager;
+import java.util.stream.Collectors;
 
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
@@ -87,7 +89,7 @@ public class PRReviewAssignmentTest {
                             .comment(ArgumentMatchers.anyString());
                     Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
                             logRecord -> logRecord.getMessage().contains(
-                                    "Following people are not collaborators in this repository [wildfly] and can not be requested for PR review: [user1, user2]")));
+                                    "Bot can not request PR review from the following people: [user1, user2]")));
 
                     List<Mail> sent = mailbox.getMailsSentTo("foo@bar.baz");
                     Assertions.assertEquals(sent.size(), 1);
@@ -102,7 +104,7 @@ public class PRReviewAssignmentTest {
     public void testNoCommentOnlyReviewAssignment() throws IOException {
         mockedContext = MockedContext.builder(gitHubJson.id())
                 .prFiles("src/main/java/resource/application.properties")
-                .collaborators("user1", "user2");
+                .users("user1", "user2");
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
@@ -110,11 +112,11 @@ public class PRReviewAssignmentTest {
                     Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.never())
                             .comment(ArgumentMatchers.anyString());
                     ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id())).requestReviewers(captor.capture());
-                    Assertions.assertEquals(captor.getValue().size(), 2);
-                    MatcherAssert.assertThat(captor.getValue().stream()
-                            .map(GHPerson::getLogin)
-                            .toList(), Matchers.containsInAnyOrder("user1", "user2"));
+                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.times(2)).requestReviewers(captor.capture());
+                    List<GHUser> requestedReviewers = captor.getAllValues().stream().flatMap(List::stream).toList();
+                    Set<String> requestedReviewersLogins = requestedReviewers.stream().map(GHUser::getLogin)
+                            .collect(Collectors.toSet());
+                    Assertions.assertEquals(requestedReviewersLogins, Set.of("user1", "user2"));
                 });
     }
 
@@ -122,7 +124,7 @@ public class PRReviewAssignmentTest {
     public void testCommentAndReviewAssignmentCombination() throws IOException {
         mockedContext = MockedContext.builder(gitHubJson.id())
                 .prFiles("src/main/java/resource/application.properties")
-                .collaborators("user1");
+                .users("user1");
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
@@ -137,7 +139,7 @@ public class PRReviewAssignmentTest {
                             .toList(), Matchers.containsInAnyOrder("user1"));
                     Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
                             logRecord -> logRecord.getMessage().contains(
-                                    "Following people are not collaborators in this repository [wildfly] and can not be requested for PR review: [user2]")));
+                                    "Bot can not request PR review from the following people: [user2]")));
 
                     List<Mail> sent = mailbox.getMailsSentTo("foo@bar.baz");
                     Assertions.assertEquals(sent.size(), 1);
