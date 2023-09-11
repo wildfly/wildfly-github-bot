@@ -52,7 +52,7 @@ public class PRSkipPullRequestTest {
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    verify(mocks.pullRequest(gitHubJson.id()), times(2)).getBody();
+                    verify(mocks.pullRequest(gitHubJson.id()), times(4)).getBody();
                     verify(mocks.pullRequest(gitHubJson.id())).listFiles();
                     // Following invocations are used for logging
                     verify(mocks.pullRequest(gitHubJson.id()), times(2)).getNumber();
@@ -70,7 +70,7 @@ public class PRSkipPullRequestTest {
                 .when().payloadFromString(gitHubJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    verify(mocks.pullRequest(gitHubJson.id()), times(2)).getBody();
+                    verify(mocks.pullRequest(gitHubJson.id()), times(4)).getBody();
                     verify(mocks.pullRequest(gitHubJson.id())).listFiles();
                     verify(mocks.pullRequest(gitHubJson.id()), times(2)).isDraft();
                     verifyNoMoreInteractions(mocks.pullRequest(gitHubJson.id()));

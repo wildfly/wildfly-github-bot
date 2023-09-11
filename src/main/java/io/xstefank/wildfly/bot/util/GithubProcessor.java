@@ -233,7 +233,7 @@ public class GithubProcessor {
     }
 
     public String skipPullRequest(GHPullRequest pullRequest, WildFlyConfigFile wildFlyConfigFile) throws IOException {
-        if (SKIP_FORMAT_COMMAND.matcher(pullRequest.getBody()).find()) {
+        if (pullRequest.getBody() != null && SKIP_FORMAT_COMMAND.matcher(pullRequest.getBody()).find()) {
             return "skip format command found";
         }
 
