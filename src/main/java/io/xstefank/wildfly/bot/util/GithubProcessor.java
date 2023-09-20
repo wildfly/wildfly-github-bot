@@ -21,6 +21,7 @@ import org.kohsuke.github.HttpException;
 import org.kohsuke.github.PagedIterable;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -97,23 +98,6 @@ public class GithubProcessor {
 
         ccMentions.removeAll(reviewers);
 
-        Set<String> collaborators = pullRequest.getRepository().getCollaboratorNames();
-        List<String> notCollaborators = reviewers.stream()
-                .filter(s -> !collaborators.contains(s))
-                .toList();
-
-        if (!notCollaborators.isEmpty()) {
-            LOG.infof(
-                    "Following people are not collaborators in this repository [%s] and can not be requested for PR review: %s",
-                    pullRequest.getRepository().getName(), notCollaborators);
-            GHRepository repository = pullRequest.getRepository();
-            sendEmail(
-                    COLLABORATOR_MISSING_SUBJECT.formatted(repository.getFullName()),
-                    COLLABORATOR_MISSING_BODY.formatted(repository.getFullName(), pullRequest.getNumber(), notCollaborators),
-                    emails);
-            reviewers.removeAll(notCollaborators);
-        }
-
         List<String> currentReviewers = pullRequest.getRequestedReviewers()
                 .stream()
                 .map(GHPerson::getLogin)
@@ -128,21 +112,27 @@ public class GithubProcessor {
                 LOG.infof("Pull request #%d - PR review requested from \"%s\"", pullRequest.getNumber(),
                         String.join(",", reviewers));
             } else {
-                try {
-                    List<GHUser> ghReviewers = reviewers.stream()
-                            .map(user -> {
-                                try {
-                                    return gitHub.getUser(user);
-                                } catch (IOException e) {
-                                    // This should not be thrown as these are valid people - Collaborators
-                                    LOG.errorf(e, "User %s was not found", user);
-                                    throw new RuntimeException("Unable to find user " + user, e);
-                                }
-                            })
-                            .toList();
-                    pullRequest.requestReviewers(ghReviewers);
-                } catch (HttpException | RuntimeException e) {
-                    LOG.errorf("The request has failed due to %s", e.getMessage());
+                List<String> failedReviewers = new ArrayList<>();
+                for (String requestedReviewer : reviewers) {
+                    try {
+                        GHUser ghUser = gitHub.getUser(requestedReviewer);
+                        pullRequest.requestReviewers(List.of(ghUser));
+                    } catch (HttpException | RuntimeException e) {
+                        LOG.warnf(
+                                "The request of getting GHUser or requesting the user as Pull Request reviewer has failed due to %s",
+                                e.getMessage());
+                        failedReviewers.add(requestedReviewer);
+                    }
+                }
+
+                if (!failedReviewers.isEmpty()) {
+                    LOG.warnf("Bot can not request PR review from the following people: %s", failedReviewers);
+                    GHRepository repository = pullRequest.getRepository();
+                    sendEmail(
+                            COLLABORATOR_MISSING_SUBJECT.formatted(repository.getFullName()),
+                            COLLABORATOR_MISSING_BODY.formatted(repository.getFullName(), pullRequest.getNumber(),
+                                    failedReviewers),
+                            emails);
                 }
             }
         }
