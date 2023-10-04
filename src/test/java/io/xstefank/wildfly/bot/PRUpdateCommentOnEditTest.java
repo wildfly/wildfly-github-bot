@@ -18,9 +18,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
-import static io.xstefank.wildfly.bot.PullRequestFormatProcessor.FAILED_FORMAT_COMMENT;
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEFAULT_COMMIT_MESSAGE;
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEFAULT_TITLE_MESSAGE;
+import static io.xstefank.wildfly.bot.model.RuntimeConstants.FAILED_FORMAT_COMMENT;
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.PROJECT_PATTERN_REGEX;
 import static io.xstefank.wildfly.bot.utils.TestConstants.INVALID_DESCRIPTION;
 import static io.xstefank.wildfly.bot.utils.TestConstants.INVALID_TITLE;

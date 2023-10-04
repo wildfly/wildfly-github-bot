@@ -3,8 +3,8 @@ package io.xstefank.wildfly.bot.util;
 import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.Mailer;
 import io.xstefank.wildfly.bot.config.WildFlyBotConfig;
-import io.xstefank.wildfly.bot.model.WildFlyConfigFile;
 import io.xstefank.wildfly.bot.model.RuntimeConstants;
+import io.xstefank.wildfly.bot.model.WildFlyConfigFile;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
@@ -282,6 +282,53 @@ public class GithubProcessor {
                 LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Removed the following labels: %s"), labelsToRemove);
             } else {
                 pullRequest.removeLabels(labelsToRemove.toArray(String[]::new));
+            }
+        }
+    }
+
+    public void deleteFormatComment(GHPullRequest pullRequest, String commentBody) throws IOException {
+        formatComment(pullRequest, commentBody, null);
+    }
+
+    public void formatComment(GHPullRequest pullRequest, String commentBody, Collection<String> errors) throws IOException {
+        boolean update = false;
+        String firstLine = commentBody.split("\n")[0];
+        for (GHIssueComment comment : pullRequest.listComments()) {
+            if (comment.getUser().getLogin().equals(wildFlyBotConfig.githubName())
+                    && comment.getBody().startsWith(firstLine)) {
+                if (errors == null || errors.isEmpty()) {
+                    if (wildFlyBotConfig.isDryRun()) {
+                        LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Delete comment %s"), comment);
+                    } else {
+                        comment.delete();
+                    }
+                    update = true;
+                    break;
+                }
+
+                String updatedBody = commentBody.formatted(errors.stream()
+                        .map("- %s"::formatted)
+                        .collect(Collectors.joining("\n\n")));
+
+                if (wildFlyBotConfig.isDryRun()) {
+                    LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Update comment \"%s\" to \"%s\""), comment.getBody(),
+                            updatedBody);
+                } else {
+                    comment.update(updatedBody);
+                }
+                update = true;
+                break;
+            }
+        }
+
+        if (!update && errors != null && !errors.isEmpty()) {
+            String updatedBody = commentBody.formatted(errors.stream()
+                    .map("- %s"::formatted)
+                    .collect(Collectors.joining("\n\n")));
+            if (wildFlyBotConfig.isDryRun()) {
+                LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Add new comment %s"), updatedBody);
+            } else {
+                pullRequest.comment(updatedBody);
             }
         }
     }

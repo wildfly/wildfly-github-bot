@@ -2,13 +2,14 @@ package io.xstefank.wildfly.bot.utils;
 
 import io.quarkiverse.githubapp.testing.dsl.GitHubMockSetupContext;
 import io.quarkiverse.githubapp.testing.dsl.GitHubMockVerificationContext;
-import io.xstefank.wildfly.bot.PullRequestFormatProcessor;
 import io.xstefank.wildfly.bot.model.RuntimeConstants;
 import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHRepository;
 import org.mockito.Mockito;
 
 import java.io.IOException;
+
+import static io.xstefank.wildfly.bot.model.RuntimeConstants.FAILED_FORMAT_COMMENT;
 
 /**
  * Class containing utility and helper methods for tests
@@ -44,6 +45,6 @@ public class Util {
             String comment)
             throws IOException {
         Mockito.verify(mocks.pullRequest(pullRequestJson.id()))
-                .comment(PullRequestFormatProcessor.FAILED_FORMAT_COMMENT.formatted(comment));
+                .comment(FAILED_FORMAT_COMMENT.formatted(comment));
     }
 }

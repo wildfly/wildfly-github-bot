@@ -23,4 +23,20 @@ public class RuntimeConstants {
     public static final String MAIN_BRANCH_REF = "refs/heads/" + MAIN_BRANCH;
 
     public static final String DRY_RUN_PREPEND = "DRY_RUN %s";
+
+    public static final String FAILED_FORMAT_COMMENT = """
+            Failed format check on this pull request:
+
+            %s
+
+            Please fix the format according to these guidelines.
+            """;
+
+    public static final String FAILED_CONFIGFILE_COMMENT = """
+            Failed configuration file check on this pull request and the following are the problems with rules:
+
+            %s
+
+            Please fix these rules according to these guidelines.
+            """;
 }
