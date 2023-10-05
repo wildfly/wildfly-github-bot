@@ -48,7 +48,7 @@ public class PRDependabotTest {
                 .then().github(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
                     Mockito.verify(mockedPR).comment("WildFly Bot recognized this PR as dependabot dependency update. " +
-                            "Please create a WFLY issue and add its ID to the title and its link to the description.");
+                            "Please create a WFLY issue and add new comment containing this JIRA link please.");
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatFailure(repo, pullRequestJson, "description, title");
                     Util.verifyFailedFormatComment(mocks, pullRequestJson, String.format("""
@@ -79,7 +79,7 @@ public class PRDependabotTest {
                 .then().github(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
                     Mockito.verify(mockedPR).comment("WildFly Bot recognized this PR as dependabot dependency update. " +
-                            "Please create a WFLY issue and add its ID to the title and its link to the description.");
+                            "Please create a WFLY issue and add new comment containing this JIRA link please.");
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatFailure(repo, pullRequestJson, "description, title");
                     Util.verifyFailedFormatComment(mocks, pullRequestJson, String.format("""
