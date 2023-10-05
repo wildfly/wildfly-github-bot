@@ -90,7 +90,7 @@ public class PullRequestFormatProcessor {
         if (pullRequest.getUser().getLogin().equals(DEPENDABOT)) {
             LOG.infof("Dependabot detected.");
             String comment = ("WildFly Bot recognized this PR as dependabot dependency update. Please create a %s issue" +
-                    " and add its ID to the title and its link to the description.")
+                    " and add new comment containing this JIRA link please.")
                     .formatted(wildflyConfigFile.wildfly.projectKey);
             if (wildFlyBotConfig.isDryRun()) {
                 LOG.infof("Add new comment %s", comment);
