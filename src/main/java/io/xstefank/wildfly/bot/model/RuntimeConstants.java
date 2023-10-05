@@ -12,7 +12,13 @@ public class RuntimeConstants {
 
     public static final String LABEL_NEEDS_REBASE = "rebase-this";
 
+    public static final String LABEL_FIX_ME = "fix-me";
+
     public static final String DEPENDABOT = "dependabot[bot]";
 
     public static final String PROJECT_PATTERN_REGEX = "%s-\\d+";
+
+    public static final String MAIN_BRANCH = "main";
+
+    public static final String MAIN_BRANCH_REF = "refs/heads/" + MAIN_BRANCH;
 }

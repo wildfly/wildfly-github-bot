@@ -2,7 +2,7 @@ package io.xstefank.wildfly.bot;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
-import io.xstefank.wildfly.bot.utils.GitHubJson;
+import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.MockedContext;
 import io.xstefank.wildfly.bot.utils.Util;
 import org.junit.jupiter.api.BeforeAll;
@@ -27,12 +27,12 @@ import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON
 public class PRCommitCheckTest {
 
     private static String wildflyConfigFile;
-    private static GitHubJson gitHubJson;
+    private static PullRequestJson pullRequestJson;
     private MockedContext mockedContext;
 
     @BeforeAll
     static void setUpGitHubJson() throws IOException {
-        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON).build();
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON).build();
     }
 
     @Test
@@ -43,15 +43,15 @@ public class PRCommitCheckTest {
                     commit:
                       enabled: true
                 """;
-        mockedContext = MockedContext.builder(gitHubJson.id())
+        mockedContext = MockedContext.builder(pullRequestJson.id())
                 .commit(INVALID_COMMIT_MESSAGE);
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatFailure(repo, gitHubJson, "commit");
-                    Util.verifyFailedFormatComment(mocks, gitHubJson, "- " + String.format(DEFAULT_COMMIT_MESSAGE,
+                    Util.verifyFormatFailure(repo, pullRequestJson, "commit");
+                    Util.verifyFailedFormatComment(mocks, pullRequestJson, "- " + String.format(DEFAULT_COMMIT_MESSAGE,
                             PROJECT_PATTERN_REGEX.formatted("WFLY")));
                 });
     }
@@ -63,16 +63,16 @@ public class PRCommitCheckTest {
                   format:
                     commit:
                 """;
-        mockedContext = MockedContext.builder(gitHubJson.id())
+        mockedContext = MockedContext.builder(pullRequestJson.id())
                 .commit(INVALID_COMMIT_MESSAGE);
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatFailure(repo, gitHubJson, "commit");
-                    Util.verifyFailedFormatComment(mocks, gitHubJson, "- " + String.format(DEFAULT_COMMIT_MESSAGE,
+                    Util.verifyFormatFailure(repo, pullRequestJson, "commit");
+                    Util.verifyFailedFormatComment(mocks, pullRequestJson, "- " + String.format(DEFAULT_COMMIT_MESSAGE,
                             PROJECT_PATTERN_REGEX.formatted("WFLY", "WFLY")));
                 });
     }
@@ -87,12 +87,12 @@ public class PRCommitCheckTest {
                 """;
 
         given()
-                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-                .when().payloadFromString(gitHubJson.jsonString())
+                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatSuccess(repo, gitHubJson);
+                    Util.verifyFormatSuccess(repo, pullRequestJson);
                 });
     }
 
@@ -108,7 +108,7 @@ public class PRCommitCheckTest {
                       enabled: true
                 """;
 
-        mockedContext = MockedContext.builder(gitHubJson.id())
+        mockedContext = MockedContext.builder(pullRequestJson.id())
                 .commit("""
                         WFLY-18341 Restore incorrectly updated copyright dates in Jipijapa
 
@@ -116,12 +116,12 @@ public class PRCommitCheckTest {
                         096a516e745663a99fce0062ff4bb93a4ca1066f:
                         Upgrade to Hibernate Search 6.2.0.CR1""");
         given()
-                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
+                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatSuccess(repo, gitHubJson);
+                    Util.verifyFormatSuccess(repo, pullRequestJson);
                 });
     }
 
@@ -134,12 +134,12 @@ public class PRCommitCheckTest {
                 """;
 
         given()
-                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-                .when().payloadFromString(gitHubJson.jsonString())
+                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatSuccess(repo, gitHubJson);
+                    Util.verifyFormatSuccess(repo, pullRequestJson);
                 });
     }
 
@@ -151,15 +151,15 @@ public class PRCommitCheckTest {
                     commit:
                       enabled: false
                 """;
-        mockedContext = MockedContext.builder(gitHubJson.id())
+        mockedContext = MockedContext.builder(pullRequestJson.id())
                 .commit(INVALID_COMMIT_MESSAGE);
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatSuccess(repo, gitHubJson);
+                    Util.verifyFormatSuccess(repo, pullRequestJson);
                 });
     }
 
@@ -172,16 +172,16 @@ public class PRCommitCheckTest {
                       message: "Lorem ipsum dolor sit amet"
                 """;
 
-        mockedContext = MockedContext.builder(gitHubJson.id())
+        mockedContext = MockedContext.builder(pullRequestJson.id())
                 .commit(INVALID_COMMIT_MESSAGE);
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatFailure(repo, gitHubJson, "commit");
-                    Util.verifyFailedFormatComment(mocks, gitHubJson, "- Lorem ipsum dolor sit amet");
+                    Util.verifyFormatFailure(repo, pullRequestJson, "commit");
+                    Util.verifyFailedFormatComment(mocks, pullRequestJson, "- Lorem ipsum dolor sit amet");
                 });
     }
 }

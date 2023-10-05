@@ -4,7 +4,7 @@ import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.config.WildFlyBotConfig;
 import io.xstefank.wildfly.bot.utils.Action;
-import io.xstefank.wildfly.bot.utils.GitHubJson;
+import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.MockedContext;
 import io.xstefank.wildfly.bot.utils.TestConstants;
 import io.xstefank.wildfly.bot.utils.Util;
@@ -32,14 +32,14 @@ import static org.mockito.ArgumentMatchers.anyString;
 public class PRNotifyChangeOnPREditTest {
 
     private String wildflyConfigFile;
-    private static GitHubJson gitHubJson;
+    private static PullRequestJson pullRequestJson;
 
     @Inject
     WildFlyBotConfig wildFlyBotConfig;
 
     @BeforeAll
     static void setupTests() throws IOException {
-        gitHubJson = GitHubJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .action(Action.EDITED)
                 .build();
     }
@@ -55,19 +55,19 @@ public class PRNotifyChangeOnPREditTest {
                     - id: "previous rule"
                       directories: [app]
                       notify: [user1]""";
-        MockedContext mockedContext = MockedContext.builder(gitHubJson.id())
+        MockedContext mockedContext = MockedContext.builder(pullRequestJson.id())
                 .commit("WFLY-123 commit")
                 .prFiles("src/pom.xml", "app/pom.xml")
                 .users("user1", "user2")
                 .reviewers("user1");
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.never())
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never())
                             .comment(anyString());
                     ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id())).requestReviewers(captor.capture());
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).requestReviewers(captor.capture());
                     Assertions.assertEquals(captor.getValue().size(), 1);
                     MatcherAssert.assertThat(captor.getValue().stream()
                             .map(GHPerson::getLogin)
@@ -87,20 +87,20 @@ public class PRNotifyChangeOnPREditTest {
                     - id: "test2"
                       title: "WFLY"
                       notify: [user2, user3]""";
-        MockedContext mockedContext = MockedContext.builder(gitHubJson.id())
+        MockedContext mockedContext = MockedContext.builder(pullRequestJson.id())
                 .comment("/cc @user3", wildFlyBotConfig.githubName())
                 .commit("WFLY-123 commit")
                 .prFiles("src/pom.xml", "app/pom.xml")
                 .users("user1", "user2")
                 .reviewers("user1");
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.never())
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never())
                             .comment(anyString());
                     ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id())).requestReviewers(captor.capture());
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).requestReviewers(captor.capture());
                     Assertions.assertEquals(captor.getValue().size(), 1);
                     MatcherAssert.assertThat(captor.getValue().stream()
                             .map(GHPerson::getLogin)
@@ -120,18 +120,18 @@ public class PRNotifyChangeOnPREditTest {
                     - id: "test2"
                       title: "WFLY"
                       notify: [user2, user3]""";
-        MockedContext mockedContext = MockedContext.builder(gitHubJson.id())
+        MockedContext mockedContext = MockedContext.builder(pullRequestJson.id())
                 .commit("WFLY-123 commit")
                 .prFiles("src/pom.xml", "app/pom.xml")
                 .users("user1", "user2")
                 .reviewers("user1");
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id())).comment("/cc @user3");
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).comment("/cc @user3");
                     ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id())).requestReviewers(captor.capture());
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).requestReviewers(captor.capture());
                     Assertions.assertEquals(captor.getValue().size(), 1);
                     MatcherAssert.assertThat(captor.getValue().stream()
                             .map(GHPerson::getLogin)
@@ -150,15 +150,15 @@ public class PRNotifyChangeOnPREditTest {
                     - id: "previous rule"
                       titleBody: "WFLY"
                       notify: [user1]""";
-        MockedContext mockedContext = MockedContext.builder(gitHubJson.id())
+        MockedContext mockedContext = MockedContext.builder(pullRequestJson.id())
                 .comment("/cc @user1", wildFlyBotConfig.githubName())
                 .commit("WFLY-123 commit");
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     Mockito.verify(mocks.issueComment(0L)).update("/cc @user1, @user2");
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.never()).requestReviewers(anyList());
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never()).requestReviewers(anyList());
                 });
     }
 
@@ -174,17 +174,17 @@ public class PRNotifyChangeOnPREditTest {
                     - id: "test2"
                       title: "WFLY"
                       notify: [user2, user3]""";
-        MockedContext mockedContext = MockedContext.builder(gitHubJson.id())
+        MockedContext mockedContext = MockedContext.builder(pullRequestJson.id())
                 .commit("WFLY-123 commit")
                 .prFiles("src/pom.xml", "app/pom.xml")
                 .users("user1", "user2")
                 .reviewers("user1", "user2");
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id())).comment("/cc @user3");
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.never()).requestReviewers(anyList());
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).comment("/cc @user3");
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never()).requestReviewers(anyList());
                 });
     }
 }

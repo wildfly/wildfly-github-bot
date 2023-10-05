@@ -26,6 +26,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static io.xstefank.wildfly.bot.model.RuntimeConstants.LABEL_FIX_ME;
+import static io.xstefank.wildfly.bot.model.RuntimeConstants.LABEL_NEEDS_REBASE;
+
 @ApplicationScoped
 public class LifecycleProcessor {
 
@@ -75,7 +78,7 @@ public class LifecycleProcessor {
                         List<String> emailAddresses = wildflyBotConfigFile.wildfly.emails;
                         List<String> problems = configFileChangeProcessor.validateFile(wildflyBotConfigFile, repository);
 
-                        githubProcessor.createLabelsIfMissing(repository, Set.of(RuntimeConstants.LABEL_NEEDS_REBASE));
+                        githubProcessor.createLabelsIfMissing(repository, Set.of(LABEL_NEEDS_REBASE, LABEL_FIX_ME));
 
                         if (problems.isEmpty()) {
                             LOG.infof("The configuration file from the repository %s was parsed successfully.",

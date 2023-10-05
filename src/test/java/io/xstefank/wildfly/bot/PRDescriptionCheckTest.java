@@ -4,7 +4,7 @@ import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.format.DescriptionCheck;
 import io.xstefank.wildfly.bot.model.Description;
-import io.xstefank.wildfly.bot.utils.GitHubJson;
+import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.Util;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class PRDescriptionCheckTest {
 
     private static String wildflyConfigFile;
-    private static GitHubJson gitHubJson;
+    private static PullRequestJson pullRequestJson;
 
     @Test
     void configFileNullTest() {
@@ -49,17 +49,17 @@ public class PRDescriptionCheckTest {
                         - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
                           message: "The PR description must contain a link to the JIRA issue"
                 """;
-        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
                 .description(INVALID_DESCRIPTION)
                 .build();
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatFailure(repo, gitHubJson, "description");
-                    Util.verifyFailedFormatComment(mocks, gitHubJson,
+                    Util.verifyFormatFailure(repo, pullRequestJson, "description");
+                    Util.verifyFailedFormatComment(mocks, pullRequestJson,
                             "- The PR description must contain a link to the JIRA issue");
                 });
     }
@@ -73,17 +73,17 @@ public class PRDescriptionCheckTest {
                       regexes:
                         - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
                 """;
-        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
                 .description(INVALID_DESCRIPTION)
                 .build();
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatFailure(repo, gitHubJson, "description");
-                    Util.verifyFailedFormatComment(mocks, gitHubJson, "- Invalid description content");
+                    Util.verifyFormatFailure(repo, pullRequestJson, "description");
+                    Util.verifyFailedFormatComment(mocks, pullRequestJson, "- Invalid description content");
                 });
     }
 
@@ -98,14 +98,14 @@ public class PRDescriptionCheckTest {
                         - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
                           message: "The PR description must contain a link to the JIRA issue"
                 """;
-        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON).build();
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON).build();
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatSuccess(repo, gitHubJson);
+                    Util.verifyFormatSuccess(repo, pullRequestJson);
                 });
     }
 
@@ -116,14 +116,14 @@ public class PRDescriptionCheckTest {
                   format:
                     description:
                 """;
-        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON).build();
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON).build();
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatSuccess(repo, gitHubJson);
+                    Util.verifyFormatSuccess(repo, pullRequestJson);
                 });
     }
 
@@ -138,7 +138,7 @@ public class PRDescriptionCheckTest {
                         - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
                           message: "The PR description must contain a link to the JIRA issue"
                 """;
-        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
                 .description("""
                         First line of description
                         Additional line of description - JIRA: https://issues.redhat.com/browse/WFLY-666
@@ -146,12 +146,12 @@ public class PRDescriptionCheckTest {
                         """)
                 .build();
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatSuccess(repo, gitHubJson);
+                    Util.verifyFormatSuccess(repo, pullRequestJson);
                 });
     }
 
@@ -167,17 +167,17 @@ public class PRDescriptionCheckTest {
                           message: "The PR description must contain a link to the JIRA issue"
                         - pattern: "JIRA"
                 """;
-        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
                 .description("JIRA")
                 .build();
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatFailure(repo, gitHubJson, "description");
-                    Util.verifyFailedFormatComment(mocks, gitHubJson,
+                    Util.verifyFormatFailure(repo, pullRequestJson, "description");
+                    Util.verifyFailedFormatComment(mocks, pullRequestJson,
                             "- The PR description must contain a link to the JIRA issue");
                 });
     }
@@ -194,17 +194,17 @@ public class PRDescriptionCheckTest {
                           message: "The PR description must contain a link to the JIRA issue"
                         - pattern: "JIRA"
                 """;
-        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
                 .description("https://issues.redhat.com/browse/WFLY-123")
                 .build();
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatFailure(repo, gitHubJson, "description");
-                    Util.verifyFailedFormatComment(mocks, gitHubJson, "- Lorem ipsum dolor sit amet");
+                    Util.verifyFormatFailure(repo, pullRequestJson, "description");
+                    Util.verifyFailedFormatComment(mocks, pullRequestJson, "- Lorem ipsum dolor sit amet");
                 });
     }
 
@@ -220,17 +220,17 @@ public class PRDescriptionCheckTest {
                           message: "The PR description must contain a link to the JIRA issue"
                         - pattern: "JIRA"
                 """;
-        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
                 .description(INVALID_DESCRIPTION)
                 .build();
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatFailure(repo, gitHubJson, "description");
-                    Util.verifyFailedFormatComment(mocks, gitHubJson,
+                    Util.verifyFormatFailure(repo, pullRequestJson, "description");
+                    Util.verifyFailedFormatComment(mocks, pullRequestJson,
                             "- The PR description must contain a link to the JIRA issue");
                 });
     }
@@ -247,14 +247,14 @@ public class PRDescriptionCheckTest {
                           message: "The PR description must contain a link to the JIRA issue"
                         - pattern: "JIRA"
                 """;
-        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON).build();
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON).build();
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatSuccess(repo, gitHubJson);
+                    Util.verifyFormatSuccess(repo, pullRequestJson);
                 });
     }
 }

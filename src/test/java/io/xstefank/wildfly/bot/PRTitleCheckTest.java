@@ -4,7 +4,7 @@ import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.format.TitleCheck;
 import io.xstefank.wildfly.bot.model.RegexDefinition;
-import io.xstefank.wildfly.bot.utils.GitHubJson;
+import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.MockedContext;
 import io.xstefank.wildfly.bot.utils.Util;
 import org.junit.jupiter.api.Assertions;
@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class PRTitleCheckTest {
 
     private static String wildflyConfigFile;
-    private static GitHubJson gitHubJson;
+    private static PullRequestJson pullRequestJson;
     private MockedContext mockedContext;
 
     @Test
@@ -50,24 +50,24 @@ public class PRTitleCheckTest {
                     title:
                       enabled: true
                 """;
-        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
                 .title(INVALID_TITLE)
                 .build();
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatFailure(repo, gitHubJson, "title");
-                    Util.verifyFailedFormatComment(mocks, gitHubJson, "- " + String.format(DEFAULT_TITLE_MESSAGE,
+                    Util.verifyFormatFailure(repo, pullRequestJson, "title");
+                    Util.verifyFailedFormatComment(mocks, pullRequestJson, "- " + String.format(DEFAULT_TITLE_MESSAGE,
                             PROJECT_PATTERN_REGEX.formatted("WFLY")));
                 });
     }
 
     @Test
     void incorrectTitleCheckFailFormatConfigMissingTest() throws IOException {
-        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
                 .title(INVALID_TITLE)
                 .build();
         wildflyConfigFile = """
@@ -75,38 +75,38 @@ public class PRTitleCheckTest {
                 """;
 
         given()
-                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-                .when().payloadFromString(gitHubJson.jsonString())
+                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatFailure(repo, gitHubJson, "title");
-                    Util.verifyFailedFormatComment(mocks, gitHubJson, "- " + String.format(DEFAULT_TITLE_MESSAGE,
+                    Util.verifyFormatFailure(repo, pullRequestJson, "title");
+                    Util.verifyFailedFormatComment(mocks, pullRequestJson, "- " + String.format(DEFAULT_TITLE_MESSAGE,
                             PROJECT_PATTERN_REGEX.formatted("WFLY", "WFLY")));
                 });
     }
 
     @Test
     void correctTitleCheckFailFormatConfigMissingTest() throws IOException {
-        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
                 .build();
         wildflyConfigFile = """
                 wildfly:
                 """;
 
         given()
-                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-                .when().payloadFromString(gitHubJson.jsonString())
+                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatSuccess(repo, gitHubJson);
+                    Util.verifyFormatSuccess(repo, pullRequestJson);
                 });
     }
 
     @Test
     void incorrectTitleCheckFailFormatConfigNullTest() throws IOException {
-        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
                 .title(INVALID_TITLE)
                 .build();
         wildflyConfigFile = """
@@ -115,20 +115,20 @@ public class PRTitleCheckTest {
                 """;
 
         given()
-                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-                .when().payloadFromString(gitHubJson.jsonString())
+                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatFailure(repo, gitHubJson, "title");
-                    Util.verifyFailedFormatComment(mocks, gitHubJson, "- " + String.format(DEFAULT_TITLE_MESSAGE,
+                    Util.verifyFormatFailure(repo, pullRequestJson, "title");
+                    Util.verifyFailedFormatComment(mocks, pullRequestJson, "- " + String.format(DEFAULT_TITLE_MESSAGE,
                             PROJECT_PATTERN_REGEX.formatted("WFLY", "WFLY")));
                 });
     }
 
     @Test
     void correctTitleCheckFailFormatConfigNullTest() throws IOException {
-        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
                 .build();
         wildflyConfigFile = """
                 wildfly:
@@ -136,18 +136,18 @@ public class PRTitleCheckTest {
                 """;
 
         given()
-                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-                .when().payloadFromString(gitHubJson.jsonString())
+                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatSuccess(repo, gitHubJson);
+                    Util.verifyFormatSuccess(repo, pullRequestJson);
                 });
     }
 
     @Test
     void incorrectTitleCheckFailFormatTitleConfigNullTest() throws IOException {
-        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
                 .title(INVALID_TITLE)
                 .build();
         wildflyConfigFile = """
@@ -157,20 +157,20 @@ public class PRTitleCheckTest {
                 """;
 
         given()
-                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-                .when().payloadFromString(gitHubJson.jsonString())
+                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatFailure(repo, gitHubJson, "title");
-                    Util.verifyFailedFormatComment(mocks, gitHubJson, "- " + String.format(DEFAULT_TITLE_MESSAGE,
+                    Util.verifyFormatFailure(repo, pullRequestJson, "title");
+                    Util.verifyFailedFormatComment(mocks, pullRequestJson, "- " + String.format(DEFAULT_TITLE_MESSAGE,
                             PROJECT_PATTERN_REGEX.formatted("WFLY", "WFLY")));
                 });
     }
 
     @Test
     void correctTitleCheckFailFormatTitleConfigNullTest() throws IOException {
-        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
                 .build();
         wildflyConfigFile = """
                 wildfly:
@@ -179,12 +179,12 @@ public class PRTitleCheckTest {
                 """;
 
         given()
-                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-                .when().payloadFromString(gitHubJson.jsonString())
+                .github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatSuccess(repo, gitHubJson);
+                    Util.verifyFormatSuccess(repo, pullRequestJson);
                 });
     }
 
@@ -196,14 +196,14 @@ public class PRTitleCheckTest {
                     title:
                       enabled: true
                 """;
-        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON).build();
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON).build();
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatSuccess(repo, gitHubJson);
+                    Util.verifyFormatSuccess(repo, pullRequestJson);
                 });
     }
 
@@ -215,16 +215,16 @@ public class PRTitleCheckTest {
                     title:
                       enabled: false
                 """;
-        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
                 .title(INVALID_TITLE)
                 .build();
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatSuccess(repo, gitHubJson);
+                    Util.verifyFormatSuccess(repo, pullRequestJson);
                 });
     }
 
@@ -236,19 +236,19 @@ public class PRTitleCheckTest {
                     title:
                       message: "Custom title message"
                 """;
-        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
                 .title(INVALID_TITLE)
                 .build();
-        mockedContext = MockedContext.builder(gitHubJson.id())
+        mockedContext = MockedContext.builder(pullRequestJson.id())
                 .commit("WFLY-00000 commit");
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatFailure(repo, gitHubJson, "title");
-                    Util.verifyFailedFormatComment(mocks, gitHubJson, "- Custom title message");
+                    Util.verifyFormatFailure(repo, pullRequestJson, "title");
+                    Util.verifyFailedFormatComment(mocks, pullRequestJson, "- Custom title message");
                 });
     }
 }

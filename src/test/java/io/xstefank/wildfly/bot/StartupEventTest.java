@@ -13,8 +13,8 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestExtension;
 import io.xstefank.wildfly.bot.model.RuntimeConstants;
-import io.xstefank.wildfly.bot.utils.GitHubJson;
 import io.xstefank.wildfly.bot.utils.MockedContext;
+import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import org.jboss.logmanager.Level;
@@ -36,10 +36,13 @@ import org.kohsuke.github.PagedSearchIterable;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.logging.LogManager;
 
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
+import static io.xstefank.wildfly.bot.model.RuntimeConstants.LABEL_FIX_ME;
+import static io.xstefank.wildfly.bot.model.RuntimeConstants.LABEL_NEEDS_REBASE;
 import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
 import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -47,6 +50,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -68,7 +72,7 @@ public class StartupEventTest {
     @Inject
     MockMailbox mailbox;
 
-    private static GitHubJson gitHubJson;
+    private static PullRequestJson pullRequestJson;
 
     private static final java.util.logging.Logger rootLogger = LogManager.getLogManager().getLogger("io.xstefank.wildfly.bot");
     private static final InMemoryLogHandler inMemoryLogHandler = new InMemoryLogHandler(
@@ -78,8 +82,15 @@ public class StartupEventTest {
         rootLogger.addHandler(inMemoryLogHandler);
     }
 
+    private MockedContext mockedContext;
+
     @RegisterExtension
     static QuarkusTestExtension TEST = new QuarkusTestExtension();
+
+    @BeforeEach
+    void setup() {
+        mockedContext = MockedContext.builder(1371642823);
+    }
 
     private class CustomGithubMockSetup implements GitHubMockSetup {
 
@@ -127,7 +138,7 @@ public class StartupEventTest {
             when(mockIterator.next()).thenReturn(repo);
             when(mockIterator.hasNext()).thenReturn(true).thenReturn(false);
 
-            MockedContext.builder(1371642823).mock(mocks);
+            mockedContext.mock(mocks);
 
             startupEvent.fire(new StartupEvent());
         }
@@ -135,7 +146,7 @@ public class StartupEventTest {
 
     @BeforeAll
     static void setUpGitHubJson() throws IOException {
-        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON).build();
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON).build();
     }
 
     @BeforeEach
@@ -153,7 +164,7 @@ public class StartupEventTest {
                   emails:
                     - foo@bar.baz
                 """))
-                .when().payloadFromString(gitHubJson.jsonString())
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.STAR)
                 .then().github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
                         logRecord -> logRecord.getMessage().equals(
@@ -170,7 +181,7 @@ public class StartupEventTest {
                   emails:
                     - foo@bar.baz
                 """))
-                .when().payloadFromString(gitHubJson.jsonString())
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.STAR)
                 .then().github(mocks -> {
                     GHRepository repository = mocks.repository(TEST_REPO);
@@ -195,7 +206,7 @@ public class StartupEventTest {
                   emails:
                     - foo@bar.baz
                 """))
-                .when().payloadFromString(gitHubJson.jsonString())
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.STAR)
                 .then().github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
                         logRecord -> logRecord.getMessage().equals(
@@ -214,7 +225,7 @@ public class StartupEventTest {
                   emails:
                     - foo@bar.baz
                 """))
-                .when().payloadFromString(gitHubJson.jsonString())
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.STAR)
                 .then().github(mocks -> {
                     GHRepository repository = mocks.repository(TEST_REPO);
@@ -243,7 +254,7 @@ public class StartupEventTest {
                   emails:
                     - foo@bar.baz
                 """))
-                .when().payloadFromString(gitHubJson.jsonString())
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.STAR)
                 .then()
                 .github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(logRecord -> logRecord
@@ -274,18 +285,37 @@ public class StartupEventTest {
     }
 
     @Test
-    public void testCreateRebaseThisLabel() throws IOException {
+    public void testCreateMissingLabelsLabel() throws IOException {
         given().github(new CustomGithubMockSetup("""
                 wildfly:
                   rules:
                     - title: "Test"
                       id: "test"
                 """))
-                .when().payloadFromString(gitHubJson.jsonString())
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.STAR)
                 .then().github(mocks -> {
-                    GHRepository repository = mocks.repository("xstefank/wildfly");
-                    verify(repository).createLabel(eq(RuntimeConstants.LABEL_NEEDS_REBASE), anyString());
+                    GHRepository repository = mocks.repository(TEST_REPO);
+                    verify(repository).createLabel(eq(LABEL_NEEDS_REBASE), anyString());
+                    verify(repository).createLabel(eq(LABEL_FIX_ME), anyString());
+                });
+    }
+
+    @Test
+    public void testCreateOneMissingLabelsLabel() throws IOException {
+        mockedContext.repoLabels(Set.of(LABEL_FIX_ME));
+        given().github(new CustomGithubMockSetup("""
+                wildfly:
+                  rules:
+                    - title: "Test"
+                      id: "test"
+                """))
+                .when().payloadFromString(pullRequestJson.jsonString())
+                .event(GHEvent.STAR)
+                .then().github(mocks -> {
+                    GHRepository repository = mocks.repository(TEST_REPO);
+                    verify(repository).createLabel(eq(LABEL_NEEDS_REBASE), anyString());
+                    verify(repository, never()).createLabel(eq(LABEL_FIX_ME), anyString());
                 });
     }
 }

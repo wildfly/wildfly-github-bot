@@ -11,12 +11,14 @@ import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
+import org.kohsuke.github.GHLabel;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @RequestScoped
@@ -37,7 +39,7 @@ public class PullRequestRuleProcessor {
 
         String message = githubProcessor.skipPullRequest(pullRequest, wildflyBotConfigFile);
         if (message != null) {
-            LOG.infof("Skipping format due to %s", message);
+            LOG.infof("Skipping rules due to %s", message);
             return;
         }
 
@@ -49,14 +51,14 @@ public class PullRequestRuleProcessor {
         for (WildFlyConfigFile.WildFlyRule rule : wildflyBotConfigFile.wildfly.rules) {
             if (Matcher.notifyRequestReview(pullRequest, rule)) {
                 if (!rule.notify.isEmpty()) {
-                    LOG.infof("Pull Request \"%s\" was matched with a rule, containing notify, with the id: %s.",
+                    LOG.infof("title \"%s\" was matched with a rule, containing notify, with the id: %s.",
                             pullRequest.getTitle(), rule.id != null ? rule.id : "N/A");
                     reviewers.addAll(rule.notify);
                 }
                 labels.addAll(rule.labels);
             } else if (Matcher.notifyComment(pullRequest, rule)) {
                 if (!rule.notify.isEmpty()) {
-                    LOG.infof("Pull Request \"%s\" was matched with a rule, containing notify, with the id: %s.",
+                    LOG.infof("title \"%s\" was matched with a rule, containing notify, with the id: %s.",
                             pullRequest.getTitle(), rule.id != null ? rule.id : "N/A");
                     ccMentions.addAll(rule.notify);
                 }
@@ -69,8 +71,13 @@ public class PullRequestRuleProcessor {
 
         githubProcessor.createLabelsIfMissing(repository, labels);
 
+        List<String> currentLabels = pullRequest.getLabels().stream()
+                .map(GHLabel::getName)
+                .toList();
+        labels.removeIf(currentLabels::contains);
+
         if (!labels.isEmpty()) {
-            LOG.debugf("Adding following labels to Pull Request %s: %s.", pullRequest.getTitle(), labels);
+            LOG.debugf("Adding following labels: %s.", labels);
             pullRequest.addLabels(labels.toArray(String[]::new));
         }
 

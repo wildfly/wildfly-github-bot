@@ -2,9 +2,8 @@ package io.xstefank.wildfly.bot;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
-import io.xstefank.wildfly.bot.model.RuntimeConstants;
-import io.xstefank.wildfly.bot.utils.GitHubJson;
 import io.xstefank.wildfly.bot.utils.MockedContext;
+import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.TestConstants;
 import io.xstefank.wildfly.bot.utils.Util;
 import org.hamcrest.MatcherAssert;
@@ -22,18 +21,20 @@ import java.util.Arrays;
 import java.util.Set;
 
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
+import static io.xstefank.wildfly.bot.utils.Action.SYNCHRONIZE;
 
 @QuarkusTest
 @GitHubAppTest
-public class PRLabelTest {
+public class PRRuleLabelTest {
 
     private String wildflyConfigFile;
-    private static GitHubJson gitHubJson;
+    private static PullRequestJson pullRequestJson;
     private MockedContext mockedContext;
 
     @BeforeAll
     static void setupTests() throws IOException {
-        gitHubJson = GitHubJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+                .action(SYNCHRONIZE)
                 .build();
     }
 
@@ -46,13 +47,13 @@ public class PRLabelTest {
                       title: WFLY
                       labels: [label1]
                        """;
-        mockedContext = MockedContext.builder(gitHubJson.id())
-                .labels(Set.of("label1"));
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
+        mockedContext = MockedContext.builder(pullRequestJson.id())
+                .repoLabels(Set.of("label1"));
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id())).addLabels("label1");
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).addLabels("label1");
                 });
     }
 
@@ -65,14 +66,14 @@ public class PRLabelTest {
                       title: WFLY
                       labels: [label1]
                        """;
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repository = mocks.repository(TestConstants.TEST_REPO);
                     Mockito.verify(repository).createLabel(ArgumentMatchers.eq("label1"), ArgumentMatchers.anyString());
                     final ArgumentCaptor<String[]> argumentCaptor = ArgumentCaptor.forClass(String[].class);
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id())).addLabels(argumentCaptor.capture());
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).addLabels(argumentCaptor.capture());
                     MatcherAssert.assertThat(Arrays.asList(argumentCaptor.getValue()), Matchers.containsInAnyOrder("label1"));
                 });
     }
@@ -86,55 +87,19 @@ public class PRLabelTest {
                       title: WFLY
                       labels: [label1, label2, label3, label4]
                        """;
-        mockedContext = MockedContext.builder(gitHubJson.id())
-                .labels(Set.of("label2", "label4"));
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
+        mockedContext = MockedContext.builder(pullRequestJson.id())
+                .repoLabels(Set.of("label2", "label4"));
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repository = mocks.repository(TestConstants.TEST_REPO);
                     Mockito.verify(repository).createLabel(ArgumentMatchers.eq("label1"), ArgumentMatchers.anyString());
                     Mockito.verify(repository).createLabel(ArgumentMatchers.eq("label3"), ArgumentMatchers.anyString());
                     final ArgumentCaptor<String[]> argumentCaptor = ArgumentCaptor.forClass(String[].class);
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id())).addLabels(argumentCaptor.capture());
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).addLabels(argumentCaptor.capture());
                     MatcherAssert.assertThat(Arrays.asList(argumentCaptor.getValue()),
                             Matchers.containsInAnyOrder("label1", "label2", "label3", "label4"));
-                });
-    }
-
-    @Test
-    public void testNotApplyRebaseThisLabel() throws IOException {
-        wildflyConfigFile = """
-                wildfly:
-                  rules:
-                    - id: "Label rule"
-                      title: WFLY
-                       """;
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson))
-                .when().payloadFromString(gitHubJson.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.never())
-                        .addLabels(ArgumentMatchers.anyString()));
-    }
-
-    @Test
-    public void testApplyRebaseThisLabel() throws IOException {
-        wildflyConfigFile = """
-                wildfly:
-                  rules:
-                    - id: "Label rule"
-                      title: WFLY
-                       """;
-        mockedContext = MockedContext.builder(gitHubJson.id())
-                .mergeable(Boolean.FALSE);
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
-                    final ArgumentCaptor<String[]> argumentCaptor = ArgumentCaptor.forClass(String[].class);
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id())).addLabels(argumentCaptor.capture());
-                    MatcherAssert.assertThat(Arrays.asList(argumentCaptor.getValue()),
-                            Matchers.containsInAnyOrder(RuntimeConstants.LABEL_NEEDS_REBASE));
                 });
     }
 }

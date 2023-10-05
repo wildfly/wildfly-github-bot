@@ -82,7 +82,7 @@ public class ConfigFileChangeProcessor {
                     LOG.errorf(e, "Unable to parse the configuration file from the repository %s",
                             pullRequest.getHead().getRepository().getFullName());
                     githubProcessor.commitStatusError(pullRequest, CHECK_NAME, "Unable to parse the configuration file. " +
-                            "Make sure it can be loaded to model at https://github.com/xstefank/wildfly-github-bot/blob/main/CONFIGURATION.yml");
+                            "Make sure it can be loaded to model at https://github.com/wildfly/wildfly-github-bot/blob/main/CONFIGURATION.yml");
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }

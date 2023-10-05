@@ -2,8 +2,8 @@ package io.xstefank.wildfly.bot;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
-import io.xstefank.wildfly.bot.utils.GitHubJson;
 import io.xstefank.wildfly.bot.utils.MockedContext;
+import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.TestConstants;
 import io.xstefank.wildfly.bot.utils.Util;
 import org.junit.jupiter.api.Assertions;
@@ -27,7 +27,7 @@ import static io.xstefank.wildfly.bot.utils.TestConstants.INVALID_TITLE;
 public class PRMentionsReviewsCombinationTest {
     private static String wildflyConfigFile;
 
-    private static GitHubJson gitHubJson;
+    private static PullRequestJson pullRequestJson;
     private MockedContext mockedContext;
 
     @Test
@@ -45,19 +45,20 @@ public class PRMentionsReviewsCombinationTest {
                     commit:
                       enabled: false
                 """;
-        gitHubJson = GitHubJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
-        mockedContext = MockedContext.builder(gitHubJson.id())
+        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
+        mockedContext = MockedContext.builder(pullRequestJson.id())
                 .prFiles("src/main/java/resource/application.properties")
                 .users("user1", "user2");
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.never())
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never())
                             .comment(ArgumentMatchers.anyString());
                     ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.times(2)).requestReviewers(captor.capture());
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.times(2))
+                            .requestReviewers(captor.capture());
                     List<GHUser> requestedReviewers = captor.getAllValues().stream().flatMap(List::stream).toList();
                     Set<String> requestedReviewersLogins = requestedReviewers.stream().map(GHUser::getLogin)
                             .collect(Collectors.toSet());
@@ -80,16 +81,16 @@ public class PRMentionsReviewsCombinationTest {
                     commit:
                       enabled: false
                 """;
-        gitHubJson = GitHubJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
-        mockedContext = MockedContext.builder(gitHubJson.id())
+        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
+        mockedContext = MockedContext.builder(pullRequestJson.id())
                 .users("user1", "user2");
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id())).comment("/cc @user1, @user2");
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.never())
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).comment("/cc @user1, @user2");
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never())
                             .requestReviewers(ArgumentMatchers.anyList());
                 });
     }
@@ -109,21 +110,22 @@ public class PRMentionsReviewsCombinationTest {
                     commit:
                       enabled: false
                 """;
-        gitHubJson = GitHubJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .title(INVALID_TITLE)
                 .build();
-        mockedContext = MockedContext.builder(gitHubJson.id())
+        mockedContext = MockedContext.builder(pullRequestJson.id())
                 .prFiles("src/main/java/resource/application.properties")
                 .users("user1", "user2");
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.never())
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never())
                             .comment(ArgumentMatchers.anyString());
                     ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.times(2)).requestReviewers(captor.capture());
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.times(2))
+                            .requestReviewers(captor.capture());
                     List<GHUser> requestedReviewers = captor.getAllValues().stream().flatMap(List::stream).toList();
                     Set<String> requestedReviewersLogins = requestedReviewers.stream().map(GHUser::getLogin)
                             .collect(Collectors.toSet());
@@ -149,21 +151,22 @@ public class PRMentionsReviewsCombinationTest {
                     commit:
                       enabled: false
                 """;
-        gitHubJson = GitHubJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .title(INVALID_TITLE)
                 .build();
-        mockedContext = MockedContext.builder(gitHubJson.id())
+        mockedContext = MockedContext.builder(pullRequestJson.id())
                 .prFiles("src/main/java/resource/application.properties")
                 .users("user1", "user2");
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.never())
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never())
                             .comment(ArgumentMatchers.anyString());
                     ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.times(2)).requestReviewers(captor.capture());
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.times(2))
+                            .requestReviewers(captor.capture());
                     List<GHUser> requestedReviewers = captor.getAllValues().stream().flatMap(List::stream).toList();
                     Set<String> requestedReviewersLogins = requestedReviewers.stream().map(GHUser::getLogin)
                             .collect(Collectors.toSet());
@@ -189,19 +192,20 @@ public class PRMentionsReviewsCombinationTest {
                     commit:
                       enabled: false
                 """;
-        gitHubJson = GitHubJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .build();
-        mockedContext = MockedContext.builder(gitHubJson.id())
+        mockedContext = MockedContext.builder(pullRequestJson.id())
                 .prFiles("src/main/java/resource/application.properties")
                 .users("user1", "user2");
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id())).comment("/cc @user3");
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).comment("/cc @user3");
                     ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
-                    Mockito.verify(mocks.pullRequest(gitHubJson.id()), Mockito.times(2)).requestReviewers(captor.capture());
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.times(2))
+                            .requestReviewers(captor.capture());
                     List<GHUser> requestedReviewers = captor.getAllValues().stream().flatMap(List::stream).toList();
                     Set<String> requestedReviewersLogins = requestedReviewers.stream().map(GHUser::getLogin)
                             .collect(Collectors.toSet());

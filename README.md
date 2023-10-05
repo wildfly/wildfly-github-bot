@@ -19,10 +19,13 @@ Fields to fill in:
 - Add this link to `Webhook URL`
 4. Set up permissions
 - `Commit statuses` - `Access: Read and write`
+- `Contents` - `Access Read-only`
 - `Metadata` - `Access: Read-only`
 - `Pull requests` - `Access: Read and write`
 5. Subscribe to events
+- `Push` 
 - `Pull requests`
+- `Pull request review`
 - `Pull request review comment`
 6. Create a private key
 

@@ -3,7 +3,7 @@ package io.xstefank.wildfly.bot;
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.config.WildFlyBotConfig;
-import io.xstefank.wildfly.bot.utils.GitHubJson;
+import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.MockedContext;
 import io.xstefank.wildfly.bot.utils.Util;
 import jakarta.inject.Inject;
@@ -32,7 +32,7 @@ import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON
 public class PRUpdateCommentOnEditTest {
 
     private static String wildflyConfigFile;
-    private static GitHubJson gitHubJson;
+    private static PullRequestJson pullRequestJson;
     private MockedContext mockedContext;
 
     @Inject
@@ -48,11 +48,11 @@ public class PRUpdateCommentOnEditTest {
                     commit:
                       enabled: false
                 """;
-        gitHubJson = GitHubJson.builder(VALID_PR_TEMPLATE_JSON)
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
                 .title(INVALID_TITLE)
                 .description(INVALID_DESCRIPTION)
                 .build();
-        mockedContext = MockedContext.builder(gitHubJson.id())
+        mockedContext = MockedContext.builder(pullRequestJson.id())
                 .comment(FAILED_FORMAT_COMMENT.formatted(Stream.of(
                         DEFAULT_COMMIT_MESSAGE.formatted(PROJECT_PATTERN_REGEX.formatted("WFLY")),
                         DEFAULT_TITLE_MESSAGE.formatted(PROJECT_PATTERN_REGEX.formatted("WFLY")),
@@ -60,14 +60,14 @@ public class PRUpdateCommentOnEditTest {
                         .map("- %s"::formatted)
                         .collect(Collectors.joining("\n\n"))), wildFlyBotConfig.githubName());
 
-        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, gitHubJson, mockedContext))
-                .when().payloadFromString(gitHubJson.jsonString())
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHIssueComment comment = mocks.issueComment(0);
                     Mockito.verify(comment).delete();
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    Util.verifyFormatSuccess(repo, gitHubJson);
+                    Util.verifyFormatSuccess(repo, pullRequestJson);
                 });
     }
 }

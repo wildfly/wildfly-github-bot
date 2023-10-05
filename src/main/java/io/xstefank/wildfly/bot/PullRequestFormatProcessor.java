@@ -65,10 +65,6 @@ public class PullRequestFormatProcessor {
         List<Check> checks = initializeChecks(wildflyConfigFile);
         Map<String, String> errors = new HashMap<>();
 
-        if (!pullRequest.getMergeable()) {
-            pullRequest.addLabels(RuntimeConstants.LABEL_NEEDS_REBASE);
-        }
-
         for (Check check : checks) {
             String result = check.check(pullRequest);
             if (result != null) {
