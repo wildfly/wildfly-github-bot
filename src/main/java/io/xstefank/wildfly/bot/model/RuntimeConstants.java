@@ -21,4 +21,6 @@ public class RuntimeConstants {
     public static final String MAIN_BRANCH = "main";
 
     public static final String MAIN_BRANCH_REF = "refs/heads/" + MAIN_BRANCH;
+
+    public static final String DRY_RUN_PREPEND = "DRY_RUN %s";
 }

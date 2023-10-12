@@ -63,7 +63,8 @@ public class LifecycleProcessor {
 
     void onStart(@Observes StartupEvent event) {
         if (wildFlyBotConfig.isDryRun()) {
-            Log.info("Dry Run enabled. GitHub requests will only log statements and not send actual requests to GitHub.");
+            Log.info(RuntimeConstants.DRY_RUN_PREPEND
+                    .formatted("GitHub requests will only log statements and not send actual requests to GitHub."));
         }
 
         long installationId = 0L;

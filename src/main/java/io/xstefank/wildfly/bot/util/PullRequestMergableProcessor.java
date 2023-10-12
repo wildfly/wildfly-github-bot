@@ -20,6 +20,7 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.function.Function;
 
+import static io.xstefank.wildfly.bot.model.RuntimeConstants.DRY_RUN_PREPEND;
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.LABEL_NEEDS_REBASE;
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.MAIN_BRANCH;
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.MAIN_BRANCH_REF;
@@ -58,7 +59,7 @@ public class PullRequestMergableProcessor {
             .invoke(pullRequest1 -> {
                 try {
                     if (wildFlyBotConfig.isDryRun()) {
-                        LOGGER.info("Sending a request to GitHub for mergable status");
+                        LOGGER.info(DRY_RUN_PREPEND.formatted("Sending a request to GitHub for mergable status"));
                     } else {
                         pullRequest1.getMergeable();
                     }
@@ -73,7 +74,7 @@ public class PullRequestMergableProcessor {
             List<String> labelsToAdd = new ArrayList<>();
             List<String> labelsToRemove = new ArrayList<>();
             if (wildFlyBotConfig.isDryRun()) {
-                LOGGER.info("Retrieving mergable status and then we would apply labels accordingly");
+                LOGGER.info(DRY_RUN_PREPEND.formatted("Retrieving mergable status and then we would apply labels accordingly"));
             } else {
                 Optional<Boolean> mergable = Optional.ofNullable(pullRequest.getMergeable());
                 if (mergable.isPresent()) {
