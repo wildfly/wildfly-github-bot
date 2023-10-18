@@ -2,6 +2,7 @@ package io.xstefank.wildfly.bot;
 
 import io.quarkiverse.githubapp.event.PullRequestReview;
 import io.xstefank.wildfly.bot.config.WildFlyBotConfig;
+import io.xstefank.wildfly.bot.model.RuntimeConstants;
 import io.xstefank.wildfly.bot.util.GithubProcessor;
 import io.xstefank.wildfly.bot.util.PullRequestLogger;
 import jakarta.enterprise.context.RequestScoped;
@@ -47,7 +48,8 @@ public class PullRequestReviewProcessor {
             if (pullRequest.getLabels().stream().noneMatch(ghLabel -> ghLabel.getName().equals(LABEL_FIX_ME))) {
                 LOG.infof("Changes requested, applying following labels: %s.", LABEL_FIX_ME);
                 if (wildFlyBotConfig.isDryRun()) {
-                    LOG.infof("The following labels have been applied: %s", LABEL_FIX_ME);
+                    LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("The following labels have been applied: %s"),
+                            LABEL_FIX_ME);
                 } else {
                     pullRequest.addLabels(LABEL_FIX_ME);
                 }

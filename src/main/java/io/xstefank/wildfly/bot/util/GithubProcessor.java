@@ -4,6 +4,7 @@ import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.Mailer;
 import io.xstefank.wildfly.bot.config.WildFlyBotConfig;
 import io.xstefank.wildfly.bot.model.WildFlyConfigFile;
+import io.xstefank.wildfly.bot.model.RuntimeConstants;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
@@ -71,7 +72,8 @@ public class GithubProcessor {
         String sha = pullRequest.getHead().getSha();
 
         if (wildFlyBotConfig.isDryRun()) {
-            LOG.infof("Commit status success {%s, %s, %s}", sha, checkName, description);
+            LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Commit status success {%s, %s, %s}"), sha, checkName,
+                    description);
         } else {
             pullRequest.getRepository().createCommitStatus(sha, GHCommitState.SUCCESS, "", description, checkName);
         }
@@ -81,7 +83,8 @@ public class GithubProcessor {
         String sha = pullRequest.getHead().getSha();
 
         if (wildFlyBotConfig.isDryRun()) {
-            LOG.infof("Commit status failure {%s, %s, %s}", sha, checkName, description);
+            LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Commit status failure {%s, %s, %s}"), sha, checkName,
+                    description);
         } else {
             pullRequest.getRepository().createCommitStatus(sha, GHCommitState.ERROR, "", description, checkName);
         }
@@ -107,7 +110,8 @@ public class GithubProcessor {
 
         if (!reviewers.isEmpty()) {
             if (wildFlyBotConfig.isDryRun()) {
-                LOG.infof("PR review requested from \"%s\"", String.join(",", reviewers));
+                LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("PR review requested from \"%s\""),
+                        String.join(",", reviewers));
             } else {
                 List<String> failedReviewers = new ArrayList<>();
                 for (String requestedReviewer : reviewers) {
@@ -141,7 +145,7 @@ public class GithubProcessor {
                     && comment.getBody().startsWith("/cc")) {
                 if (newMentions.isEmpty()) {
                     if (wildFlyBotConfig.isDryRun()) {
-                        LOG.infof("Delete comment %s", comment);
+                        LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Delete comment %s"), comment);
                     } else {
                         comment.delete();
                     }
@@ -163,7 +167,7 @@ public class GithubProcessor {
 
                         String updatedBody = "/cc @" + String.join(", @", commentMentions);
                         if (wildFlyBotConfig.isDryRun()) {
-                            LOG.infof("Update comment %s to %s", comment.getBody(),
+                            LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Update comment %s to %s"), comment.getBody(),
                                     updatedBody);
                         } else {
                             comment.update(updatedBody);
@@ -180,7 +184,7 @@ public class GithubProcessor {
 
         String updatedBody = "/cc @" + String.join(", @", newMentions);
         if (wildFlyBotConfig.isDryRun()) {
-            LOG.infof("Add new comment %s", updatedBody);
+            LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Add new comment %s"), updatedBody);
         } else {
             pullRequest.comment(updatedBody);
         }
@@ -262,7 +266,7 @@ public class GithubProcessor {
             }
             LOG.info(logMessage);
             if (wildFlyBotConfig.isDryRun()) {
-                LOG.infof("Added the following labels: %s", labelsToAdd);
+                LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Added the following labels: %s"), labelsToAdd);
             } else {
                 pullRequest.addLabels(labelsToAdd.toArray(String[]::new));
             }
@@ -275,7 +279,7 @@ public class GithubProcessor {
             }
             LOG.info(logMessage);
             if (wildFlyBotConfig.isDryRun()) {
-                LOG.infof("Removed the following labels: %s", labelsToRemove);
+                LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Removed the following labels: %s"), labelsToRemove);
             } else {
                 pullRequest.removeLabels(labelsToRemove.toArray(String[]::new));
             }

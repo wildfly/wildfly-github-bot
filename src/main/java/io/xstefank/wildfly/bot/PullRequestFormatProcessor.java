@@ -93,7 +93,7 @@ public class PullRequestFormatProcessor {
                     " and add new comment containing this JIRA link please.")
                     .formatted(wildflyConfigFile.wildfly.projectKey);
             if (wildFlyBotConfig.isDryRun()) {
-                LOG.infof("Add new comment %s", comment);
+                LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Add new comment %s"), comment);
             } else {
                 pullRequest.comment(comment);
             }
@@ -112,7 +112,7 @@ public class PullRequestFormatProcessor {
                     && comment.getBody().startsWith("Failed format check")) {
                 if (errors == null) {
                     if (wildFlyBotConfig.isDryRun()) {
-                        LOG.infof("Delete comment %s", comment);
+                        LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Delete comment %s"), comment);
                     } else {
                         comment.delete();
                     }
@@ -125,7 +125,8 @@ public class PullRequestFormatProcessor {
                         .collect(Collectors.joining("\n\n")));
 
                 if (wildFlyBotConfig.isDryRun()) {
-                    LOG.infof("Update comment \"%s\" to \"%s\"", comment.getBody(), updatedBody);
+                    LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Update comment \"%s\" to \"%s\""), comment.getBody(),
+                            updatedBody);
                 } else {
                     comment.update(updatedBody);
                 }
@@ -139,7 +140,7 @@ public class PullRequestFormatProcessor {
                     .map("- %s"::formatted)
                     .collect(Collectors.joining("\n\n")));
             if (wildFlyBotConfig.isDryRun()) {
-                LOG.infof("Add new comment %s", updatedBody);
+                LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Add new comment %s"), updatedBody);
             } else {
                 pullRequest.comment(updatedBody);
             }
