@@ -191,7 +191,7 @@ public class StartupEventTest {
                     Assertions.assertEquals(sent.get(0).getSubject(), LifecycleProcessor.EMAIL_SUBJECT);
                     Assertions.assertEquals(sent.get(0).getText(), LifecycleProcessor.EMAIL_TEXT.formatted(
                             RuntimeConstants.CONFIG_FILE_NAME, repository.getHttpTransportUrl(),
-                            "- Rule [title=Test, notify=[7125767235, 0979986727]] is missing an id"));
+                            "- [WARN] - Rule [title=Test, notify=[7125767235, 0979986727]] is missing an id"));
                 });
     }
 

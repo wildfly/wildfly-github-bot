@@ -16,29 +16,20 @@ import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
-import org.kohsuke.github.GHIssueComment;
 import org.kohsuke.github.GHPullRequest;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEPENDABOT;
+import static io.xstefank.wildfly.bot.model.RuntimeConstants.FAILED_FORMAT_COMMENT;
 
 @RequestScoped
 public class PullRequestFormatProcessor {
 
-    public static final String FAILED_FORMAT_COMMENT = """
-            Failed format check on this pull request:
-
-            %s
-
-            Please fix the format according to these guidelines.
-            """;
     private static final Logger LOG_DELEGATE = Logger.getLogger(PullRequestFormatProcessor.class);
     private final PullRequestLogger LOG = new PullRequestLogger(LOG_DELEGATE);
     private static final String CHECK_NAME = "Format";
@@ -74,11 +65,10 @@ public class PullRequestFormatProcessor {
 
         if (errors.isEmpty()) {
             githubProcessor.commitStatusSuccess(pullRequest, CHECK_NAME, "Valid");
-            deleteFormatComment(pullRequest);
         } else {
             githubProcessor.commitStatusError(pullRequest, CHECK_NAME, "Failed checks: " + String.join(", ", errors.keySet()));
-            formatComment(pullRequest, errors.values());
         }
+        githubProcessor.formatComment(pullRequest, FAILED_FORMAT_COMMENT, errors.values());
     }
 
     void postDependabotInfo(@PullRequest.Opened GHEventPayload.PullRequest pullRequestPayload,
@@ -99,52 +89,6 @@ public class PullRequestFormatProcessor {
             }
         }
 
-    }
-
-    private void deleteFormatComment(GHPullRequest pullRequest) throws IOException {
-        formatComment(pullRequest, null);
-    }
-
-    private void formatComment(GHPullRequest pullRequest, Collection<String> errors) throws IOException {
-        boolean update = false;
-        for (GHIssueComment comment : pullRequest.listComments()) {
-            if (comment.getUser().getLogin().equals(wildFlyBotConfig.githubName())
-                    && comment.getBody().startsWith("Failed format check")) {
-                if (errors == null) {
-                    if (wildFlyBotConfig.isDryRun()) {
-                        LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Delete comment %s"), comment);
-                    } else {
-                        comment.delete();
-                    }
-                    update = true;
-                    break;
-                }
-
-                String updatedBody = FAILED_FORMAT_COMMENT.formatted(errors.stream()
-                        .map("- %s"::formatted)
-                        .collect(Collectors.joining("\n\n")));
-
-                if (wildFlyBotConfig.isDryRun()) {
-                    LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Update comment \"%s\" to \"%s\""), comment.getBody(),
-                            updatedBody);
-                } else {
-                    comment.update(updatedBody);
-                }
-                update = true;
-                break;
-            }
-        }
-
-        if (!update && errors != null) {
-            String updatedBody = FAILED_FORMAT_COMMENT.formatted(errors.stream()
-                    .map("- %s"::formatted)
-                    .collect(Collectors.joining("\n\n")));
-            if (wildFlyBotConfig.isDryRun()) {
-                LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Add new comment %s"), updatedBody);
-            } else {
-                pullRequest.comment(updatedBody);
-            }
-        }
     }
 
     private List<Check> initializeChecks(WildFlyConfigFile wildflyConfigFile) {

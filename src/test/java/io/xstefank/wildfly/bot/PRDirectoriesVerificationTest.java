@@ -88,7 +88,8 @@ public class PRDirectoriesVerificationTest {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     Mockito.verify(repo).getDirectoryContent("src");
                     Mockito.verify(repo).createCommitStatus(pullRequestJson.commitSHA(),
-                            GHCommitState.ERROR, "", "Rule is missing an id or multiple rules have the same id.",
+                            GHCommitState.ERROR, "",
+                            "One or multiple rules are invalid, please see the comment stating the problems",
                             "Configuration File");
                 });
     }
@@ -146,7 +147,8 @@ public class PRDirectoriesVerificationTest {
                     Mockito.verify(repo).getDirectoryContent("src/main");
                     Mockito.verify(repo).getDirectoryContent("src/test");
                     Mockito.verify(repo).createCommitStatus(pullRequestJson.commitSHA(),
-                            GHCommitState.ERROR, "", "Rule is missing an id or multiple rules have the same id.",
+                            GHCommitState.ERROR, "",
+                            "One or multiple rules are invalid, please see the comment stating the problems",
                             "Configuration File");
                 });
     }

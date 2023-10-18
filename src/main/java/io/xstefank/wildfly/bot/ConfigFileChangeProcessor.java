@@ -29,12 +29,16 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static io.xstefank.wildfly.bot.model.RuntimeConstants.FAILED_CONFIGFILE_COMMENT;
+
 @RequestScoped
 public class ConfigFileChangeProcessor {
 
     private static final String CHECK_NAME = "Configuration File";
     private static final Logger LOG_DELEGATE = Logger.getLogger(ConfigFileChangeProcessor.class);
     private final PullRequestLogger LOG = new PullRequestLogger(LOG_DELEGATE);
+    private static final String WARN_RULE = "[WARN] - %s";
+    private static final String ERROR_RULE = "[ERROR] - %s";
 
     @Inject
     GitHubConfigFileProviderImpl fileProvider;
@@ -70,9 +74,10 @@ public class ConfigFileChangeProcessor {
                             LOG.debug("Configuration File check successful");
                         } else {
                             githubProcessor.commitStatusError(pullRequest, CHECK_NAME,
-                                    "Rule is missing an id or multiple rules have the same id.");
+                                    "One or multiple rules are invalid, please see the comment stating the problems");
                             LOG.warnf("Configuration File check unsuccessful. %s", String.join(",", problems));
                         }
+                        githubProcessor.formatComment(pullRequest, FAILED_CONFIGFILE_COMMENT, problems);
                     } else {
                         String message = "Configuration File check unsuccessful. Unable to correctly map loaded file to YAML.";
                         githubProcessor.commitStatusError(pullRequest, CHECK_NAME, message);
@@ -106,14 +111,15 @@ public class ConfigFileChangeProcessor {
                         .forEach(wildFlyRule -> problems.add("Rule [" + wildFlyRule.toPrettyString() + "] and ["
                                 + rule.toPrettyString() + "] have the same id"));
                 if (rule.id == null) {
-                    problems.add("Rule [" + rule.toPrettyString() + "] is missing an id");
+                    problems.add(WARN_RULE.formatted("Rule [" + rule.toPrettyString() + "] is missing an id"));
                 } else {
                     rules.add(rule);
                 }
 
                 for (String label : rule.labels) {
                     if (!repoLabels.contains(label)) {
-                        problems.add("Rule [" + rule.toPrettyString() + "] points to non-existing label: " + label);
+                        problems.add(WARN_RULE
+                                .formatted("Rule [" + rule.toPrettyString() + "] points to non-existing label: " + label));
                     }
                 }
 
@@ -125,8 +131,8 @@ public class ConfigFileChangeProcessor {
                         if (e instanceof GHFileNotFoundException ||
                                 (e instanceof HttpException && !e.getMessage().startsWith(
                                         "Server returned HTTP response code: 200, message: 'null' for URL: https://api.github.com/repos/"))) {
-                            problems.add("Rule [" + rule.toPrettyString()
-                                    + "] has the following non-existing directory specified: " + directory);
+                            problems.add(ERROR_RULE.formatted("Rule [" + rule.toPrettyString()
+                                    + "] has the following non-existing directory specified: " + directory));
                             LOG.debugf(e, "Exception on directories check caught");
                         }
                     }
