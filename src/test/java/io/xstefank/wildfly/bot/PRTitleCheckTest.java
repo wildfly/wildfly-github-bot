@@ -4,13 +4,14 @@ import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.format.TitleCheck;
 import io.xstefank.wildfly.bot.model.RegexDefinition;
-import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.MockedContext;
+import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.Util;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHRepository;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 
@@ -21,6 +22,9 @@ import static io.xstefank.wildfly.bot.utils.TestConstants.INVALID_TITLE;
 import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
 import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 
 /**
  * Tests for the Wildfly -> Format -> Title checks.
@@ -249,6 +253,26 @@ public class PRTitleCheckTest {
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatFailure(repo, pullRequestJson, "title");
                     Util.verifyFailedFormatComment(mocks, pullRequestJson, "- Custom title message");
+                });
+    }
+
+    @Test
+    public void testDisableGlobalFormatCheck() throws IOException {
+        wildflyConfigFile = """
+                wildfly:
+                  format:
+                    enabled: false
+                """;
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
+                .title(INVALID_TITLE)
+                .build();
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Mockito.verify(repo, never()).createCommitStatus(anyString(), any(), anyString(), anyString());
+                    Mockito.verify(repo, never()).createCommitStatus(anyString(), any(), anyString(), anyString(), anyString());
                 });
     }
 }

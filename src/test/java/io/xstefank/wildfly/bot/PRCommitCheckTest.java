@@ -2,13 +2,14 @@ package io.xstefank.wildfly.bot;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
-import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.MockedContext;
+import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.Util;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHRepository;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 
@@ -18,6 +19,9 @@ import static io.xstefank.wildfly.bot.model.RuntimeConstants.PROJECT_PATTERN_REG
 import static io.xstefank.wildfly.bot.utils.TestConstants.INVALID_COMMIT_MESSAGE;
 import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
 import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 
 /**
  * Tests for the Wildfly -> Format -> Commit checks.
@@ -182,6 +186,25 @@ public class PRCommitCheckTest {
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatFailure(repo, pullRequestJson, "commit");
                     Util.verifyFailedFormatComment(mocks, pullRequestJson, "- Lorem ipsum dolor sit amet");
+                });
+    }
+
+    @Test
+    public void testDisableGlobalFormatCheck() throws IOException {
+        wildflyConfigFile = """
+                wildfly:
+                  format:
+                    enabled: false
+                """;
+        mockedContext = MockedContext.builder(pullRequestJson.id())
+                .commit(INVALID_COMMIT_MESSAGE);
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Mockito.verify(repo, never()).createCommitStatus(anyString(), any(), anyString(), anyString());
+                    Mockito.verify(repo, never()).createCommitStatus(anyString(), any(), anyString(), anyString(), anyString());
                 });
     }
 }

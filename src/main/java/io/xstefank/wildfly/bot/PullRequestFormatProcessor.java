@@ -53,6 +53,11 @@ public class PullRequestFormatProcessor {
             return;
         }
 
+        if (!wildflyConfigFile.wildfly.format.enabled) {
+            LOG.info("Skipping format due to format being disabled");
+            return;
+        }
+
         List<Check> checks = initializeChecks(wildflyConfigFile);
         Map<String, String> errors = new HashMap<>();
 
