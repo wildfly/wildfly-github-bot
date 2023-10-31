@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.Nulls;
 
 public final class Format {
 
+    public boolean enabled = true;
+
     @JsonSetter(nulls = Nulls.SKIP)
     public TitlePattern title = new TitlePattern();
 

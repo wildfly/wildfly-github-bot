@@ -9,15 +9,20 @@ import io.xstefank.wildfly.bot.utils.Util;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHRepository;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 import static io.xstefank.wildfly.bot.utils.TestConstants.INVALID_DESCRIPTION;
+import static io.xstefank.wildfly.bot.utils.TestConstants.INVALID_TITLE;
 import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
 import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 
 /**
  * Tests for the Wildfly -> Format -> Description checks.
@@ -255,6 +260,32 @@ public class PRDescriptionCheckTest {
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatSuccess(repo, pullRequestJson);
+                });
+    }
+
+    @Test
+    public void testDisableGlobalFormatCheck() throws IOException {
+        wildflyConfigFile = """
+                wildfly:
+                  format:
+                    enabled: false
+                    description:
+                      message: Default fail message
+                      regexes:
+                        - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
+                          message: "The PR description must contain a link to the JIRA issue"
+                        - pattern: "JIRA"
+                """;
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
+                .title(INVALID_TITLE)
+                .build();
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .when().payloadFromString(pullRequestJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHRepository repo = mocks.repository(TEST_REPO);
+                    Mockito.verify(repo, never()).createCommitStatus(anyString(), any(), anyString(), anyString());
+                    Mockito.verify(repo, never()).createCommitStatus(anyString(), any(), anyString(), anyString(), anyString());
                 });
     }
 }
