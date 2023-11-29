@@ -31,9 +31,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static io.xstefank.wildfly.bot.util.Strings.blockQuoted;
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEPENDABOT;
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.FAILED_FORMAT_COMMENT;
+import static io.xstefank.wildfly.bot.util.Strings.blockQuoted;
 
 @RequestScoped
 public class PullRequestFormatProcessor {
@@ -105,6 +105,7 @@ public class PullRequestFormatProcessor {
         }
 
     }
+
 
     private void generateAppendedMessage(GHPullRequest pullRequest, Pattern projectPattern) throws IOException {
         Set<String> jiraIssues = parseJiraIssues(pullRequest, projectPattern);
