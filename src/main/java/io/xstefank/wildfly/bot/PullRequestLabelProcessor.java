@@ -11,6 +11,7 @@ import org.kohsuke.github.GHPullRequest;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.LABEL_FIX_ME;
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.LABEL_NEEDS_REBASE;
@@ -38,7 +39,8 @@ public class PullRequestLabelProcessor {
         List<String> labelsToAdd = new ArrayList<>();
         List<String> labelsToRemove = new ArrayList<>(List.of(LABEL_FIX_ME));
 
-        if (!pullRequest.getMergeable()) {
+        // By default, if we do not know the state, consider it mergable.
+        if (!Optional.ofNullable(pullRequest.getMergeable()).orElse(true)) {
             labelsToAdd.add(LABEL_NEEDS_REBASE);
         } else {
             labelsToRemove.add(LABEL_NEEDS_REBASE);
