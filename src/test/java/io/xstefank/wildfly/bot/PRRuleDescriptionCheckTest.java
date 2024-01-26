@@ -14,8 +14,8 @@ import java.io.IOException;
 
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 import static io.xstefank.wildfly.bot.utils.TestConstants.INVALID_DESCRIPTION;
-import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
+import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 
 /**
  * Tests for the Wildfly -> Rules -> Body checks.
