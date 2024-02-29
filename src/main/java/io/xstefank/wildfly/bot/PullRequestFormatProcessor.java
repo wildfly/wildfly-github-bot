@@ -15,6 +15,7 @@ import io.xstefank.wildfly.bot.util.PullRequestLogger;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
+import org.kohsuke.github.GHCommitStatus;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHPullRequestCommitDetail;
@@ -31,9 +32,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static io.xstefank.wildfly.bot.util.Strings.blockQuoted;
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEPENDABOT;
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.FAILED_FORMAT_COMMENT;
+import static io.xstefank.wildfly.bot.util.Strings.blockQuoted;
 
 @RequestScoped
 public class PullRequestFormatProcessor {
@@ -57,6 +58,14 @@ public class PullRequestFormatProcessor {
 
         String message = githubProcessor.skipPullRequest(pullRequest, wildflyConfigFile);
         if (message != null) {
+            String sha = pullRequest.getHead().getSha();
+            for (GHCommitStatus commitStatus : pullRequest.getRepository().listCommitStatuses(sha)) {
+                // only update format check, if it was created
+                if (commitStatus.getContext().equals(CHECK_NAME)) {
+                    githubProcessor.commitStatusSuccess(pullRequest, CHECK_NAME, "Valid [Skipped]");
+                }
+            }
+            githubProcessor.deleteFormatComment(pullRequest, FAILED_FORMAT_COMMENT);
             LOG.infof("Skipping format due to %s", message);
             return;
         }

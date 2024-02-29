@@ -71,7 +71,7 @@ public class ConfigFileChangeProcessor {
                         List<String> problems = validateFile(file.get(), repository);
                         if (problems.isEmpty()) {
                             githubProcessor.commitStatusSuccess(pullRequest, CHECK_NAME, "Valid");
-                            LOG.debug("Configuration File check successful");
+                            LOG.info("Configuration File check successful");
                         } else {
                             githubProcessor.commitStatusError(pullRequest, CHECK_NAME,
                                     "One or multiple rules are invalid, please see the comment stating the problems");

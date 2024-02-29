@@ -54,8 +54,10 @@ public class PRSkipPullRequestTest {
                 .then().github(mocks -> {
                     verify(mocks.pullRequest(pullRequestJson.id()), times(2)).getBody();
                     verify(mocks.pullRequest(pullRequestJson.id())).listFiles();
+                    verify(mocks.pullRequest(pullRequestJson.id())).listComments();
                     // Following invocations are used for logging
                     verify(mocks.pullRequest(pullRequestJson.id()), times(2)).getNumber();
+                    // commit status should not be set
                     verifyNoMoreInteractions(mocks.pullRequest(pullRequestJson.id()));
                 });
     }
@@ -73,6 +75,8 @@ public class PRSkipPullRequestTest {
                     verify(mocks.pullRequest(pullRequestJson.id()), times(2)).getBody();
                     verify(mocks.pullRequest(pullRequestJson.id())).listFiles();
                     verify(mocks.pullRequest(pullRequestJson.id()), times(2)).isDraft();
+                    verify(mocks.pullRequest(pullRequestJson.id())).listComments();
+                    // commit status should not be set
                     verifyNoMoreInteractions(mocks.pullRequest(pullRequestJson.id()));
                 });
     }
