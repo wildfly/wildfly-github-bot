@@ -3,6 +3,7 @@ package io.xstefank.wildfly.bot.utils;
 import io.quarkiverse.githubapp.testing.GitHubAppMockito;
 import io.quarkiverse.githubapp.testing.dsl.GitHubMockContext;
 import io.smallrye.mutiny.tuples.Tuple2;
+import org.kohsuke.github.GHCommitStatus;
 import org.kohsuke.github.GHContent;
 import org.kohsuke.github.GHFileNotFoundException;
 import org.kohsuke.github.GHIssueComment;
@@ -31,6 +32,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static io.xstefank.wildfly.bot.utils.TestConstants.INSTALLATION_ID;
 import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
+import static org.mockito.ArgumentMatchers.anyString;
 
 public class MockedContext {
 
@@ -41,6 +43,7 @@ public class MockedContext {
     private Set<String> reviewers = new LinkedHashSet<>();
     private Set<String> repoLabels = new LinkedHashSet<>();
     private Set<String> prLabels = new LinkedHashSet<>();
+    private Set<String> commitStatuses = new LinkedHashSet<>();
     private final List<MockedCommit> commits = new ArrayList<>();
     private final Set<String> repositoryDirectories = new LinkedHashSet<>();
     private final Set<String> repositoryFiles = new LinkedHashSet<>();
@@ -126,6 +129,11 @@ public class MockedContext {
         return this;
     }
 
+    public MockedContext commitStatuses(String... commitStatuses) {
+        this.commitStatuses.addAll(Arrays.asList(commitStatuses));
+        return this;
+    }
+
     public void mock(GitHubMockContext mocks) throws IOException {
         AtomicLong id = new AtomicLong(0L);
 
@@ -176,6 +184,17 @@ public class MockedContext {
         Mockito.when(pullRequest.listCommits()).thenReturn(commitDetails);
 
         GHRepository repository = mocks.repository(this.repository);
+
+        List<GHCommitStatus> mockedCommitStatuses = new ArrayList<>();
+        for (String commitStatus : commitStatuses) {
+            GHCommitStatus mockedCommitStatus = Mockito.mock(GHCommitStatus.class);
+            Mockito.when(mockedCommitStatus.getContext()).thenReturn(commitStatus);
+            mockedCommitStatuses.add(mockedCommitStatus);
+        }
+
+        PagedIterable<GHCommitStatus> commitStatusesIterable = GitHubAppMockito
+                .mockPagedIterable(mockedCommitStatuses.toArray(GHCommitStatus[]::new));
+        Mockito.when(repository.listCommitStatuses(anyString())).thenReturn(commitStatusesIterable);
 
         Mockito.when(repository.getCollaboratorNames()).thenReturn(this.users);
 

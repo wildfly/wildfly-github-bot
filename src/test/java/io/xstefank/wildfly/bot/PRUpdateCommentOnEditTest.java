@@ -3,8 +3,9 @@ package io.xstefank.wildfly.bot;
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.config.WildFlyBotConfig;
-import io.xstefank.wildfly.bot.utils.PullRequestJson;
+import io.xstefank.wildfly.bot.utils.Action;
 import io.xstefank.wildfly.bot.utils.MockedContext;
+import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.Util;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
@@ -68,6 +69,36 @@ public class PRUpdateCommentOnEditTest {
                     Mockito.verify(comment).delete();
                     GHRepository repo = mocks.repository(TEST_REPO);
                     Util.verifyFormatSuccess(repo, pullRequestJson);
+                });
+    }
+
+    @Test
+    void testRemoveCommentAndUpdateCommitStatusOnEditToSkipFormatCheck() throws IOException {
+        wildflyConfigFile = """
+                wildfly:
+                  format:
+                """;
+        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
+                .title(INVALID_TITLE)
+                .description("@%s skip format".formatted(wildFlyBotConfig.githubName()))
+                .action(Action.EDITED)
+                .build();
+        mockedContext = MockedContext.builder(pullRequestJson.id())
+                .commitStatuses(pullRequestJson.commitSHA(), "Format")
+                .comment(FAILED_FORMAT_COMMENT.formatted(Stream.of(
+                        DEFAULT_COMMIT_MESSAGE.formatted(PROJECT_PATTERN_REGEX.formatted("WFLY")),
+                        DEFAULT_TITLE_MESSAGE.formatted(PROJECT_PATTERN_REGEX.formatted("WFLY")),
+                        "The PR description must contain a link to the JIRA issue")
+                        .map("- %s"::formatted)
+                        .collect(Collectors.joining("\n\n"))), wildFlyBotConfig.githubName());
+
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when().payloadFromString(pullRequestJson.jsonString())
+                .event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    GHIssueComment comment = mocks.issueComment(0);
+                    Mockito.verify(comment).delete();
+                    Util.verifyFormatSkipped(mocks.repository(TEST_REPO), pullRequestJson);
                 });
     }
 }

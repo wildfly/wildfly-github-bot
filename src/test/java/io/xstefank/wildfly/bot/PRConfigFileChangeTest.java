@@ -22,6 +22,7 @@ import static io.xstefank.wildfly.bot.model.RuntimeConstants.FAILED_CONFIGFILE_C
 import static io.xstefank.wildfly.bot.utils.TestConstants.TEST_REPO;
 import static io.xstefank.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -66,6 +67,7 @@ public class PRConfigFileChangeTest {
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     verify(mocks.pullRequest(pullRequestJson.id())).listFiles();
+                    verify(mocks.pullRequest(pullRequestJson.id())).listComments();
                     GHRepository repo = mocks.repository(TEST_REPO);
                     verify(repo).getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, pullRequestJson.commitSHA());
                     Mockito.verify(repo).createCommitStatus(pullRequestJson.commitSHA(),
@@ -105,7 +107,7 @@ public class PRConfigFileChangeTest {
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     verify(mocks.pullRequest(pullRequestJson.id())).listFiles();
-                    verify(mocks.pullRequest(pullRequestJson.id())).listComments();
+                    verify(mocks.pullRequest(pullRequestJson.id()), times(2)).listComments();
                     GHRepository repo = mocks.repository(TEST_REPO);
                     verify(repo).getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, pullRequestJson.commitSHA());
                     Mockito.verify(repo).createCommitStatus(pullRequestJson.commitSHA(),
@@ -143,7 +145,7 @@ public class PRConfigFileChangeTest {
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     verify(mocks.pullRequest(pullRequestJson.id())).listFiles();
-                    verify(mocks.pullRequest(pullRequestJson.id())).listComments();
+                    verify(mocks.pullRequest(pullRequestJson.id()), times(2)).listComments();
                     verify(mocks.pullRequest(pullRequestJson.id())).comment(FAILED_CONFIGFILE_COMMENT.formatted(
                             String.join("\n\n",
                                     List.of(

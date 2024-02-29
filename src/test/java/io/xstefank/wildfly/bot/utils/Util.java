@@ -35,6 +35,11 @@ public class Util {
                 GHCommitState.SUCCESS, "", "Valid", "Format");
     }
 
+    public static void verifyFormatSkipped(GHRepository repo, PullRequestJson pullRequestJson) throws IOException {
+        Mockito.verify(repo).createCommitStatus(pullRequestJson.commitSHA(),
+                GHCommitState.SUCCESS, "", "Valid [Skipped]", "Format");
+    }
+
     public static void verifyFormatFailure(GHRepository repo, PullRequestJson pullRequestJson, String failedChecks)
             throws IOException {
         Mockito.verify(repo).createCommitStatus(pullRequestJson.commitSHA(),
