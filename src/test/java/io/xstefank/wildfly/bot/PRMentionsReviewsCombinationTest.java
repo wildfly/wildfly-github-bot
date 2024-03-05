@@ -2,7 +2,9 @@ package io.xstefank.wildfly.bot;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
-import io.xstefank.wildfly.bot.utils.MockedContext;
+import io.xstefank.wildfly.bot.utils.Mockable;
+import io.xstefank.wildfly.bot.utils.MockedGHPullRequest;
+import io.xstefank.wildfly.bot.utils.MockedGHRepository;
 import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.TestConstants;
 import io.xstefank.wildfly.bot.utils.Util;
@@ -28,7 +30,7 @@ public class PRMentionsReviewsCombinationTest {
     private static String wildflyConfigFile;
 
     private static PullRequestJson pullRequestJson;
-    private MockedContext mockedContext;
+    private Mockable mockedContext;
 
     @Test
     public void testMentionsReviewsBothHitSameRule() throws IOException {
@@ -46,8 +48,9 @@ public class PRMentionsReviewsCombinationTest {
                       enabled: false
                 """;
         pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
-        mockedContext = MockedContext.builder(pullRequestJson.id())
-                .prFiles("src/main/java/resource/application.properties")
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+                .files("src/main/java/resource/application.properties")
+                .mockNext(MockedGHRepository.builder())
                 .users("user1", "user2");
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
@@ -82,7 +85,8 @@ public class PRMentionsReviewsCombinationTest {
                       enabled: false
                 """;
         pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
-        mockedContext = MockedContext.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+                .mockNext(MockedGHRepository.builder())
                 .users("user1", "user2");
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
@@ -113,8 +117,9 @@ public class PRMentionsReviewsCombinationTest {
         pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .title(INVALID_TITLE)
                 .build();
-        mockedContext = MockedContext.builder(pullRequestJson.id())
-                .prFiles("src/main/java/resource/application.properties")
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+                .files("src/main/java/resource/application.properties")
+                .mockNext(MockedGHRepository.builder())
                 .users("user1", "user2");
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
@@ -154,8 +159,9 @@ public class PRMentionsReviewsCombinationTest {
         pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .title(INVALID_TITLE)
                 .build();
-        mockedContext = MockedContext.builder(pullRequestJson.id())
-                .prFiles("src/main/java/resource/application.properties")
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+                .files("src/main/java/resource/application.properties")
+                .mockNext(MockedGHRepository.builder())
                 .users("user1", "user2");
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
@@ -194,8 +200,9 @@ public class PRMentionsReviewsCombinationTest {
                 """;
         pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .build();
-        mockedContext = MockedContext.builder(pullRequestJson.id())
-                .prFiles("src/main/java/resource/application.properties")
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+                .files("src/main/java/resource/application.properties")
+                .mockNext(MockedGHRepository.builder())
                 .users("user1", "user2");
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))

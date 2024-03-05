@@ -4,8 +4,10 @@ import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.config.WildFlyBotConfig;
 import io.xstefank.wildfly.bot.utils.Action;
+import io.xstefank.wildfly.bot.utils.Mockable;
+import io.xstefank.wildfly.bot.utils.MockedGHPullRequest;
+import io.xstefank.wildfly.bot.utils.MockedGHRepository;
 import io.xstefank.wildfly.bot.utils.PullRequestJson;
-import io.xstefank.wildfly.bot.utils.MockedContext;
 import io.xstefank.wildfly.bot.utils.TestConstants;
 import io.xstefank.wildfly.bot.utils.Util;
 import jakarta.inject.Inject;
@@ -33,6 +35,7 @@ public class PRNotifyChangeOnPREditTest {
 
     private String wildflyConfigFile;
     private static PullRequestJson pullRequestJson;
+    private Mockable mockedContext;
 
     @Inject
     WildFlyBotConfig wildFlyBotConfig;
@@ -55,11 +58,12 @@ public class PRNotifyChangeOnPREditTest {
                     - id: "previous rule"
                       directories: [app]
                       notify: [user1]""";
-        MockedContext mockedContext = MockedContext.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit("WFLY-123 commit")
-                .prFiles("src/pom.xml", "app/pom.xml")
-                .users("user1", "user2")
-                .reviewers("user1");
+                .files("src/pom.xml", "app/pom.xml")
+                .reviewers("user1")
+                .mockNext(MockedGHRepository.builder())
+                .users("user1", "user2");
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
@@ -87,12 +91,13 @@ public class PRNotifyChangeOnPREditTest {
                     - id: "test2"
                       title: "WFLY"
                       notify: [user2, user3]""";
-        MockedContext mockedContext = MockedContext.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .comment("/cc @user3", wildFlyBotConfig.githubName())
                 .commit("WFLY-123 commit")
-                .prFiles("src/pom.xml", "app/pom.xml")
-                .users("user1", "user2")
-                .reviewers("user1");
+                .files("src/pom.xml", "app/pom.xml")
+                .reviewers("user1")
+                .mockNext(MockedGHRepository.builder())
+                .users("user1", "user2");
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
@@ -120,11 +125,12 @@ public class PRNotifyChangeOnPREditTest {
                     - id: "test2"
                       title: "WFLY"
                       notify: [user2, user3]""";
-        MockedContext mockedContext = MockedContext.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit("WFLY-123 commit")
-                .prFiles("src/pom.xml", "app/pom.xml")
-                .users("user1", "user2")
-                .reviewers("user1");
+                .files("src/pom.xml", "app/pom.xml")
+                .reviewers("user1")
+                .mockNext(MockedGHRepository.builder())
+                .users("user1", "user2");
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
@@ -150,7 +156,7 @@ public class PRNotifyChangeOnPREditTest {
                     - id: "previous rule"
                       titleBody: "WFLY"
                       notify: [user1]""";
-        MockedContext mockedContext = MockedContext.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .comment("/cc @user1", wildFlyBotConfig.githubName())
                 .commit("WFLY-123 commit");
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
@@ -174,11 +180,12 @@ public class PRNotifyChangeOnPREditTest {
                     - id: "test2"
                       title: "WFLY"
                       notify: [user2, user3]""";
-        MockedContext mockedContext = MockedContext.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit("WFLY-123 commit")
-                .prFiles("src/pom.xml", "app/pom.xml")
-                .users("user1", "user2")
-                .reviewers("user1", "user2");
+                .files("src/pom.xml", "app/pom.xml")
+                .reviewers("user1", "user2")
+                .mockNext(MockedGHRepository.builder())
+                .users("user1", "user2");
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)

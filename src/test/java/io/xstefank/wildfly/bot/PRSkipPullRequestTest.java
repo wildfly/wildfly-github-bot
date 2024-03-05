@@ -2,7 +2,8 @@ package io.xstefank.wildfly.bot;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
-import io.xstefank.wildfly.bot.utils.MockedContext;
+import io.xstefank.wildfly.bot.utils.Mockable;
+import io.xstefank.wildfly.bot.utils.MockedGHPullRequest;
 import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.Util;
 import org.junit.jupiter.api.Test;
@@ -23,7 +24,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 public class PRSkipPullRequestTest {
 
     private static PullRequestJson pullRequestJson;
-    private MockedContext mockedContext;
+    private Mockable mockedContext;
     private static final String wildflyConfigFile = """
             wildfly:
               format:
@@ -47,7 +48,7 @@ public class PRSkipPullRequestTest {
 
                         finished""")
                 .build();
-        mockedContext = MockedContext.builder(pullRequestJson.id()).commit(INVALID_COMMIT_MESSAGE);
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id()).commit(INVALID_COMMIT_MESSAGE);
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
@@ -67,7 +68,7 @@ public class PRSkipPullRequestTest {
         pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
                 .title(INVALID_TITLE)
                 .build();
-        mockedContext = MockedContext.builder(pullRequestJson.id()).draft();
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id()).draft();
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)

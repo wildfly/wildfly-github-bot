@@ -4,7 +4,7 @@ import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.InMemoryLogHandler;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.config.WildFlyBotConfig;
-import io.xstefank.wildfly.bot.utils.MockedContext;
+import io.xstefank.wildfly.bot.utils.MockedGHPullRequest;
 import jakarta.inject.Inject;
 import org.jboss.logmanager.Level;
 import org.junit.jupiter.api.Assertions;
@@ -74,7 +74,9 @@ public class PushEventTest {
                 if (i < 2) {
                     // This happens as we mock repository content and on second mocking we invoke the mocked method...
                     try {
-                        MockedContext.builder(i).repository(TEST_REPO).prLabels(LABEL_NEEDS_REBASE).mock(mocks);
+                        MockedGHPullRequest.builder(i)
+                                .labels(LABEL_NEEDS_REBASE)
+                                .mock(mocks);
                     } catch (GHFileNotFoundException ignored) {
                     }
                 }

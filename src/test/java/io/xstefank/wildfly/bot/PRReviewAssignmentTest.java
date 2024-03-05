@@ -6,7 +6,9 @@ import io.quarkus.mailer.MockMailbox;
 import io.quarkus.test.InMemoryLogHandler;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.util.GithubProcessor;
-import io.xstefank.wildfly.bot.utils.MockedContext;
+import io.xstefank.wildfly.bot.utils.Mockable;
+import io.xstefank.wildfly.bot.utils.MockedGHPullRequest;
+import io.xstefank.wildfly.bot.utils.MockedGHRepository;
 import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.TestConstants;
 import io.xstefank.wildfly.bot.utils.Util;
@@ -62,7 +64,7 @@ public class PRReviewAssignmentTest {
             """;
 
     private static PullRequestJson pullRequestJson;
-    private MockedContext mockedContext;
+    private Mockable mockedContext;
 
     @Inject
     MockMailbox mailbox;
@@ -79,8 +81,8 @@ public class PRReviewAssignmentTest {
 
     @Test
     public void testOnlyMissingCollaboratorsNoReviewAssignment() throws IOException {
-        mockedContext = MockedContext.builder(pullRequestJson.id())
-                .prFiles("src/main/java/resource/application.properties");
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+                .files("src/main/java/resource/application.properties");
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
@@ -102,8 +104,9 @@ public class PRReviewAssignmentTest {
 
     @Test
     public void testNoCommentOnlyReviewAssignment() throws IOException {
-        mockedContext = MockedContext.builder(pullRequestJson.id())
-                .prFiles("src/main/java/resource/application.properties")
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+                .files("src/main/java/resource/application.properties")
+                .mockNext(MockedGHRepository.builder())
                 .users("user1", "user2");
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
@@ -123,8 +126,9 @@ public class PRReviewAssignmentTest {
 
     @Test
     public void testCommentAndReviewAssignmentCombination() throws IOException {
-        mockedContext = MockedContext.builder(pullRequestJson.id())
-                .prFiles("src/main/java/resource/application.properties")
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+                .files("src/main/java/resource/application.properties")
+                .mockNext(MockedGHRepository.builder())
                 .users("user1");
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())

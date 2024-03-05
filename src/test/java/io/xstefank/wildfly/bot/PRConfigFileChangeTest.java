@@ -3,7 +3,7 @@ package io.xstefank.wildfly.bot;
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.model.RuntimeConstants;
-import io.xstefank.wildfly.bot.utils.MockedContext;
+import io.xstefank.wildfly.bot.utils.MockedGHPullRequest;
 import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeAll;
@@ -59,8 +59,8 @@ public class PRConfigFileChangeTest {
                         - address@email.com""",
                     "UTF-8"));
 
-            MockedContext.builder(pullRequestJson.id())
-                    .prFiles(".github/wildfly-bot.yml")
+            MockedGHPullRequest.builder(pullRequestJson.id())
+                    .files(".github/wildfly-bot.yml")
                     .mock(mocks);
         })
                 .when().payloadFromString(pullRequestJson.jsonString())
@@ -99,8 +99,8 @@ public class PRConfigFileChangeTest {
                         - address@email.com""",
                     "UTF-8"));
 
-            MockedContext.builder(pullRequestJson.id())
-                    .prFiles(".github/wildfly-bot.yml")
+            MockedGHPullRequest.builder(pullRequestJson.id())
+                    .files(".github/wildfly-bot.yml")
                     .mock(mocks);
         })
                 .when().payloadFromString(pullRequestJson.jsonString())
@@ -137,8 +137,8 @@ public class PRConfigFileChangeTest {
                         - address@email.com""",
                     "UTF-8"));
 
-            MockedContext.builder(pullRequestJson.id())
-                    .prFiles(".github/wildfly-bot.yml")
+            MockedGHPullRequest.builder(pullRequestJson.id())
+                    .files(".github/wildfly-bot.yml")
                     .mock(mocks);
         })
                 .when().payloadFromString(pullRequestJson.jsonString())

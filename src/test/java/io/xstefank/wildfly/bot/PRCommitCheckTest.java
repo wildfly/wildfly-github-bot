@@ -2,7 +2,8 @@ package io.xstefank.wildfly.bot;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
-import io.xstefank.wildfly.bot.utils.MockedContext;
+import io.xstefank.wildfly.bot.utils.Mockable;
+import io.xstefank.wildfly.bot.utils.MockedGHPullRequest;
 import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.Util;
 import org.junit.jupiter.api.BeforeAll;
@@ -32,7 +33,7 @@ public class PRCommitCheckTest {
 
     private static String wildflyConfigFile;
     private static PullRequestJson pullRequestJson;
-    private MockedContext mockedContext;
+    private Mockable mockedContext;
 
     @BeforeAll
     static void setUpGitHubJson() throws IOException {
@@ -47,7 +48,7 @@ public class PRCommitCheckTest {
                     commit:
                       enabled: true
                 """;
-        mockedContext = MockedContext.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit(INVALID_COMMIT_MESSAGE);
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
@@ -67,7 +68,7 @@ public class PRCommitCheckTest {
                   format:
                     commit:
                 """;
-        mockedContext = MockedContext.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit(INVALID_COMMIT_MESSAGE);
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
@@ -112,7 +113,7 @@ public class PRCommitCheckTest {
                       enabled: true
                 """;
 
-        mockedContext = MockedContext.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit("""
                         WFLY-18341 Restore incorrectly updated copyright dates in Jipijapa
 
@@ -155,7 +156,7 @@ public class PRCommitCheckTest {
                     commit:
                       enabled: false
                 """;
-        mockedContext = MockedContext.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit(INVALID_COMMIT_MESSAGE);
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
@@ -176,7 +177,7 @@ public class PRCommitCheckTest {
                       message: "Lorem ipsum dolor sit amet"
                 """;
 
-        mockedContext = MockedContext.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit(INVALID_COMMIT_MESSAGE);
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
@@ -196,7 +197,7 @@ public class PRCommitCheckTest {
                   format:
                     enabled: false
                 """;
-        mockedContext = MockedContext.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit(INVALID_COMMIT_MESSAGE);
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
                 .when().payloadFromString(pullRequestJson.jsonString())

@@ -19,13 +19,13 @@ public class Util {
     public static void mockRepo(GitHubMockSetupContext mocks, String wildflyConfigFile, PullRequestJson pullRequestJson)
             throws IOException {
         mocks.configFile(RuntimeConstants.CONFIG_FILE_NAME).fromString(wildflyConfigFile);
-        MockedContext context = MockedContext.builder(pullRequestJson.id())
+        MockedGHPullRequest context = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit("[WFLY-123] Valid commit message");
         context.mock(mocks);
     }
 
     public static void mockRepo(GitHubMockSetupContext mocks, String wildflyConfigFile, PullRequestJson pullRequestJson,
-            MockedContext context) throws IOException {
+            Mockable context) throws IOException {
         mocks.configFile(RuntimeConstants.CONFIG_FILE_NAME).fromString(wildflyConfigFile);
         context.mock(mocks);
     }
