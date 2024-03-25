@@ -32,6 +32,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static io.xstefank.wildfly.bot.model.RuntimeConstants.BOT_REPO_REF_FOOTER;
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.DEPENDABOT;
 import static io.xstefank.wildfly.bot.model.RuntimeConstants.FAILED_FORMAT_COMMENT;
 import static io.xstefank.wildfly.bot.util.Strings.blockQuoted;
@@ -93,6 +94,9 @@ public class PullRequestFormatProcessor {
             githubProcessor.commitStatusError(pullRequest, CHECK_NAME, "Failed checks: " + String.join(", ", errors.keySet()));
         }
         githubProcessor.formatComment(pullRequest, FAILED_FORMAT_COMMENT, errors.values());
+
+        String updatedBody = pullRequest.getBody() + BOT_REPO_REF_FOOTER.formatted(wildFlyBotConfig.githubName());
+        pullRequest.setBody(updatedBody);
     }
 
     void postDependabotInfo(@PullRequest.Opened GHEventPayload.PullRequest pullRequestPayload,

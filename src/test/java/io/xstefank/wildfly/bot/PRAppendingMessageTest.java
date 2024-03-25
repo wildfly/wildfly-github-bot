@@ -2,20 +2,23 @@ package io.xstefank.wildfly.bot;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
+import io.xstefank.wildfly.bot.config.WildFlyBotConfig;
 import io.xstefank.wildfly.bot.model.RuntimeConstants;
 import io.xstefank.wildfly.bot.utils.Action;
 import io.xstefank.wildfly.bot.utils.MockedGHPullRequest;
 import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.TestConstants;
 import io.xstefank.wildfly.bot.utils.Util;
+import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 import java.io.IOException;
 
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
+import static io.xstefank.wildfly.bot.model.RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE;
+import static io.xstefank.wildfly.bot.model.RuntimeConstants.BOT_REPO_REF_FOOTER;
 import static io.xstefank.wildfly.bot.util.Strings.blockQuoted;
 
 @QuarkusTest
@@ -34,6 +37,9 @@ public class PRAppendingMessageTest {
 
             %s%%s%s""", RuntimeConstants.BOT_MESSAGE_HEADER, blockQuoted(RuntimeConstants.BOT_JIRA_LINKS_HEADER),
             RuntimeConstants.BOT_MESSAGE_FOOTER);
+
+    @Inject
+    WildFlyBotConfig wildFlyBotConfig;
 
     PullRequestJson pullRequestJson;
 
@@ -56,7 +62,6 @@ public class PRAppendingMessageTest {
                             sb.append(blockQuoted(
                                     String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00000")))));
                 });
-
     }
 
     @Test
@@ -244,8 +249,31 @@ public class PRAppendingMessageTest {
                 .commit("WFLY-00003 commit");
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.times(0))
-                            .setBody(ArgumentMatchers.anyString());
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()))
+                            .setBody(body + BOT_REPO_REF_FOOTER.formatted(wildFlyBotConfig.githubName()));
+                });
+    }
+
+    @Test
+    public void testRepoRefFooterAppendedMessage() throws IOException {
+        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+                .action(Action.EDITED)
+                .title("WFLY-00000 title")
+                .description(null)
+                .build();
+
+        String jiraLinkDescription = String.format(appendedMessage,
+                blockQuoted(BOT_JIRA_LINK_COMMENT_TEMPLATE.formatted("WFLY-00000")));
+        // even as the description is set, it's after the start, thus we need to mock it's content to match
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+                .describtion(jiraLinkDescription)
+                .commit("WFLY-00000 commit");
+        given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .when()
+                .payloadFromString(pullRequestJson.jsonString()).event(GHEvent.PULL_REQUEST)
+                .then().github(mocks -> {
+                    String repoRef = jiraLinkDescription + BOT_REPO_REF_FOOTER.formatted(wildFlyBotConfig.githubName());
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).setBody(repoRef);
                 });
     }
 }

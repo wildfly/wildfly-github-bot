@@ -21,6 +21,9 @@ public class RuntimeConstants {
     public static final String BOT_MESSAGE_FOOTER = """
             \n<--- END OF WILDFLY GITHUB BOT REPORT --->""";
 
+    public static final String BOT_REPO_REF_FOOTER = """
+            \n\nMore information about the [%s](https://github.com/wildfly/wildfly-github-bot)""";
+
     public static final String BOT_JIRA_LINKS_HEADER = "Wildfly issue links:\n";
 
     public static final String BOT_JIRA_LINK_TEMPLATE = "https://issues.redhat.com/browse/%1$s";
