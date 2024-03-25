@@ -3,6 +3,28 @@ wildfly-github-bot helps you to keep your pull requests in the correct format.
 
 This project is build with usage of Quarkus GitHub App: https://quarkiverse.github.io/quarkiverse-docs/quarkus-github-app/dev/index.html
 
+## Functionality
+
+* Expected format for Pull Requests - Defined in config file:
+  * Title - Regex, we expect to match for title of the Pull Request.
+  * Commit - Regex, we expect to match for at least one commit in the Pull Request.
+  * Description - Regexes, we expect to match for description of the Pull Request.
+* _Activation Rules_ for matching on Pull Requests and applying __functionality__ - Defined in config file:
+  * __Notify__ - List of people to request Pull Request review. People, we can't request review from, we only cc notify them - Rule functionality.
+  * __Labels__ - Labels to apply on the Pull Request - Rule functionality.
+  * _Title_ - Regex, used on title of the Pull Request - Rule activation.
+  * _Body_ - Regex, used on body of the Pull Request - Rule activation.
+  * _TitleBody_ - Regex, used on either title or body of the Pull Request - Rule activation.
+  * _Directories_ - List of directories, if corresponding files are changed in the Pull Request - Rule activation.
+* Option to disable format checks on Pull Request by adding message `@wildfly-bot[bot] skip format` in the description.
+* Automatically append JIRA links into description of the Pull Request, if issue tracker number is detected in Title, Description or Commit.
+* Automatically applies/removes labels on a Pull Request:
+  * `rebase-this` - depending on conflicts with `main` branch.
+  * `fix-me` - depending on Pull Request Review status update.
+* Tracking changes to config file, if it's kept valid
+* On startup, validates config file, creates `rebase-this` and `fix-me` labels if necessary. Notifies `emails` in case of problems encountered.
+
+
 ## Development
 ### Step 1 - Register the application
 
