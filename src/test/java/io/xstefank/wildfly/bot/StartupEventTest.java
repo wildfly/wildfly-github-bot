@@ -13,7 +13,9 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestExtension;
 import io.xstefank.wildfly.bot.model.RuntimeConstants;
-import io.xstefank.wildfly.bot.utils.MockedContext;
+import io.xstefank.wildfly.bot.utils.Mockable;
+import io.xstefank.wildfly.bot.utils.MockedGHPullRequest;
+import io.xstefank.wildfly.bot.utils.MockedGHRepository;
 import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
@@ -82,14 +84,14 @@ public class StartupEventTest {
         rootLogger.addHandler(inMemoryLogHandler);
     }
 
-    private MockedContext mockedContext;
+    private Mockable mockedContext;
 
     @RegisterExtension
     static QuarkusTestExtension TEST = new QuarkusTestExtension();
 
     @BeforeEach
     void setup() {
-        mockedContext = MockedContext.builder(1371642823);
+        mockedContext = MockedGHPullRequest.builder(1371642823);
     }
 
     private class CustomGithubMockSetup implements GitHubMockSetup {
@@ -303,7 +305,7 @@ public class StartupEventTest {
 
     @Test
     public void testCreateOneMissingLabelsLabel() throws IOException {
-        mockedContext.repoLabels(Set.of(LABEL_FIX_ME));
+        mockedContext = mockedContext.mockNext(MockedGHRepository.builder()).labels(Set.of(LABEL_FIX_ME));
         given().github(new CustomGithubMockSetup("""
                 wildfly:
                   rules:

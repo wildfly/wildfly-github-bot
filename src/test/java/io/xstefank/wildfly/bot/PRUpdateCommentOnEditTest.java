@@ -4,7 +4,9 @@ import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.config.WildFlyBotConfig;
 import io.xstefank.wildfly.bot.utils.Action;
-import io.xstefank.wildfly.bot.utils.MockedContext;
+import io.xstefank.wildfly.bot.utils.Mockable;
+import io.xstefank.wildfly.bot.utils.MockedGHPullRequest;
+import io.xstefank.wildfly.bot.utils.MockedGHRepository;
 import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.Util;
 import jakarta.inject.Inject;
@@ -34,7 +36,7 @@ public class PRUpdateCommentOnEditTest {
 
     private static String wildflyConfigFile;
     private static PullRequestJson pullRequestJson;
-    private MockedContext mockedContext;
+    private Mockable mockedContext;
 
     @Inject
     WildFlyBotConfig wildFlyBotConfig;
@@ -53,7 +55,7 @@ public class PRUpdateCommentOnEditTest {
                 .title(INVALID_TITLE)
                 .description(INVALID_DESCRIPTION)
                 .build();
-        mockedContext = MockedContext.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .comment(FAILED_FORMAT_COMMENT.formatted(Stream.of(
                         DEFAULT_COMMIT_MESSAGE.formatted(PROJECT_PATTERN_REGEX.formatted("WFLY")),
                         DEFAULT_TITLE_MESSAGE.formatted(PROJECT_PATTERN_REGEX.formatted("WFLY")),
@@ -83,14 +85,15 @@ public class PRUpdateCommentOnEditTest {
                 .description("@%s skip format".formatted(wildFlyBotConfig.githubName()))
                 .action(Action.EDITED)
                 .build();
-        mockedContext = MockedContext.builder(pullRequestJson.id())
-                .commitStatuses(pullRequestJson.commitSHA(), "Format")
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .comment(FAILED_FORMAT_COMMENT.formatted(Stream.of(
                         DEFAULT_COMMIT_MESSAGE.formatted(PROJECT_PATTERN_REGEX.formatted("WFLY")),
                         DEFAULT_TITLE_MESSAGE.formatted(PROJECT_PATTERN_REGEX.formatted("WFLY")),
                         "The PR description must contain a link to the JIRA issue")
                         .map("- %s"::formatted)
-                        .collect(Collectors.joining("\n\n"))), wildFlyBotConfig.githubName());
+                        .collect(Collectors.joining("\n\n"))), wildFlyBotConfig.githubName())
+                .mockNext(MockedGHRepository.builder())
+                .commitStatuses(pullRequestJson.commitSHA(), "Format");
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())

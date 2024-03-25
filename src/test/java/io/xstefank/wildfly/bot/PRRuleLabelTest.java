@@ -2,7 +2,8 @@ package io.xstefank.wildfly.bot;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
-import io.xstefank.wildfly.bot.utils.MockedContext;
+import io.xstefank.wildfly.bot.utils.Mockable;
+import io.xstefank.wildfly.bot.utils.MockedGHRepository;
 import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.TestConstants;
 import io.xstefank.wildfly.bot.utils.Util;
@@ -29,7 +30,7 @@ public class PRRuleLabelTest {
 
     private String wildflyConfigFile;
     private static PullRequestJson pullRequestJson;
-    private MockedContext mockedContext;
+    private Mockable mockedContext;
 
     @BeforeAll
     static void setupTests() throws IOException {
@@ -47,8 +48,8 @@ public class PRRuleLabelTest {
                       title: WFLY
                       labels: [label1]
                        """;
-        mockedContext = MockedContext.builder(pullRequestJson.id())
-                .repoLabels(Set.of("label1"));
+        mockedContext = MockedGHRepository.builder()
+                .labels(Set.of("label1"));
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
@@ -87,8 +88,8 @@ public class PRRuleLabelTest {
                       title: WFLY
                       labels: [label1, label2, label3, label4]
                        """;
-        mockedContext = MockedContext.builder(pullRequestJson.id())
-                .repoLabels(Set.of("label2", "label4"));
+        mockedContext = MockedGHRepository.builder()
+                .labels(Set.of("label2", "label4"));
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)

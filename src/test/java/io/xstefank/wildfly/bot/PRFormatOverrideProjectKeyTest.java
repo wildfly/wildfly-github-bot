@@ -3,8 +3,8 @@ package io.xstefank.wildfly.bot;
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.utils.Action;
+import io.xstefank.wildfly.bot.utils.MockedGHPullRequest;
 import io.xstefank.wildfly.bot.utils.PullRequestJson;
-import io.xstefank.wildfly.bot.utils.MockedContext;
 import io.xstefank.wildfly.bot.utils.Util;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
@@ -30,7 +30,7 @@ public class PRFormatOverrideProjectKeyTest {
               projectKey: WFCORE
             """;
     private static PullRequestJson pullRequestJson;
-    private static MockedContext mockedContext;
+    private static MockedGHPullRequest mockedContext;
 
     @Test
     public void testOverridingProjectKeyCorrectTitle() throws IOException {
@@ -38,7 +38,7 @@ public class PRFormatOverrideProjectKeyTest {
                 .action(Action.EDITED)
                 .title("WFCORE-00000 title")
                 .build();
-        mockedContext = MockedContext.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit("[WFCORE-123] Valid commit message");
 
         given()
@@ -56,7 +56,7 @@ public class PRFormatOverrideProjectKeyTest {
         pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
                 .action(Action.EDITED)
                 .build();
-        mockedContext = MockedContext.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit("[WFCORE-123] Valid commit message");
 
         given()

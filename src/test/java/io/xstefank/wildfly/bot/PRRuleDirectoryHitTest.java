@@ -2,7 +2,9 @@ package io.xstefank.wildfly.bot;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
-import io.xstefank.wildfly.bot.utils.MockedContext;
+import io.xstefank.wildfly.bot.utils.Mockable;
+import io.xstefank.wildfly.bot.utils.MockedGHPullRequest;
+import io.xstefank.wildfly.bot.utils.MockedGHRepository;
 import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.Util;
 import org.hamcrest.MatcherAssert;
@@ -33,7 +35,7 @@ public class PRRuleDirectoryHitTest {
 
     private static String wildflyConfigFile;
     private static PullRequestJson pullRequestJson;
-    private MockedContext mockedContext;
+    private Mockable mockedContext;
 
     @BeforeAll
     static void setUpGitHubJson() throws IOException {
@@ -55,11 +57,12 @@ public class PRRuleDirectoryHitTest {
                     title:
                       enabled: false
                 """;
-        mockedContext = MockedContext.builder(pullRequestJson.id())
-                .users("7125767235")
-                .prFiles("appclient/test.txt",
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+                .files("appclient/test.txt",
                         "microprofile/health-smallrye/pom.xml",
-                        "testsuite/integration/basic/pom.xml");
+                        "testsuite/integration/basic/pom.xml")
+                .mockNext(MockedGHRepository.builder())
+                .users("7125767235");
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
@@ -82,11 +85,12 @@ public class PRRuleDirectoryHitTest {
                        - microprofile/health-smallrye
                       notify: [7125767235]
                 """;
-        mockedContext = MockedContext.builder(pullRequestJson.id())
-                .users("7125767235")
-                .prFiles("appclient/test.txt",
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+                .files("appclient/test.txt",
                         "microprofile/health-smallrye/pom.xml",
-                        "testsuite/integration/basic/pom.xml");
+                        "testsuite/integration/basic/pom.xml")
+                .mockNext(MockedGHRepository.builder())
+                .users("7125767235");
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
@@ -114,11 +118,12 @@ public class PRRuleDirectoryHitTest {
                        - testsuite/integration
                       notify: [7125767235]
                 """;
-        mockedContext = MockedContext.builder(pullRequestJson.id())
-                .users("7125767235")
-                .prFiles("appclient/test.txt",
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+                .files("appclient/test.txt",
                         "microprofile/health-smallrye/pom.xml",
-                        "testsuite/integration/basic/pom.xml");
+                        "testsuite/integration/basic/pom.xml")
+                .mockNext(MockedGHRepository.builder())
+                .users("7125767235");
 
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
@@ -146,8 +151,8 @@ public class PRRuleDirectoryHitTest {
                        - transactions
                       notify: [7125767235]
                 """;
-        mockedContext = MockedContext.builder(pullRequestJson.id())
-                .prFiles("appclient/test.txt",
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+                .files("appclient/test.txt",
                         "microprofile/health-smallrye/pom.xml",
                         "testsuite/integration/basic/pom.xml");
 
@@ -173,8 +178,8 @@ public class PRRuleDirectoryHitTest {
                        - app
                       notify: [7125767235]
                 """;
-        mockedContext = MockedContext.builder(pullRequestJson.id())
-                .prFiles("appclient/test.txt",
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+                .files("appclient/test.txt",
                         "microprofile/health-smallrye/pom.xml",
                         "testsuite/integration/basic/pom.xml");
 

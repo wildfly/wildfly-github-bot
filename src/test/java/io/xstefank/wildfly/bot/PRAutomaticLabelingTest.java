@@ -2,7 +2,8 @@ package io.xstefank.wildfly.bot;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
-import io.xstefank.wildfly.bot.utils.MockedContext;
+import io.xstefank.wildfly.bot.utils.Mockable;
+import io.xstefank.wildfly.bot.utils.MockedGHPullRequest;
 import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.TestConstants;
 import io.xstefank.wildfly.bot.utils.Util;
@@ -29,7 +30,7 @@ public class PRAutomaticLabelingTest {
 
     private String wildflyConfigFile;
     private static PullRequestJson pullRequestJson;
-    private MockedContext mockedContext;
+    private Mockable mockedContext;
 
     @BeforeAll
     static void setupTests() throws IOException {
@@ -40,8 +41,8 @@ public class PRAutomaticLabelingTest {
 
     @Test
     public void testNotApplyAndRemoveRebaseThisLabel() throws IOException {
-        mockedContext = MockedContext.builder(pullRequestJson.id())
-                .prLabels(LABEL_NEEDS_REBASE, LABEL_FIX_ME);
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+                .labels(LABEL_NEEDS_REBASE, LABEL_FIX_ME);
         wildflyConfigFile = """
                 wildfly:
                   rules:
@@ -69,7 +70,7 @@ public class PRAutomaticLabelingTest {
                     - id: "Label rule"
                       title: WFLY
                        """;
-        mockedContext = MockedContext.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .mergeable(Boolean.FALSE);
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())

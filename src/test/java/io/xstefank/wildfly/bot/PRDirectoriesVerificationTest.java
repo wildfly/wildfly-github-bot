@@ -3,7 +3,9 @@ package io.xstefank.wildfly.bot;
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.model.RuntimeConstants;
-import io.xstefank.wildfly.bot.utils.MockedContext;
+import io.xstefank.wildfly.bot.utils.Mockable;
+import io.xstefank.wildfly.bot.utils.MockedGHPullRequest;
+import io.xstefank.wildfly.bot.utils.MockedGHRepository;
 import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.TestConstants;
 import org.apache.commons.io.IOUtils;
@@ -27,7 +29,7 @@ import static org.mockito.Mockito.when;
 public class PRDirectoriesVerificationTest {
 
     private static PullRequestJson pullRequestJson;
-    private MockedContext mockedContext;
+    private Mockable mockedContext;
 
     @BeforeAll
     public static void setupTests() throws IOException {
@@ -37,9 +39,10 @@ public class PRDirectoriesVerificationTest {
 
     @Test
     public void existingDirectoryTest() throws IOException {
-        mockedContext = MockedContext.builder(pullRequestJson.id())
-                .prFiles(".github/wildfly-bot.yml")
-                .repoDirectories("src");
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+                .files(".github/wildfly-bot.yml")
+                .mockNext(MockedGHRepository.builder())
+                .directories("src");
         given().github(mocks -> {
             mockedContext.mock(mocks);
             GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
@@ -66,8 +69,8 @@ public class PRDirectoriesVerificationTest {
 
     @Test
     public void nonExistingDirectoryTest() throws IOException {
-        mockedContext = MockedContext.builder(pullRequestJson.id())
-                .prFiles(".github/wildfly-bot.yml");
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+                .files(".github/wildfly-bot.yml");
         given().github(mocks -> {
             mockedContext.mock(mocks);
             GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
@@ -96,9 +99,10 @@ public class PRDirectoriesVerificationTest {
 
     @Test
     public void existingFileTest() throws IOException {
-        mockedContext = MockedContext.builder(pullRequestJson.id())
-                .prFiles(".github/wildfly-bot.yml")
-                .repoFiles("pom.xml");
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+                .files(".github/wildfly-bot.yml")
+                .mockNext(MockedGHRepository.builder())
+                .files("pom.xml");
         given().github(mocks -> {
             mockedContext.mock(mocks);
             GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
@@ -123,9 +127,10 @@ public class PRDirectoriesVerificationTest {
 
     @Test
     public void oneExistingSubdirectoryTest() throws IOException {
-        mockedContext = MockedContext.builder(pullRequestJson.id())
-                .prFiles(".github/wildfly-bot.yml")
-                .repoDirectories("src", "src/main", "src/main/java");
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+                .files(".github/wildfly-bot.yml")
+                .mockNext(MockedGHRepository.builder())
+                .directories("src", "src/main", "src/main/java");
         given().github(mocks -> {
             mockedContext.mock(mocks);
             GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
@@ -155,10 +160,11 @@ public class PRDirectoriesVerificationTest {
 
     @Test
     public void oneExistingFileInSubdirectoryTest() throws IOException {
-        mockedContext = MockedContext.builder(pullRequestJson.id())
-                .prFiles(".github/wildfly-bot.yml")
-                .repoDirectories("src", "src/main", "src/main/java")
-                .repoFiles("src/main/resources/application.properties");
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+                .files(".github/wildfly-bot.yml")
+                .mockNext(MockedGHRepository.builder())
+                .directories("src", "src/main", "src/main/java")
+                .files("src/main/resources/application.properties");
         given().github(mocks -> {
             mockedContext.mock(mocks);
             GHRepository repo = mocks.repository(TestConstants.TEST_REPO);

@@ -2,7 +2,8 @@ package io.xstefank.wildfly.bot;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
-import io.xstefank.wildfly.bot.utils.MockedContext;
+import io.xstefank.wildfly.bot.utils.Mockable;
+import io.xstefank.wildfly.bot.utils.MockedGHPullRequest;
 import io.xstefank.wildfly.bot.utils.PullRequestReviewJson;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
@@ -33,13 +34,13 @@ public class PRReviewFixMeLabelTest {
 
     private static PullRequestReviewJson pullRequestReviewJson;
 
-    private MockedContext mockedContext;
+    private Mockable mockedContext;
 
     @Test
     void notAddingFixMeLabelOnPROpen() throws IOException {
         pullRequestReviewJson = PullRequestReviewJson.<PullRequestReviewJson.Builder<PullRequestReviewJson>> builder(
                 VALID_PR_REVIEW_TEMPLATE_JSON).build();
-        given().github(mocks -> MockedContext.builder(pullRequestReviewJson.id()).mock(mocks))
+        given().github(mocks -> MockedGHPullRequest.builder(pullRequestReviewJson.id()).mock(mocks))
                 .when().payloadFromString(pullRequestReviewJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
@@ -52,7 +53,7 @@ public class PRReviewFixMeLabelTest {
     void notAddingFixMeLabelOnReviewComment() throws IOException {
         pullRequestReviewJson = PullRequestReviewJson.<PullRequestReviewJson.Builder<PullRequestReviewJson>> builder(
                 VALID_PR_REVIEW_TEMPLATE_JSON).state(COMMENT).build();
-        given().github(mocks -> MockedContext.builder(pullRequestReviewJson.id()).mock(mocks))
+        given().github(mocks -> MockedGHPullRequest.builder(pullRequestReviewJson.id()).mock(mocks))
                 .when().payloadFromString(pullRequestReviewJson.jsonString())
                 .event(GHEvent.PULL_REQUEST_REVIEW)
                 .then().github(mocks -> {
@@ -65,7 +66,7 @@ public class PRReviewFixMeLabelTest {
     void notAddingFixMeLabelOnReviewApprove() throws IOException {
         pullRequestReviewJson = PullRequestReviewJson.<PullRequestReviewJson.Builder<PullRequestReviewJson>> builder(
                 VALID_PR_REVIEW_TEMPLATE_JSON).state(APPROVE).build();
-        given().github(mocks -> MockedContext.builder(pullRequestReviewJson.id()).mock(mocks))
+        given().github(mocks -> MockedGHPullRequest.builder(pullRequestReviewJson.id()).mock(mocks))
                 .when().payloadFromString(pullRequestReviewJson.jsonString())
                 .event(GHEvent.PULL_REQUEST_REVIEW)
                 .then().github(mocks -> {
@@ -79,7 +80,7 @@ public class PRReviewFixMeLabelTest {
         pullRequestReviewJson = PullRequestReviewJson.<PullRequestReviewJson.Builder<PullRequestReviewJson>> builder(
                 VALID_PR_REVIEW_TEMPLATE_JSON).state(CHANGES_REQUESTED)
                 .build();
-        given().github(mocks -> MockedContext.builder(pullRequestReviewJson.id()).mock(mocks))
+        given().github(mocks -> MockedGHPullRequest.builder(pullRequestReviewJson.id()).mock(mocks))
                 .when().payloadFromString(pullRequestReviewJson.jsonString())
                 .event(GHEvent.PULL_REQUEST_REVIEW)
                 .then().github(mocks -> {
@@ -95,9 +96,9 @@ public class PRReviewFixMeLabelTest {
         pullRequestReviewJson = PullRequestReviewJson.<PullRequestReviewJson.Builder<PullRequestReviewJson>> builder(
                 VALID_PR_TEMPLATE_JSON)
                 .action(SYNCHRONIZE).build();
-        given().github(mocks -> MockedContext.builder(pullRequestReviewJson.id())
+        given().github(mocks -> MockedGHPullRequest.builder(pullRequestReviewJson.id())
                 .commit("Mock commit")
-                .prLabels(LABEL_FIX_ME)
+                .labels(LABEL_FIX_ME)
                 .mock(mocks))
                 .when().payloadFromString(pullRequestReviewJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
@@ -114,9 +115,9 @@ public class PRReviewFixMeLabelTest {
         pullRequestReviewJson = PullRequestReviewJson.<PullRequestReviewJson.Builder<PullRequestReviewJson>> builder(
                 VALID_PR_TEMPLATE_JSON)
                 .action(EDITED).build();
-        given().github(mocks -> MockedContext.builder(pullRequestReviewJson.id())
+        given().github(mocks -> MockedGHPullRequest.builder(pullRequestReviewJson.id())
                 .commit("Mock commit")
-                .prLabels(LABEL_FIX_ME)
+                .labels(LABEL_FIX_ME)
                 .mock(mocks))
                 .when().payloadFromString(pullRequestReviewJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)

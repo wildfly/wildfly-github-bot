@@ -4,7 +4,7 @@ import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import io.xstefank.wildfly.bot.model.RuntimeConstants;
 import io.xstefank.wildfly.bot.utils.Action;
-import io.xstefank.wildfly.bot.utils.MockedContext;
+import io.xstefank.wildfly.bot.utils.MockedGHPullRequest;
 import io.xstefank.wildfly.bot.utils.PullRequestJson;
 import io.xstefank.wildfly.bot.utils.TestConstants;
 import io.xstefank.wildfly.bot.utils.Util;
@@ -37,7 +37,7 @@ public class PRAppendingMessageTest {
 
     PullRequestJson pullRequestJson;
 
-    MockedContext mockedContext;
+    MockedGHPullRequest mockedContext;
 
     @Test
     public void testEmptyBodyAppendMessage() throws IOException {
@@ -47,7 +47,7 @@ public class PRAppendingMessageTest {
                 .description(null)
                 .build();
 
-        mockedContext = MockedContext.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit("WFLY-00000 commit");
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
@@ -74,7 +74,7 @@ public class PRAppendingMessageTest {
                 .description(body)
                 .build();
 
-        mockedContext = MockedContext.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit("WFLY-00000 commit");
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
@@ -94,7 +94,7 @@ public class PRAppendingMessageTest {
                 .description(null)
                 .build();
 
-        mockedContext = MockedContext.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit("WFLY-00002 commit");
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
@@ -121,7 +121,7 @@ public class PRAppendingMessageTest {
                 .description(body)
                 .build();
 
-        mockedContext = MockedContext.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit("WFLY-00002 commit");
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
@@ -142,7 +142,7 @@ public class PRAppendingMessageTest {
                 .description(null)
                 .build();
 
-        mockedContext = MockedContext.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit("WFLY-00002 commit")
                 .commit("WFLY-00003 commit");
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
@@ -172,7 +172,7 @@ public class PRAppendingMessageTest {
                 .description(body)
                 .build();
 
-        mockedContext = MockedContext.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit("WFLY-00002 commit")
                 .commit("WFLY-00003 commit");
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
@@ -205,7 +205,7 @@ public class PRAppendingMessageTest {
                 .description(body)
                 .build();
 
-        mockedContext = MockedContext.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit("WFLY-00002 commit")
                 .commit("WFLY-00003 commit");
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
@@ -239,7 +239,7 @@ public class PRAppendingMessageTest {
                 .description(body)
                 .build();
 
-        mockedContext = MockedContext.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit("WFLY-00002 commit")
                 .commit("WFLY-00003 commit");
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))

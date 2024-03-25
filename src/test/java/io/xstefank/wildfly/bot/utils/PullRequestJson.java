@@ -24,7 +24,7 @@ public class PullRequestJson {
     private static final String LOGIN = "login";
     private static final String NUMBER = "number";
 
-    private static JsonNode file;
+    private final JsonNode file;
 
     protected <T extends PullRequestJson> PullRequestJson(Builder<T> jsonHandlerBuilder) {
         file = jsonHandlerBuilder.jsonFile;
