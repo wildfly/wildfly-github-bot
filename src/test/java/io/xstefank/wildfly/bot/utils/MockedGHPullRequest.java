@@ -26,6 +26,7 @@ public class MockedGHPullRequest extends Mockable {
 
     private final long pullRequest;
     private Set<String> prFiles = new LinkedHashSet<>();
+    private String description;
     private final List<Tuple2<String, String>> comments = new ArrayList<>();
     private Set<String> reviewers = new LinkedHashSet<>();
     private Set<String> prLabels = new LinkedHashSet<>();
@@ -49,6 +50,11 @@ public class MockedGHPullRequest extends Mockable {
     public MockedGHPullRequest comment(String comment, String author) {
         Tuple2<String, String> commentTuple = Tuple2.of(comment, author);
         this.comments.add(commentTuple);
+        return this;
+    }
+
+    public MockedGHPullRequest describtion(String description) {
+        this.description = description;
         return this;
     }
 
@@ -147,6 +153,10 @@ public class MockedGHPullRequest extends Mockable {
         Mockito.when(pullRequest.getMergeable()).thenReturn(mergeable);
 
         Mockito.when(pullRequest.isDraft()).thenReturn(isDraft);
+
+        if (description != null) {
+            Mockito.when(pullRequest.getBody()).thenReturn(description);
+        }
 
         return idGenerator;
     }
