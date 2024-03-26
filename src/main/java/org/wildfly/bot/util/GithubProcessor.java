@@ -2,9 +2,6 @@ package org.wildfly.bot.util;
 
 import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.Mailer;
-import org.wildfly.bot.config.WildFlyBotConfig;
-import org.wildfly.bot.model.RuntimeConstants;
-import org.wildfly.bot.model.WildFlyConfigFile;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
@@ -20,6 +17,9 @@ import org.kohsuke.github.GHUser;
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.HttpException;
 import org.kohsuke.github.PagedIterable;
+import org.wildfly.bot.config.WildFlyBotConfig;
+import org.wildfly.bot.model.RuntimeConstants;
+import org.wildfly.bot.model.WildFlyConfigFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -246,7 +246,7 @@ public class GithubProcessor {
 
     /**
      * This method might get executed in parallel, thus we prepend Pull Request specific info
-     * instead of relying on the {@code util.org.wildfly.bot.PullRequestLogger#setPullRequest}
+     * instead of relying on the {@code org.wildfly.bot.util.PullRequestLogger#setPullRequest}
      * being called. The logger class was not designed for parallel execution, so this is somewhat
      * of a workaround compensating this short-coming.
      */
