@@ -2,7 +2,6 @@ package org.wildfly.bot.util;
 
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
-import org.wildfly.bot.config.WildFlyBotConfig;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.jboss.logging.Logger;
@@ -10,6 +9,7 @@ import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHIssueState;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
+import org.wildfly.bot.config.WildFlyBotConfig;
 import org.wildfly.bot.model.RuntimeConstants;
 
 import java.io.IOException;
@@ -28,14 +28,14 @@ import java.util.function.Function;
  * After a certain timeout it will re-query the repository's pull requests
  * again and update these pull requests if GitHub has updated the mergable
  * status for individual pull requests. To adjust the timeout time please
- * see {@see config.org.wildfly.bot.WildFlyBotConfig#timeout()}
+ * see {@see org.wildfly.bot.config.WildFlyBotConfig#timeout()}
  * <p>
  * In case a re-queried pull request fails, it will be only logged.
  * <p>
  * Note: Do not call githubProcessor.LOG.setPullRequest inside parallel
  * Uni-s, i.e. inside the parameter `uniToExecute` in method
  * {@code combineUnis(Function<GHPullRequest, Uni<?>> uniToExecute)}
- * due to possible race condition of the {@code util.org.wildfly.bot.PullRequestLogger}.
+ * due to possible race condition of the {@code org.wildfly.bot.util.PullRequestLogger}.
  */
 @Singleton
 public class PullRequestMergableProcessor {

@@ -2,6 +2,11 @@ package org.wildfly.bot;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
+import org.junit.jupiter.api.Test;
+import org.kohsuke.github.GHEvent;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
 import org.wildfly.bot.config.WildFlyBotConfig;
 import org.wildfly.bot.model.RuntimeConstants;
 import org.wildfly.bot.utils.Action;
@@ -9,15 +14,12 @@ import org.wildfly.bot.utils.MockedGHPullRequest;
 import org.wildfly.bot.utils.PullRequestJson;
 import org.wildfly.bot.utils.TestConstants;
 import org.wildfly.bot.utils.Util;
-import jakarta.inject.Inject;
-import org.junit.jupiter.api.Test;
-import org.kohsuke.github.GHEvent;
-import org.mockito.Mockito;
 
 import java.io.IOException;
 
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 import static org.wildfly.bot.model.RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE;
+import static org.wildfly.bot.model.RuntimeConstants.BOT_MESSAGE_DELIMINER;
 import static org.wildfly.bot.model.RuntimeConstants.BOT_REPO_REF_FOOTER;
 import static org.wildfly.bot.util.Strings.blockQuoted;
 
@@ -33,10 +35,11 @@ public class PRAppendingMessageTest {
             """;
 
     private static final String appendedMessage = String.format("""
-            %s
-
-            %s%%s%s""", RuntimeConstants.BOT_MESSAGE_HEADER, blockQuoted(RuntimeConstants.BOT_JIRA_LINKS_HEADER),
+            %s%s%%s%s""", RuntimeConstants.BOT_MESSAGE_HEADER,
+            blockQuoted(RuntimeConstants.BOT_JIRA_LINKS_HEADER),
             RuntimeConstants.BOT_MESSAGE_FOOTER);
+
+    private static final String WITH_DELIMINER = BOT_MESSAGE_DELIMINER + "\n\n";
 
     @Inject
     WildFlyBotConfig wildFlyBotConfig;
@@ -58,9 +61,10 @@ public class PRAppendingMessageTest {
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
                     StringBuilder sb = new StringBuilder();
-                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).setBody(String.format(appendedMessage,
-                            sb.append(blockQuoted(
-                                    String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00000")))));
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()))
+                            .setBody(ArgumentMatchers.contains(String.format(appendedMessage,
+                                    sb.append(blockQuoted(
+                                            String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00000"))))));
                 });
     }
 
@@ -85,9 +89,9 @@ public class PRAppendingMessageTest {
                 .when().payloadFromString(pullRequestJson.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
                     StringBuilder sb = new StringBuilder();
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id()))
-                            .setBody(String.format(body + "\n\n" + appendedMessage,
+                            .setBody(ArgumentMatchers.contains(String.format(body + WITH_DELIMINER + appendedMessage,
                                     sb.append(blockQuoted(
-                                            String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00000")))));
+                                            String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00000"))))));
                 });
     }
 
@@ -104,10 +108,11 @@ public class PRAppendingMessageTest {
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
                     StringBuilder sb = new StringBuilder();
-                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).setBody(String.format(appendedMessage,
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).setBody(ArgumentMatchers.contains(String.format(
+                            appendedMessage,
                             sb.append(blockQuoted(String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00001")))
                                     .append(blockQuoted(
-                                            String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00002")))));
+                                            String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00002"))))));
                 });
     }
 
@@ -131,11 +136,11 @@ public class PRAppendingMessageTest {
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
                     StringBuilder sb = new StringBuilder();
-                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).setBody(String.format(
-                            body + "\n\n" + appendedMessage,
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).setBody(ArgumentMatchers.contains(String.format(
+                            body + WITH_DELIMINER + appendedMessage,
                             sb.append(blockQuoted(String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00001")))
                                     .append(blockQuoted(
-                                            String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00002")))));
+                                            String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00002"))))));
                 });
     }
 
@@ -153,12 +158,13 @@ public class PRAppendingMessageTest {
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
                     StringBuilder sb = new StringBuilder();
-                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).setBody(String.format(appendedMessage,
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).setBody(ArgumentMatchers.contains(String.format(
+                            appendedMessage,
                             sb.append(blockQuoted(String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00001")))
                                     .append(blockQuoted(
                                             String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00002")))
                                     .append(blockQuoted(
-                                            String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00003")))));
+                                            String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00003"))))));
                 });
     }
 
@@ -183,13 +189,13 @@ public class PRAppendingMessageTest {
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
                     StringBuilder sb = new StringBuilder();
-                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).setBody(String.format(
-                            body + "\n\n" + appendedMessage,
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).setBody(ArgumentMatchers.contains(String.format(
+                            body + WITH_DELIMINER + appendedMessage,
                             sb.append(blockQuoted(String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00001")))
                                     .append(blockQuoted(
                                             String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00002")))
                                     .append(blockQuoted(
-                                            String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00003")))));
+                                            String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00003"))))));
                 });
     }
 
@@ -216,11 +222,11 @@ public class PRAppendingMessageTest {
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
                     StringBuilder sb = new StringBuilder();
-                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).setBody(String.format(
-                            body + "\n\n" + appendedMessage,
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).setBody(ArgumentMatchers.contains(String.format(
+                            body + WITH_DELIMINER + appendedMessage,
                             sb.append(blockQuoted(String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00001")))
                                     .append(blockQuoted(
-                                            String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00003")))));
+                                            String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00003"))))));
                 });
     }
 
@@ -250,7 +256,9 @@ public class PRAppendingMessageTest {
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id()))
-                            .setBody(body + BOT_REPO_REF_FOOTER.formatted(wildFlyBotConfig.githubName()));
+                            .setBody(ArgumentMatchers
+                                    .contains(body + WITH_DELIMINER
+                                            + BOT_REPO_REF_FOOTER.formatted(wildFlyBotConfig.githubName())));
                 });
     }
 
@@ -266,13 +274,13 @@ public class PRAppendingMessageTest {
                 blockQuoted(BOT_JIRA_LINK_COMMENT_TEMPLATE.formatted("WFLY-00000")));
         // even as the description is set, it's after the start, thus we need to mock it's content to match
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
-                .describtion(jiraLinkDescription)
                 .commit("WFLY-00000 commit");
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when()
                 .payloadFromString(pullRequestJson.jsonString()).event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    String repoRef = jiraLinkDescription + BOT_REPO_REF_FOOTER.formatted(wildFlyBotConfig.githubName());
+                    String repoRef = jiraLinkDescription + "\n\n"
+                            + BOT_REPO_REF_FOOTER.formatted(wildFlyBotConfig.githubName());
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id())).setBody(repoRef);
                 });
     }
