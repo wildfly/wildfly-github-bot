@@ -1,0 +1,25 @@
+name: Format check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    name: Checkout and run check
+    timeout-minutes: 120
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        name: checkout
+
+      - uses: actions/setup-java@v1
+        name: Set up JDK 21
+        with:
+          distribution: "temurin"
+          java-version: 21
+
+      - name: Build with Maven
+        run: mvn clean formatter:validate
