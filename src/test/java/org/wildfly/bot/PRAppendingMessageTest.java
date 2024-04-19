@@ -255,10 +255,8 @@ public class PRAppendingMessageTest {
                 .commit("WFLY-00003 commit");
         given().github(mocks -> Util.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()))
-                            .setBody(ArgumentMatchers
-                                    .contains(body + WITH_DELIMINER
-                                            + BOT_REPO_REF_FOOTER.formatted(wildFlyBotConfig.githubName())));
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.times(0))
+                            .setBody(ArgumentMatchers.anyString());
                 });
     }
 
