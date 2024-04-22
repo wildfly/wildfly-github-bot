@@ -47,6 +47,7 @@ final class EventSenderOptionsImpl implements EventSenderOptions {
         map.put("WatchEvent", GHEvent.WATCH);
         return Collections.unmodifiableMap(map);
     }
+
     private static final Map<String, GHEvent> supportedEvents = createEventMap();
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final String TYPE = "type";

@@ -27,24 +27,6 @@ public class PullRequestReviewJson extends PullRequestJson {
     }
 
     public static class Builder<T extends PullRequestReviewJson> extends PullRequestJson.Builder<T> {
-
-        public enum ReviewState {
-            COMMENT("commented"),
-            APPROVE("approved"),
-            CHANGES_REQUESTED("changes_requested");
-
-            private final String state;
-
-            private ReviewState(String state) {
-                this.state = state;
-            }
-
-            @Override
-            public String toString() {
-                return this.state;
-            }
-        }
-
         /**
          * Constructs a new builder instance.
          *

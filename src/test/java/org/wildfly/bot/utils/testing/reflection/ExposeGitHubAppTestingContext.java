@@ -15,8 +15,8 @@ import java.lang.reflect.Method;
 
 /**
  * This class exposes internal code of quarkus-github-app, where we extend
- *  functionality of it's testing framework. Thus, we can intercept mocking
- *  and reuse existing code, used internally in the quarkus-github-app's testing framework.
+ * functionality of it's testing framework. Thus, we can intercept mocking
+ * and reuse existing code, used internally in the quarkus-github-app's testing framework.
  */
 public class ExposeGitHubAppTestingContext {
 
@@ -46,7 +46,8 @@ public class ExposeGitHubAppTestingContext {
         }
     }
 
-    public static void setPayload(GHEventInfo ghEventInfo, JsonNode payload) throws NoSuchFieldException, IllegalAccessException {
+    public static void setPayload(GHEventInfo ghEventInfo, JsonNode payload)
+            throws NoSuchFieldException, IllegalAccessException {
         Field payloadField = GHEventInfo.class.getDeclaredField("payload");
         payloadField.setAccessible(true);
 
