@@ -2,7 +2,6 @@ package org.wildfly.bot.utils;
 
 import io.quarkiverse.githubapp.testing.dsl.GitHubMockSetupContext;
 import io.quarkiverse.githubapp.testing.dsl.GitHubMockVerificationContext;
-import io.quarkiverse.githubapp.testing.internal.GitHubAppTestingContext;
 import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHRepository;
 import org.mockito.Mockito;
@@ -11,6 +10,7 @@ import org.wildfly.bot.utils.mocking.Mockable;
 import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
 import org.wildfly.bot.utils.model.PullRequestJson;
 import org.wildfly.bot.utils.testing.EventContextSpecificationImpl;
+import org.wildfly.bot.utils.testing.ExtendedGitHubAppTestingContext;
 import org.wildfly.bot.utils.testing.dsl.EventContextSpecification;
 
 import java.io.IOException;
@@ -58,6 +58,6 @@ public class WildflyGitHubBotTesting {
     }
 
     public static EventContextSpecification given() {
-        return new EventContextSpecificationImpl(GitHubAppTestingContext.get());
+        return new EventContextSpecificationImpl(new ExtendedGitHubAppTestingContext());
     }
 }
