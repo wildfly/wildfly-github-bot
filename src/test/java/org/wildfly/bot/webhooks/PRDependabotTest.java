@@ -2,15 +2,15 @@ package org.wildfly.bot.webhooks;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
-import org.wildfly.bot.model.RuntimeConstants;
-import org.wildfly.bot.utils.model.PullRequestJson;
-import org.wildfly.bot.utils.WildflyGitHubBotTesting;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
 import org.mockito.Mockito;
+import org.wildfly.bot.model.RuntimeConstants;
 import org.wildfly.bot.utils.TestConstants;
+import org.wildfly.bot.utils.WildflyGitHubBotTesting;
+import org.wildfly.bot.utils.model.SsePullRequestPayload;
 
 import java.io.IOException;
 
@@ -25,7 +25,7 @@ import static org.wildfly.bot.model.RuntimeConstants.PROJECT_PATTERN_REGEX;
 public class PRDependabotTest {
 
     private String wildflyConfigFile;
-    private PullRequestJson pullRequestJson;
+    private SsePullRequestPayload ssePullRequestPayload;
 
     @Test
     void testDependabotPR() throws IOException {
@@ -36,21 +36,21 @@ public class PRDependabotTest {
                           regexes:
                             - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
                 """;
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .userLogin(RuntimeConstants.DEPENDABOT)
                 .title("Bump some version from x.y to x.y+1")
                 .description("Very detailed description of this upgrade.")
                 .build();
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
-                .when().payloadFromString(pullRequestJson.jsonString())
+        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
+                    GHPullRequest mockedPR = mocks.pullRequest(ssePullRequestPayload.id());
                     Mockito.verify(mockedPR).comment("WildFly Bot recognized this PR as dependabot dependency update. " +
                             "Please create a WFLY issue and add new comment containing this JIRA link please.");
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatFailure(repo, pullRequestJson, "description, title");
-                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, pullRequestJson, String.format("""
+                    WildflyGitHubBotTesting.verifyFormatFailure(repo, ssePullRequestPayload, "description, title");
+                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, ssePullRequestPayload, String.format("""
                             - Invalid description content
 
                             - %s""", String.format(RuntimeConstants.DEFAULT_TITLE_MESSAGE,
@@ -67,21 +67,21 @@ public class PRDependabotTest {
                           regexes:
                             - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
                 """;
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .userLogin(RuntimeConstants.DEPENDABOT)
                 .title("Bump some version from x.y to x.y+1")
                 .description(null)
                 .build();
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
-                .when().payloadFromString(pullRequestJson.jsonString())
+        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
+                    GHPullRequest mockedPR = mocks.pullRequest(ssePullRequestPayload.id());
                     Mockito.verify(mockedPR).comment("WildFly Bot recognized this PR as dependabot dependency update. " +
                             "Please create a WFLY issue and add new comment containing this JIRA link please.");
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatFailure(repo, pullRequestJson, "description, title");
-                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, pullRequestJson, String.format("""
+                    WildflyGitHubBotTesting.verifyFormatFailure(repo, ssePullRequestPayload, "description, title");
+                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, ssePullRequestPayload, String.format("""
                             - Invalid description content
 
                             - %s""", String.format(RuntimeConstants.DEFAULT_TITLE_MESSAGE,

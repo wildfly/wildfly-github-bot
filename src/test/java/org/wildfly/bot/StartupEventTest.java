@@ -35,7 +35,7 @@ import org.wildfly.bot.utils.TestConstants;
 import org.wildfly.bot.utils.mocking.Mockable;
 import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
 import org.wildfly.bot.utils.mocking.MockedGHRepository;
-import org.wildfly.bot.utils.model.PullRequestJson;
+import org.wildfly.bot.utils.model.SsePullRequestPayload;
 
 import java.io.IOException;
 import java.util.List;
@@ -73,7 +73,7 @@ public class StartupEventTest {
     @Inject
     MockMailbox mailbox;
 
-    private static PullRequestJson pullRequestJson;
+    private static SsePullRequestPayload ssePullRequestPayload;
 
     private static final java.util.logging.Logger rootLogger = LogManager.getLogManager().getLogger("org.wildfly.bot");
     private static final InMemoryLogHandler inMemoryLogHandler = new InMemoryLogHandler(
@@ -147,7 +147,7 @@ public class StartupEventTest {
 
     @BeforeAll
     static void setUpGitHubJson() throws IOException {
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
     }
 
     @BeforeEach
@@ -165,7 +165,7 @@ public class StartupEventTest {
                   emails:
                     - foo@bar.baz
                 """))
-                .when().payloadFromString(pullRequestJson.jsonString())
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.STAR)
                 .then().github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
                         logRecord -> logRecord.getMessage().equals(
@@ -182,7 +182,7 @@ public class StartupEventTest {
                   emails:
                     - foo@bar.baz
                 """))
-                .when().payloadFromString(pullRequestJson.jsonString())
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.STAR)
                 .then().github(mocks -> {
                     GHRepository repository = mocks.repository(TestConstants.TEST_REPO);
@@ -207,7 +207,7 @@ public class StartupEventTest {
                   emails:
                     - foo@bar.baz
                 """))
-                .when().payloadFromString(pullRequestJson.jsonString())
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.STAR)
                 .then().github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
                         logRecord -> logRecord.getMessage().equals(
@@ -226,7 +226,7 @@ public class StartupEventTest {
                   emails:
                     - foo@bar.baz
                 """))
-                .when().payloadFromString(pullRequestJson.jsonString())
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.STAR)
                 .then().github(mocks -> {
                     GHRepository repository = mocks.repository(TestConstants.TEST_REPO);
@@ -255,7 +255,7 @@ public class StartupEventTest {
                   emails:
                     - foo@bar.baz
                 """))
-                .when().payloadFromString(pullRequestJson.jsonString())
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.STAR)
                 .then()
                 .github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(logRecord -> logRecord
@@ -293,7 +293,7 @@ public class StartupEventTest {
                     - title: "Test"
                       id: "test"
                 """))
-                .when().payloadFromString(pullRequestJson.jsonString())
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.STAR)
                 .then().github(mocks -> {
                     GHRepository repository = mocks.repository(TestConstants.TEST_REPO);
@@ -311,7 +311,7 @@ public class StartupEventTest {
                     - title: "Test"
                       id: "test"
                 """))
-                .when().payloadFromString(pullRequestJson.jsonString())
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.STAR)
                 .then().github(mocks -> {
                     GHRepository repository = mocks.repository(TestConstants.TEST_REPO);

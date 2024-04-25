@@ -10,7 +10,7 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.wildfly.bot.utils.TestConstants;
 import org.wildfly.bot.utils.WildflyGitHubBotTesting;
-import org.wildfly.bot.utils.model.PullRequestJson;
+import org.wildfly.bot.utils.model.SsePullRequestPayload;
 
 import java.io.IOException;
 
@@ -24,11 +24,11 @@ import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 public class PRRuleTitleBodyCheckTest {
 
     private static String wildflyConfigFile;
-    private static PullRequestJson pullRequestJson;
+    private static SsePullRequestPayload ssePullRequestPayload;
 
     @Test
     void testTitleBodyCheckForTitle() throws IOException {
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
         wildflyConfigFile = """
                 wildfly:
                   rules:
@@ -38,20 +38,20 @@ public class PRRuleTitleBodyCheckTest {
                       titleBody: "WFLY"
                       notify: [Tadpole]
                 """;
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
-                .when().payloadFromString(pullRequestJson.jsonString())
+        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
+                    GHPullRequest mockedPR = mocks.pullRequest(ssePullRequestPayload.id());
                     Mockito.verify(mockedPR).comment("/cc @Tadpole");
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
                 });
     }
 
     @Test
     void testTitleBodyCheckForBody() throws IOException {
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
         wildflyConfigFile = """
                 wildfly:
                   rules:
@@ -61,20 +61,20 @@ public class PRRuleTitleBodyCheckTest {
                       titleBody: "issues.redhat.com"
                       notify: [Tadpole]
                 """;
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
-                .when().payloadFromString(pullRequestJson.jsonString())
+        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
+                    GHPullRequest mockedPR = mocks.pullRequest(ssePullRequestPayload.id());
                     Mockito.verify(mockedPR).comment("/cc @Tadpole");
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
                 });
     }
 
     @Test
     void testTitleBodyCheckForTitleBodyCaseInsensitive() throws IOException {
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
         wildflyConfigFile = """
                 wildfly:
                   rules:
@@ -84,20 +84,20 @@ public class PRRuleTitleBodyCheckTest {
                       titleBody: "ISSUES.REDHAT.COM"
                       notify: [Tadpole]
                 """;
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
-                .when().payloadFromString(pullRequestJson.jsonString())
+        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
+                    GHPullRequest mockedPR = mocks.pullRequest(ssePullRequestPayload.id());
                     Mockito.verify(mockedPR).comment("/cc @Tadpole");
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
                 });
     }
 
     @Test
     void testFailedTitleBodyCheck() throws IOException {
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .title(TestConstants.INVALID_TITLE)
                 .description(TestConstants.INVALID_DESCRIPTION)
                 .build();
@@ -110,20 +110,20 @@ public class PRRuleTitleBodyCheckTest {
                       titleBody: "NonValidTitleBody"
                       notify: [Tadpole]
                 """;
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
-                .when().payloadFromString(pullRequestJson.jsonString())
+        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
+                    GHPullRequest mockedPR = mocks.pullRequest(ssePullRequestPayload.id());
                     Mockito.verify(mockedPR, Mockito.never()).comment("/cc @Tadpole");
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatFailure(repo, pullRequestJson, "title");
+                    WildflyGitHubBotTesting.verifyFormatFailure(repo, ssePullRequestPayload, "title");
                 });
     }
 
     @Test
     void testTitleBodyCheckTitleRegex() throws IOException {
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .title("[WFLY-00000] Metrics PR")
                 .build();
         wildflyConfigFile = """
@@ -132,18 +132,18 @@ public class PRRuleTitleBodyCheckTest {
                     - titleBody: "metrics|micrometer"
                       notify: [Tadpole]
                 """;
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
-                .when().payloadFromString(pullRequestJson.jsonString())
+        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
+                    GHPullRequest mockedPR = mocks.pullRequest(ssePullRequestPayload.id());
                     Mockito.verify(mockedPR).comment("/cc @Tadpole");
                 });
     }
 
     @Test
     void testTitleBodyCheckBodyRegex() throws IOException {
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .description("[WFLY-00000] Micrometer commit")
                 .build();
         wildflyConfigFile = """
@@ -152,36 +152,36 @@ public class PRRuleTitleBodyCheckTest {
                     - titleBody: "metrics|micrometer"
                       notify: [Tadpole]
                 """;
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
-                .when().payloadFromString(pullRequestJson.jsonString())
+        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
+                    GHPullRequest mockedPR = mocks.pullRequest(ssePullRequestPayload.id());
                     Mockito.verify(mockedPR).comment("/cc @Tadpole");
                 });
     }
 
     @Test
     void testTitleBodyCheckBodyRegexNoHit() throws IOException {
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
         wildflyConfigFile = """
                 wildfly:
                   rules:
                     - titleBody: "not|valid"
                       notify: [Tadpole]
                 """;
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
-                .when().payloadFromString(pullRequestJson.jsonString())
+        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
+                    GHPullRequest mockedPR = mocks.pullRequest(ssePullRequestPayload.id());
                     Mockito.verify(mockedPR, Mockito.never()).comment(ArgumentMatchers.anyString());
                 });
     }
 
     @Test
     void testTitleBodyCheckTitleSubstringNoHit() throws IOException {
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .title("See the deep no hit").build();
         wildflyConfigFile = """
                 wildfly:
@@ -192,18 +192,18 @@ public class PRRuleTitleBodyCheckTest {
                     title:
                       enabled: false
                 """;
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
-                .when().payloadFromString(pullRequestJson.jsonString())
+        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
+                    GHPullRequest mockedPR = mocks.pullRequest(ssePullRequestPayload.id());
                     Mockito.verify(mockedPR, Mockito.never()).comment(ArgumentMatchers.anyString());
                 });
     }
 
     @Test
     void testTitleBodyCheckTitleRegexSubstringNoHit() throws IOException {
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .title("See the deep no hit nor originated").build();
         wildflyConfigFile = """
                 wildfly:
@@ -214,32 +214,32 @@ public class PRRuleTitleBodyCheckTest {
                     title:
                       enabled: false
                 """;
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
-                .when().payloadFromString(pullRequestJson.jsonString())
+        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
+                    GHPullRequest mockedPR = mocks.pullRequest(ssePullRequestPayload.id());
                     Mockito.verify(mockedPR, Mockito.never()).comment(ArgumentMatchers.anyString());
                 });
     }
 
     @Test
     void testTitleBodyCheckForTitleWithPrefix() throws IOException {
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .title("(30.x) WFLY-123 Test title").build();
         wildflyConfigFile = """
                 wildfly:
                   rules:
                     - titleBody: "ee"
                 """;
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
-                .when().payloadFromString(pullRequestJson.jsonString())
+        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
+                    GHPullRequest mockedPR = mocks.pullRequest(ssePullRequestPayload.id());
                     Mockito.verify(mockedPR, Mockito.never()).comment(Mockito.anyString());
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
                 });
     }
 }

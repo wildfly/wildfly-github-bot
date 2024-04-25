@@ -10,6 +10,7 @@ public class PullRequestReviewGitHubEventPayload extends PullRequestGitHubEventP
     private static final String REVIEW = "review";
     private static final String STATE = "state";
     private static final String fileName = "events/raw_pr_review_template.json";
+
     public PullRequestReviewGitHubEventPayload(String repository, long eventId) throws IOException {
         super(fileName, repository, GHEvent.PULL_REQUEST_REVIEW, eventId);
     }

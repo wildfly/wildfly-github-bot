@@ -2,14 +2,14 @@ package org.wildfly.bot.webhooks;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
-import org.wildfly.bot.utils.model.Action;
-import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
-import org.wildfly.bot.utils.model.PullRequestJson;
-import org.wildfly.bot.utils.WildflyGitHubBotTesting;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHRepository;
 import org.wildfly.bot.utils.TestConstants;
+import org.wildfly.bot.utils.WildflyGitHubBotTesting;
+import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
+import org.wildfly.bot.utils.model.Action;
+import org.wildfly.bot.utils.model.SsePullRequestPayload;
 
 import java.io.IOException;
 
@@ -28,44 +28,44 @@ public class PRFormatOverrideProjectKeyTest {
             wildfly:
               projectKey: WFCORE
             """;
-    private static PullRequestJson pullRequestJson;
+    private static SsePullRequestPayload ssePullRequestPayload;
     private static MockedGHPullRequest mockedContext;
 
     @Test
     public void testOverridingProjectKeyCorrectTitle() throws IOException {
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .action(Action.EDITED)
                 .title("WFCORE-00000 title")
                 .build();
-        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
                 .commit("[WFCORE-123] Valid commit message");
 
         given()
-                .github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .when().payloadFromString(pullRequestJson.jsonString())
+                .github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
                 });
     }
 
     @Test
     public void testOverridingProjectKeyIncorrectTitle() throws IOException {
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .action(Action.EDITED)
                 .build();
-        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
                 .commit("[WFCORE-123] Valid commit message");
 
         given()
-                .github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .when().payloadFromString(pullRequestJson.jsonString())
+                .github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatFailure(repo, pullRequestJson, "title");
-                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, pullRequestJson,
+                    WildflyGitHubBotTesting.verifyFormatFailure(repo, ssePullRequestPayload, "title");
+                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, ssePullRequestPayload,
                             "- " + String.format(DEFAULT_TITLE_MESSAGE,
                                     PROJECT_PATTERN_REGEX.formatted("WFCORE")));
                 });

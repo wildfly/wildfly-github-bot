@@ -2,8 +2,8 @@ package org.wildfly.bot.utils.mocking;
 
 import com.thoughtworks.xstream.InitializationException;
 import io.quarkiverse.githubapp.testing.dsl.GitHubMockContext;
-import org.wildfly.bot.utils.model.PullRequestJson;
 import org.wildfly.bot.utils.TestConstants;
+import org.wildfly.bot.utils.model.SsePullRequestPayload;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -36,8 +36,8 @@ public abstract class Mockable {
         Set<Mockable> requiredMockableCollector = new HashSet<>();
         requiredMockableCollector.add(MockedGHRepository.builder());
         try {
-            PullRequestJson pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
-            requiredMockableCollector.add(MockedGHPullRequest.builder(pullRequestJson.id()));
+            SsePullRequestPayload ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
+            requiredMockableCollector.add(MockedGHPullRequest.builder(ssePullRequestPayload.id()));
         } catch (IOException e) {
             throw new InitializationException("Unable to initialize MockedGHPullRequest", e);
         }

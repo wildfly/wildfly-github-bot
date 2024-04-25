@@ -2,13 +2,13 @@ package org.wildfly.bot.webhooks;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
-import org.wildfly.bot.utils.mocking.Mockable;
-import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
-import org.wildfly.bot.utils.model.PullRequestJson;
-import org.wildfly.bot.utils.WildflyGitHubBotTesting;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
 import org.wildfly.bot.utils.TestConstants;
+import org.wildfly.bot.utils.WildflyGitHubBotTesting;
+import org.wildfly.bot.utils.mocking.Mockable;
+import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
+import org.wildfly.bot.utils.model.SsePullRequestPayload;
 
 import java.io.IOException;
 
@@ -21,7 +21,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 @GitHubAppTest
 public class PRSkipPullRequestTest {
 
-    private static PullRequestJson pullRequestJson;
+    private static SsePullRequestPayload ssePullRequestPayload;
     private Mockable mockedContext;
     private static final String wildflyConfigFile = """
             wildfly:
@@ -34,7 +34,7 @@ public class PRSkipPullRequestTest {
 
     @Test
     void testSkippingFormatCheck() throws IOException {
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .title(TestConstants.INVALID_TITLE)
                 .description("""
                         Hi
@@ -46,37 +46,37 @@ public class PRSkipPullRequestTest {
 
                         finished""")
                 .build();
-        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id()).commit(TestConstants.INVALID_COMMIT_MESSAGE);
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .when().payloadFromString(pullRequestJson.jsonString())
+        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id()).commit(TestConstants.INVALID_COMMIT_MESSAGE);
+        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    verify(mocks.pullRequest(pullRequestJson.id()), times(2)).getBody();
-                    verify(mocks.pullRequest(pullRequestJson.id())).listFiles();
-                    verify(mocks.pullRequest(pullRequestJson.id())).listComments();
+                    verify(mocks.pullRequest(ssePullRequestPayload.id()), times(2)).getBody();
+                    verify(mocks.pullRequest(ssePullRequestPayload.id())).listFiles();
+                    verify(mocks.pullRequest(ssePullRequestPayload.id())).listComments();
                     // Following invocations are used for logging
-                    verify(mocks.pullRequest(pullRequestJson.id()), times(2)).getNumber();
+                    verify(mocks.pullRequest(ssePullRequestPayload.id()), times(2)).getNumber();
                     // commit status should not be set
-                    verifyNoMoreInteractions(mocks.pullRequest(pullRequestJson.id()));
+                    verifyNoMoreInteractions(mocks.pullRequest(ssePullRequestPayload.id()));
                 });
     }
 
     @Test
     void testSkippingFormatCheckOnDraft() throws IOException {
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .title(TestConstants.INVALID_TITLE)
                 .build();
-        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id()).draft();
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .when().payloadFromString(pullRequestJson.jsonString())
+        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id()).draft();
+        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    verify(mocks.pullRequest(pullRequestJson.id()), times(2)).getBody();
-                    verify(mocks.pullRequest(pullRequestJson.id())).listFiles();
-                    verify(mocks.pullRequest(pullRequestJson.id()), times(2)).isDraft();
-                    verify(mocks.pullRequest(pullRequestJson.id())).listComments();
+                    verify(mocks.pullRequest(ssePullRequestPayload.id()), times(2)).getBody();
+                    verify(mocks.pullRequest(ssePullRequestPayload.id())).listFiles();
+                    verify(mocks.pullRequest(ssePullRequestPayload.id()), times(2)).isDraft();
+                    verify(mocks.pullRequest(ssePullRequestPayload.id())).listComments();
                     // commit status should not be set
-                    verifyNoMoreInteractions(mocks.pullRequest(pullRequestJson.id()));
+                    verifyNoMoreInteractions(mocks.pullRequest(ssePullRequestPayload.id()));
                 });
     }
 }

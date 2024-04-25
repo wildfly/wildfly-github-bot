@@ -9,11 +9,11 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.wildfly.bot.config.WildFlyBotConfig;
 import org.wildfly.bot.model.RuntimeConstants;
-import org.wildfly.bot.utils.model.Action;
-import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
-import org.wildfly.bot.utils.model.PullRequestJson;
 import org.wildfly.bot.utils.TestConstants;
 import org.wildfly.bot.utils.WildflyGitHubBotTesting;
+import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
+import org.wildfly.bot.utils.model.Action;
+import org.wildfly.bot.utils.model.SsePullRequestPayload;
 
 import java.io.IOException;
 
@@ -44,24 +44,24 @@ public class PRAppendingMessageTest {
     @Inject
     WildFlyBotConfig wildFlyBotConfig;
 
-    PullRequestJson pullRequestJson;
+    SsePullRequestPayload ssePullRequestPayload;
 
     MockedGHPullRequest mockedContext;
 
     @Test
     public void testEmptyBodyAppendMessage() throws IOException {
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .action(Action.EDITED)
                 .title("WFLY-00000 title")
                 .description(null)
                 .build();
 
-        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
                 .commit("WFLY-00000 commit");
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .when().payloadFromString(pullRequestJson.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
+        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
+                .when().payloadFromString(ssePullRequestPayload.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
                     StringBuilder sb = new StringBuilder();
-                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()))
+                    Mockito.verify(mocks.pullRequest(ssePullRequestPayload.id()))
                             .setBody(ArgumentMatchers.contains(String.format(appendedMessage,
                                     sb.append(blockQuoted(
                                             String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00000"))))));
@@ -77,18 +77,18 @@ public class PRAppendingMessageTest {
                 body, which
                 should not be
                 cleared.""";
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .action(Action.EDITED)
                 .title("WFLY-00000 title")
                 .description(body)
                 .build();
 
-        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
                 .commit("WFLY-00000 commit");
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .when().payloadFromString(pullRequestJson.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
+        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
+                .when().payloadFromString(ssePullRequestPayload.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
                     StringBuilder sb = new StringBuilder();
-                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()))
+                    Mockito.verify(mocks.pullRequest(ssePullRequestPayload.id()))
                             .setBody(ArgumentMatchers.contains(String.format(body + WITH_DELIMINER + appendedMessage,
                                     sb.append(blockQuoted(
                                             String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00000"))))));
@@ -97,18 +97,18 @@ public class PRAppendingMessageTest {
 
     @Test
     public void testEmptyBodyAppendMessageMultipleLinks() throws IOException {
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .action(Action.EDITED)
                 .title("WFLY-00001 title")
                 .description(null)
                 .build();
 
-        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
                 .commit("WFLY-00002 commit");
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .when().payloadFromString(pullRequestJson.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
+        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
+                .when().payloadFromString(ssePullRequestPayload.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
                     StringBuilder sb = new StringBuilder();
-                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).setBody(ArgumentMatchers.contains(String.format(
+                    Mockito.verify(mocks.pullRequest(ssePullRequestPayload.id())).setBody(ArgumentMatchers.contains(String.format(
                             appendedMessage,
                             sb.append(blockQuoted(String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00001")))
                                     .append(blockQuoted(
@@ -125,18 +125,18 @@ public class PRAppendingMessageTest {
                 body, which
                 should not be
                 cleared.""";
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .action(Action.EDITED)
                 .title("WFLY-00001 title")
                 .description(body)
                 .build();
 
-        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
                 .commit("WFLY-00002 commit");
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .when().payloadFromString(pullRequestJson.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
+        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
+                .when().payloadFromString(ssePullRequestPayload.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
                     StringBuilder sb = new StringBuilder();
-                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).setBody(ArgumentMatchers.contains(String.format(
+                    Mockito.verify(mocks.pullRequest(ssePullRequestPayload.id())).setBody(ArgumentMatchers.contains(String.format(
                             body + WITH_DELIMINER + appendedMessage,
                             sb.append(blockQuoted(String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00001")))
                                     .append(blockQuoted(
@@ -146,19 +146,19 @@ public class PRAppendingMessageTest {
 
     @Test
     public void testEmptyBodyAppendMessageMultipleDifferentLinks() throws IOException {
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .action(Action.EDITED)
                 .title("WFLY-00001, WFLY-00002 title")
                 .description(null)
                 .build();
 
-        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
                 .commit("WFLY-00002 commit")
                 .commit("WFLY-00003 commit");
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .when().payloadFromString(pullRequestJson.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
+        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
+                .when().payloadFromString(ssePullRequestPayload.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
                     StringBuilder sb = new StringBuilder();
-                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).setBody(ArgumentMatchers.contains(String.format(
+                    Mockito.verify(mocks.pullRequest(ssePullRequestPayload.id())).setBody(ArgumentMatchers.contains(String.format(
                             appendedMessage,
                             sb.append(blockQuoted(String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00001")))
                                     .append(blockQuoted(
@@ -177,19 +177,19 @@ public class PRAppendingMessageTest {
                 body, which
                 should not be
                 cleared.""";
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .action(Action.EDITED)
                 .title("WFLY-00001, WFLY-00002 title")
                 .description(body)
                 .build();
 
-        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
                 .commit("WFLY-00002 commit")
                 .commit("WFLY-00003 commit");
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .when().payloadFromString(pullRequestJson.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
+        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
+                .when().payloadFromString(ssePullRequestPayload.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
                     StringBuilder sb = new StringBuilder();
-                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).setBody(ArgumentMatchers.contains(String.format(
+                    Mockito.verify(mocks.pullRequest(ssePullRequestPayload.id())).setBody(ArgumentMatchers.contains(String.format(
                             body + WITH_DELIMINER + appendedMessage,
                             sb.append(blockQuoted(String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00001")))
                                     .append(blockQuoted(
@@ -210,19 +210,19 @@ public class PRAppendingMessageTest {
 
                 cleared.
                 Here is one jira for you https://issues.redhat.com/browse/WFLY-00002""";
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .action(Action.EDITED)
                 .title("WFLY-00001, WFLY-00002 title")
                 .description(body)
                 .build();
 
-        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
                 .commit("WFLY-00002 commit")
                 .commit("WFLY-00003 commit");
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .when().payloadFromString(pullRequestJson.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
+        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
+                .when().payloadFromString(ssePullRequestPayload.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
                     StringBuilder sb = new StringBuilder();
-                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).setBody(ArgumentMatchers.contains(String.format(
+                    Mockito.verify(mocks.pullRequest(ssePullRequestPayload.id())).setBody(ArgumentMatchers.contains(String.format(
                             body + WITH_DELIMINER + appendedMessage,
                             sb.append(blockQuoted(String.format(RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE, "WFLY-00001")))
                                     .append(blockQuoted(
@@ -244,25 +244,25 @@ public class PRAppendingMessageTest {
                 https://issues.redhat.com/browse/WFLY-00001
                 https://issues.redhat.com/browse/WFLY-00002
                 https://issues.redhat.com/browse/WFLY-00003""";
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .action(Action.EDITED)
                 .title("WFLY-00001, WFLY-00002 title")
                 .description(body)
                 .build();
 
-        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
                 .commit("WFLY-00002 commit")
                 .commit("WFLY-00003 commit");
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .when().payloadFromString(pullRequestJson.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.times(0))
+        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
+                .when().payloadFromString(ssePullRequestPayload.jsonString()).event(GHEvent.PULL_REQUEST).then().github(mocks -> {
+                    Mockito.verify(mocks.pullRequest(ssePullRequestPayload.id()), Mockito.times(0))
                             .setBody(ArgumentMatchers.anyString());
                 });
     }
 
     @Test
     public void testRepoRefFooterAppendedMessage() throws IOException {
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
                 .action(Action.EDITED)
                 .title("WFLY-00000 title")
                 .description(null)
@@ -271,15 +271,15 @@ public class PRAppendingMessageTest {
         String jiraLinkDescription = String.format(appendedMessage,
                 blockQuoted(BOT_JIRA_LINK_COMMENT_TEMPLATE.formatted("WFLY-00000")));
         // even as the description is set, it's after the start, thus we need to mock it's content to match
-        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
                 .commit("WFLY-00000 commit");
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
                 .when()
-                .payloadFromString(pullRequestJson.jsonString()).event(GHEvent.PULL_REQUEST)
+                .payloadFromString(ssePullRequestPayload.jsonString()).event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     String repoRef = jiraLinkDescription + "\n\n"
                             + BOT_REPO_REF_FOOTER.formatted(wildFlyBotConfig.githubName());
-                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).setBody(repoRef);
+                    Mockito.verify(mocks.pullRequest(ssePullRequestPayload.id())).setBody(repoRef);
                 });
     }
 }

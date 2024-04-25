@@ -2,19 +2,19 @@ package org.wildfly.bot.webhooks;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
-import org.wildfly.bot.config.WildFlyBotConfig;
-import org.wildfly.bot.utils.model.Action;
-import org.wildfly.bot.utils.mocking.Mockable;
-import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
-import org.wildfly.bot.utils.mocking.MockedGHRepository;
-import org.wildfly.bot.utils.model.PullRequestJson;
-import org.wildfly.bot.utils.WildflyGitHubBotTesting;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHIssueComment;
 import org.kohsuke.github.GHRepository;
 import org.mockito.Mockito;
+import org.wildfly.bot.config.WildFlyBotConfig;
+import org.wildfly.bot.utils.WildflyGitHubBotTesting;
+import org.wildfly.bot.utils.mocking.Mockable;
+import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
+import org.wildfly.bot.utils.mocking.MockedGHRepository;
+import org.wildfly.bot.utils.model.Action;
+import org.wildfly.bot.utils.model.SsePullRequestPayload;
 
 import java.io.IOException;
 import java.util.stream.Collectors;
@@ -35,7 +35,7 @@ import static org.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 public class PRUpdateCommentOnEditTest {
 
     private static String wildflyConfigFile;
-    private static PullRequestJson pullRequestJson;
+    private static SsePullRequestPayload ssePullRequestPayload;
     private Mockable mockedContext;
 
     @Inject
@@ -51,11 +51,11 @@ public class PRUpdateCommentOnEditTest {
                     commit:
                       enabled: false
                 """;
-        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
+        ssePullRequestPayload = SsePullRequestPayload.builder(VALID_PR_TEMPLATE_JSON)
                 .title(INVALID_TITLE)
                 .description(INVALID_DESCRIPTION)
                 .build();
-        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
                 .comment(FAILED_FORMAT_COMMENT.formatted(Stream.of(
                         DEFAULT_COMMIT_MESSAGE.formatted(PROJECT_PATTERN_REGEX.formatted("WFLY")),
                         DEFAULT_TITLE_MESSAGE.formatted(PROJECT_PATTERN_REGEX.formatted("WFLY")),
@@ -63,14 +63,14 @@ public class PRUpdateCommentOnEditTest {
                         .map("- %s"::formatted)
                         .collect(Collectors.joining("\n\n"))), wildFlyBotConfig.githubName());
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .when().payloadFromString(pullRequestJson.jsonString())
+        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHIssueComment comment = mocks.issueComment(0);
                     Mockito.verify(comment).delete();
                     GHRepository repo = mocks.repository(TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
                 });
     }
 
@@ -80,12 +80,12 @@ public class PRUpdateCommentOnEditTest {
                 wildfly:
                   format:
                 """;
-        pullRequestJson = PullRequestJson.builder(VALID_PR_TEMPLATE_JSON)
+        ssePullRequestPayload = SsePullRequestPayload.builder(VALID_PR_TEMPLATE_JSON)
                 .title(INVALID_TITLE)
                 .description("@%s skip format".formatted(wildFlyBotConfig.githubName()))
                 .action(Action.EDITED)
                 .build();
-        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
                 .comment(FAILED_FORMAT_COMMENT.formatted(Stream.of(
                         DEFAULT_COMMIT_MESSAGE.formatted(PROJECT_PATTERN_REGEX.formatted("WFLY")),
                         DEFAULT_TITLE_MESSAGE.formatted(PROJECT_PATTERN_REGEX.formatted("WFLY")),
@@ -93,15 +93,15 @@ public class PRUpdateCommentOnEditTest {
                         .map("- %s"::formatted)
                         .collect(Collectors.joining("\n\n"))), wildFlyBotConfig.githubName())
                 .mockNext(MockedGHRepository.builder())
-                .commitStatuses(pullRequestJson.commitSHA(), "Format");
+                .commitStatuses(ssePullRequestPayload.commitSHA(), "Format");
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .when().payloadFromString(pullRequestJson.jsonString())
+        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
                     GHIssueComment comment = mocks.issueComment(0);
                     Mockito.verify(comment).delete();
-                    WildflyGitHubBotTesting.verifyFormatSkipped(mocks.repository(TEST_REPO), pullRequestJson);
+                    WildflyGitHubBotTesting.verifyFormatSkipped(mocks.repository(TEST_REPO), ssePullRequestPayload);
                 });
     }
 }

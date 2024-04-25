@@ -4,13 +4,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.IOException;
 
-public class PullRequestReviewJson extends PullRequestJson {
+public class SsePullRequestReviewPayload extends SsePullRequestPayload {
 
     private static final String REVIEW = "review";
 
     private static final String STATE = "state";
 
-    protected <T extends PullRequestReviewJson> PullRequestReviewJson(Builder<T> builder) {
+    protected <T extends SsePullRequestReviewPayload> SsePullRequestReviewPayload(Builder<T> builder) {
         super(builder);
     }
 
@@ -22,11 +22,11 @@ public class PullRequestReviewJson extends PullRequestJson {
      * @throws IOException if an error occurred during the JSON file obtaining.
      */
     @SuppressWarnings("unchecked")
-    public static <T extends PullRequestJson.Builder<? extends PullRequestJson>> T builder(String fileName) throws IOException {
+    public static <T extends SsePullRequestPayload.Builder<? extends SsePullRequestPayload>> T builder(String fileName) throws IOException {
         return (T) new Builder<>(fileName);
     }
 
-    public static class Builder<T extends PullRequestReviewJson> extends PullRequestJson.Builder<T> {
+    public static class Builder<T extends SsePullRequestReviewPayload> extends SsePullRequestPayload.Builder<T> {
         /**
          * Constructs a new builder instance.
          *
@@ -45,7 +45,7 @@ public class PullRequestReviewJson extends PullRequestJson {
         @Override
         @SuppressWarnings("unchecked")
         public T build() {
-            return (T) new PullRequestReviewJson(this);
+            return (T) new SsePullRequestReviewPayload(this);
         }
     }
 }
