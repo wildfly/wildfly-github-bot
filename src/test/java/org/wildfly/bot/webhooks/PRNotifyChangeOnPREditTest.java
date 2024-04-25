@@ -2,14 +2,6 @@ package org.wildfly.bot.webhooks;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
-import org.wildfly.bot.config.WildFlyBotConfig;
-import org.wildfly.bot.utils.model.Action;
-import org.wildfly.bot.utils.mocking.Mockable;
-import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
-import org.wildfly.bot.utils.mocking.MockedGHRepository;
-import org.wildfly.bot.utils.model.PullRequestJson;
-import org.wildfly.bot.utils.TestConstants;
-import org.wildfly.bot.utils.WildflyGitHubBotTesting;
 import jakarta.inject.Inject;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
@@ -21,6 +13,14 @@ import org.kohsuke.github.GHPerson;
 import org.kohsuke.github.GHUser;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.wildfly.bot.config.WildFlyBotConfig;
+import org.wildfly.bot.utils.TestConstants;
+import org.wildfly.bot.utils.WildflyGitHubBotTesting;
+import org.wildfly.bot.utils.mocking.Mockable;
+import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
+import org.wildfly.bot.utils.mocking.MockedGHRepository;
+import org.wildfly.bot.utils.model.Action;
+import org.wildfly.bot.utils.model.PullRequestJson;
 
 import java.io.IOException;
 import java.util.List;
@@ -54,16 +54,16 @@ public class PRNotifyChangeOnPREditTest {
                   rules:
                     - id: "new rule"
                       directories: [src]
-                      notify: [user2]
+                      notify: [Butterfly]
                     - id: "previous rule"
                       directories: [app]
-                      notify: [user1]""";
+                      notify: [Tadpole]""";
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit("WFLY-123 commit")
                 .files("src/pom.xml", "app/pom.xml")
-                .reviewers("user1")
+                .reviewers("Tadpole")
                 .mockNext(MockedGHRepository.builder())
-                .users("user1", "user2");
+                .users("Tadpole", "Butterfly");
         given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
@@ -75,7 +75,7 @@ public class PRNotifyChangeOnPREditTest {
                     Assertions.assertEquals(captor.getValue().size(), 1);
                     MatcherAssert.assertThat(captor.getValue().stream()
                             .map(GHPerson::getLogin)
-                            .toList(), Matchers.containsInAnyOrder("user2"));
+                            .toList(), Matchers.containsInAnyOrder("Butterfly"));
                 });
     }
 
@@ -87,17 +87,17 @@ public class PRNotifyChangeOnPREditTest {
                     - id: "test"
                       title: "WFLY"
                       directories: [src]
-                      notify: [user1, user2]
+                      notify: [Tadpole, Butterfly]
                     - id: "test2"
                       title: "WFLY"
-                      notify: [user2, user3]""";
+                      notify: [Butterfly, Duke]""";
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
-                .comment("/cc @user3", wildFlyBotConfig.githubName())
+                .comment("/cc @Duke", wildFlyBotConfig.githubName())
                 .commit("WFLY-123 commit")
                 .files("src/pom.xml", "app/pom.xml")
-                .reviewers("user1")
+                .reviewers("Tadpole")
                 .mockNext(MockedGHRepository.builder())
-                .users("user1", "user2");
+                .users("Tadpole", "Butterfly");
         given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
@@ -109,7 +109,7 @@ public class PRNotifyChangeOnPREditTest {
                     Assertions.assertEquals(captor.getValue().size(), 1);
                     MatcherAssert.assertThat(captor.getValue().stream()
                             .map(GHPerson::getLogin)
-                            .toList(), Matchers.containsInAnyOrder("user2"));
+                            .toList(), Matchers.containsInAnyOrder("Butterfly"));
                 });
     }
 
@@ -121,27 +121,27 @@ public class PRNotifyChangeOnPREditTest {
                     - id: "test"
                       title: "WFLY"
                       directories: [src]
-                      notify: [user1, user2]
+                      notify: [Tadpole, Butterfly]
                     - id: "test2"
                       title: "WFLY"
-                      notify: [user2, user3]""";
+                      notify: [Butterfly, Duke]""";
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit("WFLY-123 commit")
                 .files("src/pom.xml", "app/pom.xml")
-                .reviewers("user1")
+                .reviewers("Tadpole")
                 .mockNext(MockedGHRepository.builder())
-                .users("user1", "user2");
+                .users("Tadpole", "Butterfly");
         given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).comment("/cc @user3");
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).comment("/cc @Duke");
                     ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id())).requestReviewers(captor.capture());
                     Assertions.assertEquals(captor.getValue().size(), 1);
                     MatcherAssert.assertThat(captor.getValue().stream()
                             .map(GHPerson::getLogin)
-                            .toList(), Matchers.containsInAnyOrder("user2"));
+                            .toList(), Matchers.containsInAnyOrder("Butterfly"));
                 });
     }
 
@@ -152,18 +152,18 @@ public class PRNotifyChangeOnPREditTest {
                   rules:
                     - id: "new rule"
                       title: "WFLY"
-                      notify: [user2]
+                      notify: [Butterfly]
                     - id: "previous rule"
                       titleBody: "WFLY"
-                      notify: [user1]""";
+                      notify: [Tadpole]""";
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
-                .comment("/cc @user1", wildFlyBotConfig.githubName())
+                .comment("/cc @Tadpole", wildFlyBotConfig.githubName())
                 .commit("WFLY-123 commit");
         given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    Mockito.verify(mocks.issueComment(0L)).update("/cc @user1, @user2");
+                    Mockito.verify(mocks.issueComment(0L)).update("/cc @Tadpole, @Butterfly");
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never()).requestReviewers(anyList());
                 });
     }
@@ -176,21 +176,21 @@ public class PRNotifyChangeOnPREditTest {
                     - id: "test"
                       title: "WFLY"
                       directories: [src]
-                      notify: [user1, user2]
+                      notify: [Tadpole, Butterfly]
                     - id: "test2"
                       title: "WFLY"
-                      notify: [user2, user3]""";
+                      notify: [Butterfly, Duke]""";
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit("WFLY-123 commit")
                 .files("src/pom.xml", "app/pom.xml")
-                .reviewers("user1", "user2")
+                .reviewers("Tadpole", "Butterfly")
                 .mockNext(MockedGHRepository.builder())
-                .users("user1", "user2");
+                .users("Tadpole", "Butterfly");
         given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).comment("/cc @user3");
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).comment("/cc @Duke");
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never()).requestReviewers(anyList());
                 });
     }

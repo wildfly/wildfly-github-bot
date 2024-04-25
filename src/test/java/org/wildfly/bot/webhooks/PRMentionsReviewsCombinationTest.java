@@ -2,12 +2,6 @@ package org.wildfly.bot.webhooks;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
-import org.wildfly.bot.utils.mocking.Mockable;
-import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
-import org.wildfly.bot.utils.mocking.MockedGHRepository;
-import org.wildfly.bot.utils.model.PullRequestJson;
-import org.wildfly.bot.utils.TestConstants;
-import org.wildfly.bot.utils.WildflyGitHubBotTesting;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
@@ -15,6 +9,12 @@ import org.kohsuke.github.GHUser;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
+import org.wildfly.bot.utils.TestConstants;
+import org.wildfly.bot.utils.WildflyGitHubBotTesting;
+import org.wildfly.bot.utils.mocking.Mockable;
+import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
+import org.wildfly.bot.utils.mocking.MockedGHRepository;
+import org.wildfly.bot.utils.model.PullRequestJson;
 
 import java.io.IOException;
 import java.util.List;
@@ -39,7 +39,7 @@ public class PRMentionsReviewsCombinationTest {
                     - id: "test"
                       title: "WFLY"
                       directories: [src]
-                      notify: [user1, user2]
+                      notify: [Tadpole, Butterfly]
                   format:
                     title:
                       enabled: false
@@ -50,7 +50,7 @@ public class PRMentionsReviewsCombinationTest {
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .files("src/main/java/resource/application.properties")
                 .mockNext(MockedGHRepository.builder())
-                .users("user1", "user2");
+                .users("Tadpole", "Butterfly");
 
         given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
@@ -64,7 +64,7 @@ public class PRMentionsReviewsCombinationTest {
                     List<GHUser> requestedReviewers = captor.getAllValues().stream().flatMap(List::stream).toList();
                     Set<String> requestedReviewersLogins = requestedReviewers.stream().map(GHUser::getLogin)
                             .collect(Collectors.toSet());
-                    Assertions.assertEquals(requestedReviewersLogins, Set.of("user1", "user2"));
+                    Assertions.assertEquals(requestedReviewersLogins, Set.of("Tadpole", "Butterfly"));
                 });
     }
 
@@ -76,7 +76,7 @@ public class PRMentionsReviewsCombinationTest {
                     - id: "test"
                       title: "WFLY"
                       directories: [src]
-                      notify: [user1, user2]
+                      notify: [Tadpole, Butterfly]
                   format:
                     title:
                       enabled: false
@@ -86,13 +86,13 @@ public class PRMentionsReviewsCombinationTest {
         pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .mockNext(MockedGHRepository.builder())
-                .users("user1", "user2");
+                .users("Tadpole", "Butterfly");
 
         given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).comment("/cc @user1, @user2");
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).comment("/cc @Butterfly, @Tadpole");
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never())
                             .requestReviewers(ArgumentMatchers.anyList());
                 });
@@ -106,7 +106,7 @@ public class PRMentionsReviewsCombinationTest {
                     - id: "test"
                       title: "WFLY"
                       directories: [src]
-                      notify: [user1, user2]
+                      notify: [Tadpole, Butterfly]
                   format:
                     title:
                       enabled: false
@@ -119,7 +119,7 @@ public class PRMentionsReviewsCombinationTest {
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .files("src/main/java/resource/application.properties")
                 .mockNext(MockedGHRepository.builder())
-                .users("user1", "user2");
+                .users("Tadpole", "Butterfly");
 
         given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
@@ -133,7 +133,7 @@ public class PRMentionsReviewsCombinationTest {
                     List<GHUser> requestedReviewers = captor.getAllValues().stream().flatMap(List::stream).toList();
                     Set<String> requestedReviewersLogins = requestedReviewers.stream().map(GHUser::getLogin)
                             .collect(Collectors.toSet());
-                    Assertions.assertEquals(requestedReviewersLogins, Set.of("user1", "user2"));
+                    Assertions.assertEquals(requestedReviewersLogins, Set.of("Tadpole", "Butterfly"));
                 });
     }
 
@@ -145,10 +145,10 @@ public class PRMentionsReviewsCombinationTest {
                     - id: "test"
                       title: "WFLY"
                       directories: [src]
-                      notify: [user1, user2]
+                      notify: [Tadpole, Butterfly]
                     - id: "test2"
                       title: "WFLY"
-                      notify: [user1, user2]
+                      notify: [Tadpole, Butterfly]
                   format:
                     title:
                       enabled: false
@@ -161,7 +161,7 @@ public class PRMentionsReviewsCombinationTest {
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .files("src/main/java/resource/application.properties")
                 .mockNext(MockedGHRepository.builder())
-                .users("user1", "user2");
+                .users("Tadpole", "Butterfly");
 
         given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
@@ -175,7 +175,7 @@ public class PRMentionsReviewsCombinationTest {
                     List<GHUser> requestedReviewers = captor.getAllValues().stream().flatMap(List::stream).toList();
                     Set<String> requestedReviewersLogins = requestedReviewers.stream().map(GHUser::getLogin)
                             .collect(Collectors.toSet());
-                    Assertions.assertEquals(requestedReviewersLogins, Set.of("user1", "user2"));
+                    Assertions.assertEquals(requestedReviewersLogins, Set.of("Tadpole", "Butterfly"));
                 });
     }
 
@@ -187,10 +187,10 @@ public class PRMentionsReviewsCombinationTest {
                     - id: "test"
                       title: "WFLY"
                       directories: [src]
-                      notify: [user1, user2]
+                      notify: [Tadpole, Butterfly]
                     - id: "test2"
                       title: "WFLY"
-                      notify: [user2, user3]
+                      notify: [Butterfly, Duke]
                   format:
                     title:
                       enabled: false
@@ -202,20 +202,20 @@ public class PRMentionsReviewsCombinationTest {
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .files("src/main/java/resource/application.properties")
                 .mockNext(MockedGHRepository.builder())
-                .users("user1", "user2");
+                .users("Tadpole", "Butterfly");
 
         given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
                 .then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).comment("/cc @user3");
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).comment("/cc @Duke");
                     ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.times(2))
                             .requestReviewers(captor.capture());
                     List<GHUser> requestedReviewers = captor.getAllValues().stream().flatMap(List::stream).toList();
                     Set<String> requestedReviewersLogins = requestedReviewers.stream().map(GHUser::getLogin)
                             .collect(Collectors.toSet());
-                    Assertions.assertEquals(requestedReviewersLogins, Set.of("user1", "user2"));
+                    Assertions.assertEquals(requestedReviewersLogins, Set.of("Tadpole", "Butterfly"));
                 });
     }
 }

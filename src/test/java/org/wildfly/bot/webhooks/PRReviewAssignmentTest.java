@@ -5,13 +5,6 @@ import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.MockMailbox;
 import io.quarkus.test.InMemoryLogHandler;
 import io.quarkus.test.junit.QuarkusTest;
-import org.wildfly.bot.util.GithubProcessor;
-import org.wildfly.bot.utils.mocking.Mockable;
-import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
-import org.wildfly.bot.utils.mocking.MockedGHRepository;
-import org.wildfly.bot.utils.model.PullRequestJson;
-import org.wildfly.bot.utils.TestConstants;
-import org.wildfly.bot.utils.WildflyGitHubBotTesting;
 import jakarta.inject.Inject;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
@@ -26,6 +19,13 @@ import org.kohsuke.github.GHUser;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
+import org.wildfly.bot.util.GithubProcessor;
+import org.wildfly.bot.utils.TestConstants;
+import org.wildfly.bot.utils.WildflyGitHubBotTesting;
+import org.wildfly.bot.utils.mocking.Mockable;
+import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
+import org.wildfly.bot.utils.mocking.MockedGHRepository;
+import org.wildfly.bot.utils.model.PullRequestJson;
 
 import java.io.IOException;
 import java.util.List;
@@ -52,7 +52,7 @@ public class PRReviewAssignmentTest {
               rules:
                 - id: "test"
                   directories: [src]
-                  notify: [user1, user2]
+                  notify: [Tadpole, Butterfly]
               format:
                 title:
                   enabled: false
@@ -90,14 +90,14 @@ public class PRReviewAssignmentTest {
                             .comment(ArgumentMatchers.anyString());
                     Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
                             logRecord -> logRecord.getMessage().contains(
-                                    "Bot can not request PR review from the following people: [user1, user2]")));
+                                    "Bot can not request PR review from the following people: [Butterfly, Tadpole]")));
 
                     List<Mail> sent = mailbox.getMailsSentTo("foo@bar.baz");
                     Assertions.assertEquals(sent.size(), 1);
                     Assertions.assertEquals(sent.get(0).getSubject(),
                             GithubProcessor.COLLABORATOR_MISSING_SUBJECT.formatted(TestConstants.TEST_REPO));
                     Assertions.assertEquals(sent.get(0).getText(), GithubProcessor.COLLABORATOR_MISSING_BODY.formatted(
-                            TestConstants.TEST_REPO, pullRequestJson.number(), List.of("user1", "user2")));
+                            TestConstants.TEST_REPO, pullRequestJson.number(), List.of("Butterfly", "Tadpole")));
                 });
     }
 
@@ -106,7 +106,7 @@ public class PRReviewAssignmentTest {
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .files("src/main/java/resource/application.properties")
                 .mockNext(MockedGHRepository.builder())
-                .users("user1", "user2");
+                .users("Tadpole", "Butterfly");
         given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
@@ -119,7 +119,7 @@ public class PRReviewAssignmentTest {
                     List<GHUser> requestedReviewers = captor.getAllValues().stream().flatMap(List::stream).toList();
                     Set<String> requestedReviewersLogins = requestedReviewers.stream().map(GHUser::getLogin)
                             .collect(Collectors.toSet());
-                    Assertions.assertEquals(requestedReviewersLogins, Set.of("user1", "user2"));
+                    Assertions.assertEquals(requestedReviewersLogins, Set.of("Tadpole", "Butterfly"));
                 });
     }
 
@@ -128,7 +128,7 @@ public class PRReviewAssignmentTest {
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .files("src/main/java/resource/application.properties")
                 .mockNext(MockedGHRepository.builder())
-                .users("user1");
+                .users("Tadpole");
         given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
                 .event(GHEvent.PULL_REQUEST)
@@ -140,17 +140,17 @@ public class PRReviewAssignmentTest {
                     Assertions.assertEquals(captor.getValue().size(), 1);
                     MatcherAssert.assertThat(captor.getValue().stream()
                             .map(GHPerson::getLogin)
-                            .toList(), Matchers.containsInAnyOrder("user1"));
+                            .toList(), Matchers.containsInAnyOrder("Tadpole"));
                     Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
                             logRecord -> logRecord.getMessage().contains(
-                                    "Bot can not request PR review from the following people: [user2]")));
+                                    "Bot can not request PR review from the following people: [Butterfly]")));
 
                     List<Mail> sent = mailbox.getMailsSentTo("foo@bar.baz");
                     Assertions.assertEquals(sent.size(), 1);
                     Assertions.assertEquals(sent.get(0).getSubject(),
                             GithubProcessor.COLLABORATOR_MISSING_SUBJECT.formatted(TestConstants.TEST_REPO));
                     Assertions.assertEquals(sent.get(0).getText(), GithubProcessor.COLLABORATOR_MISSING_BODY.formatted(
-                            TestConstants.TEST_REPO, pullRequestJson.number(), List.of("user2")));
+                            TestConstants.TEST_REPO, pullRequestJson.number(), List.of("Butterfly")));
                 });
     }
 }

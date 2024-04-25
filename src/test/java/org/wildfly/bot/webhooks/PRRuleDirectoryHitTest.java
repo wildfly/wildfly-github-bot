@@ -2,11 +2,6 @@ package org.wildfly.bot.webhooks;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
-import org.wildfly.bot.utils.mocking.Mockable;
-import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
-import org.wildfly.bot.utils.mocking.MockedGHRepository;
-import org.wildfly.bot.utils.model.PullRequestJson;
-import org.wildfly.bot.utils.WildflyGitHubBotTesting;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
@@ -20,6 +15,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.wildfly.bot.utils.TestConstants;
+import org.wildfly.bot.utils.WildflyGitHubBotTesting;
+import org.wildfly.bot.utils.mocking.Mockable;
+import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
+import org.wildfly.bot.utils.mocking.MockedGHRepository;
+import org.wildfly.bot.utils.model.PullRequestJson;
 
 import java.io.IOException;
 import java.util.List;
@@ -50,7 +50,7 @@ public class PRRuleDirectoryHitTest {
                     - id: "Directory Test"
                       directories:
                        - appclient
-                      notify: [7125767235]
+                      notify: [Tadpole]
                   format:
                     commit:
                       enabled: false
@@ -62,7 +62,7 @@ public class PRRuleDirectoryHitTest {
                         "microprofile/health-smallrye/pom.xml",
                         "testsuite/integration/basic/pom.xml")
                 .mockNext(MockedGHRepository.builder())
-                .users("7125767235");
+                .users("Tadpole");
 
         given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
@@ -83,14 +83,14 @@ public class PRRuleDirectoryHitTest {
                     - id: "Directory Test"
                       directories:
                        - microprofile/health-smallrye
-                      notify: [7125767235]
+                      notify: [Tadpole]
                 """;
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .files("appclient/test.txt",
                         "microprofile/health-smallrye/pom.xml",
                         "testsuite/integration/basic/pom.xml")
                 .mockNext(MockedGHRepository.builder())
-                .users("7125767235");
+                .users("Tadpole");
 
         given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
@@ -103,7 +103,7 @@ public class PRRuleDirectoryHitTest {
                     Assertions.assertEquals(captor.getValue().size(), 1);
                     MatcherAssert.assertThat(captor.getValue().stream()
                             .map(GHPerson::getLogin)
-                            .toList(), Matchers.containsInAnyOrder("7125767235"));
+                            .toList(), Matchers.containsInAnyOrder("Tadpole"));
                     Mockito.verify(mockedPR, Mockito.times(2)).listComments();
                 });
     }
@@ -116,14 +116,14 @@ public class PRRuleDirectoryHitTest {
                     - id: "Directory Test"
                       directories:
                        - testsuite/integration
-                      notify: [7125767235]
+                      notify: [Tadpole]
                 """;
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .files("appclient/test.txt",
                         "microprofile/health-smallrye/pom.xml",
                         "testsuite/integration/basic/pom.xml")
                 .mockNext(MockedGHRepository.builder())
-                .users("7125767235");
+                .users("Tadpole");
 
         given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .when().payloadFromString(pullRequestJson.jsonString())
@@ -136,7 +136,7 @@ public class PRRuleDirectoryHitTest {
                     Assertions.assertEquals(captor.getValue().size(), 1);
                     MatcherAssert.assertThat(captor.getValue().stream()
                             .map(GHPerson::getLogin)
-                            .toList(), Matchers.containsInAnyOrder("7125767235"));
+                            .toList(), Matchers.containsInAnyOrder("Tadpole"));
                     Mockito.verify(mockedPR, Mockito.times(2)).listComments();
                 });
     }
@@ -149,7 +149,7 @@ public class PRRuleDirectoryHitTest {
                     - id: "Directory Test"
                       directories:
                        - transactions
-                      notify: [7125767235]
+                      notify: [Tadpole]
                 """;
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .files("appclient/test.txt",
@@ -176,7 +176,7 @@ public class PRRuleDirectoryHitTest {
                     - id: "Directory Test"
                       directories:
                        - app
-                      notify: [7125767235]
+                      notify: [Tadpole]
                 """;
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .files("appclient/test.txt",
@@ -190,7 +190,7 @@ public class PRRuleDirectoryHitTest {
                     GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
                     Mockito.verify(mockedPR, Mockito.times(2)).listFiles();
                     Mockito.verify(mockedPR, Mockito.times(2)).listComments();
-                    Mockito.verify(mockedPR, Mockito.never()).comment("/cc @7125767235");
+                    Mockito.verify(mockedPR, Mockito.never()).comment("/cc @Tadpole");
                 });
     }
 }
