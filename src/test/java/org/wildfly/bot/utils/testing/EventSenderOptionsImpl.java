@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletionException;
 
+import static org.wildfly.bot.utils.TestConstants.INSTALLATION_ID;
 import static org.wildfly.bot.utils.testing.reflection.ExposeGitHubAppTestingContext.getFromClassPath;
 
 final class EventSenderOptionsImpl implements EventSenderOptions {
@@ -53,7 +54,7 @@ final class EventSenderOptionsImpl implements EventSenderOptions {
     private static final String TYPE = "type";
     private final ExtendedGitHubAppTestingContext testingContext;
     private boolean ignoreExceptions = false;
-    private long installationId = 1L;
+    private long installationId = INSTALLATION_ID;
 
     EventSenderOptionsImpl(ExtendedGitHubAppTestingContext testingContext) {
         this.testingContext = testingContext;

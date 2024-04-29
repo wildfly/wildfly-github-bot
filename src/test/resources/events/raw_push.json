@@ -1,4 +1,4 @@
-[{
+{
   "id": "37365081883",
   "type": "PushEvent",
   "actor": {
@@ -19,7 +19,7 @@
     "push_id": 17949553218,
     "size": 1,
     "distinct_size": 1,
-    "ref": "refs/heads/issue-191",
+    "ref": "refs/heads/main",
     "head": "b5ab219b4110eb631200927d577095550c56a4ce",
     "before": "ab8dbaf882a017a4cfab71bee2d240cb2079c3a1",
     "commits": [
@@ -37,4 +37,4 @@
   },
   "public": true,
   "created_at": "2024-04-11T08:40:33Z"
-}]
+}
