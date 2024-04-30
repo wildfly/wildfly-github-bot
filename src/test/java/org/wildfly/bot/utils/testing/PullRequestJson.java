@@ -1,4 +1,4 @@
-package org.wildfly.bot.utils;
+package org.wildfly.bot.utils.testing;
 
 import com.fasterxml.jackson.databind.JsonNode;
 

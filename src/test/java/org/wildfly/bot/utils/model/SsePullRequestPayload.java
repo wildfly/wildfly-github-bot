@@ -3,8 +3,8 @@ package org.wildfly.bot.utils.model;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.wildfly.bot.utils.PullRequestJson;
-import org.wildfly.bot.utils.PullRequestJsonBuilder;
+import org.wildfly.bot.utils.PullRequestJsonBuildable;
+import org.wildfly.bot.utils.testing.PullRequestJson;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -37,7 +37,7 @@ public class SsePullRequestPayload implements PullRequestJson {
         return file;
     }
 
-    public static class Builder<T extends SsePullRequestPayload> implements PullRequestJsonBuilder {
+    public static class Builder<T extends SsePullRequestPayload> implements PullRequestJsonBuildable {
 
         protected final JsonNode jsonFile;
         private static final ObjectMapper objectMapper = new ObjectMapper();

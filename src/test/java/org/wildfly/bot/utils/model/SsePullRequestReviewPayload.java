@@ -1,10 +1,12 @@
 package org.wildfly.bot.utils.model;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.wildfly.bot.utils.testing.PullRequestJson;
+import org.wildfly.bot.utils.testing.PullRequestReviewJsonBuilder;
 
 import java.io.IOException;
 
-public class SsePullRequestReviewPayload extends SsePullRequestPayload {
+public class SsePullRequestReviewPayload extends SsePullRequestPayload implements PullRequestJson {
 
     private static final String REVIEW = "review";
 
@@ -22,11 +24,13 @@ public class SsePullRequestReviewPayload extends SsePullRequestPayload {
      * @throws IOException if an error occurred during the JSON file obtaining.
      */
     @SuppressWarnings("unchecked")
-    public static <T extends SsePullRequestPayload.Builder<? extends SsePullRequestPayload>> T builder(String fileName) throws IOException {
+    public static <T extends SsePullRequestPayload.Builder<? extends SsePullRequestPayload>> T builder(String fileName)
+            throws IOException {
         return (T) new Builder<>(fileName);
     }
 
-    public static class Builder<T extends SsePullRequestReviewPayload> extends SsePullRequestPayload.Builder<T> {
+    public static class Builder<T extends SsePullRequestReviewPayload> extends SsePullRequestPayload.Builder<T>
+            implements PullRequestReviewJsonBuilder {
         /**
          * Constructs a new builder instance.
          *
@@ -37,6 +41,7 @@ public class SsePullRequestReviewPayload extends SsePullRequestPayload {
             super(fileName);
         }
 
+        @Override
         public Builder<T> state(ReviewState state) {
             ((ObjectNode) this.jsonFile.get(REVIEW)).put(STATE, state.toString());
             return this;
