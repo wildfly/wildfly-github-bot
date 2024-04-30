@@ -3,18 +3,29 @@ package org.wildfly.bot.utils.testing.model;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.kohsuke.github.GHEvent;
-import org.wildfly.bot.utils.PullRequestJson;
-import org.wildfly.bot.utils.PullRequestJsonBuilder;
+import org.wildfly.bot.utils.PullRequestJsonBuildable;
 import org.wildfly.bot.utils.model.Action;
+import org.wildfly.bot.utils.testing.PullRequestJson;
 
 import java.io.IOException;
 
-public class PullRequestGitHubEventPayload extends GitHubEventPayload implements PullRequestJsonBuilder, PullRequestJson {
+import static org.wildfly.bot.utils.TestConstants.INSTALLATION_ID;
+import static org.wildfly.bot.utils.TestConstants.TEST_REPO;
+
+public class PullRequestGitHubEventPayload extends GitHubEventPayload implements PullRequestJsonBuildable, PullRequestJson {
 
     private static final String fileName = "events/raw_pr_template.json";
 
+    public PullRequestGitHubEventPayload() throws IOException {
+        this(fileName, TEST_REPO, GHEvent.PULL_REQUEST, INSTALLATION_ID);
+    }
+
     public PullRequestGitHubEventPayload(String repository, long eventId) throws IOException {
         this(fileName, repository, GHEvent.PULL_REQUEST, eventId);
+    }
+
+    protected PullRequestGitHubEventPayload(String fileName, GHEvent event) throws IOException {
+        this(fileName, TEST_REPO, event, INSTALLATION_ID);
     }
 
     protected PullRequestGitHubEventPayload(String fileName, String repository, GHEvent event, long eventId)
@@ -24,7 +35,7 @@ public class PullRequestGitHubEventPayload extends GitHubEventPayload implements
 
     @Override
     public PullRequestGitHubEventPayload action(Action action) {
-        getPayload(PULL_REQUEST).put(ACTION, action.getValue());
+        getPayload().put(ACTION, action.getValue());
         return this;
     }
 
@@ -54,5 +65,10 @@ public class PullRequestGitHubEventPayload extends GitHubEventPayload implements
     @Override
     public JsonNode payload() {
         return super.getPayload();
+    }
+
+    @Override
+    public String jsonString() {
+        return super.toString();
     }
 }

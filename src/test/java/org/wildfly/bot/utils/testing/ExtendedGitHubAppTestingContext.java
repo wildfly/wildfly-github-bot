@@ -116,6 +116,7 @@ public final class ExtendedGitHubAppTestingContext {
         Map<String, List<String>> repositories = collectRepos(payload);
         Collection<GHRepository> mockedRepositories = repositories.entrySet().stream().map(entry -> {
             GHRepository mockedRepo = this.testingContext.mocks.repository(entry.getKey());
+            when(mockedRepo.getFullName()).thenReturn(entry.getKey());
             List<GHEventInfo> repoEvents = entry.getValue().stream().map(s -> {
                 try {
                     JsonNode payloadJson = objectMapper.readTree(s);
