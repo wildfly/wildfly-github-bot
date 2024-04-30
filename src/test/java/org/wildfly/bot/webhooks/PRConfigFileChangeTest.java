@@ -14,11 +14,12 @@ import org.wildfly.bot.model.RuntimeConstants;
 import org.wildfly.bot.utils.TestConstants;
 import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
 import org.wildfly.bot.utils.model.SsePullRequestPayload;
+import org.wildfly.bot.utils.testing.PullRequestJson;
+import org.wildfly.bot.utils.testing.internal.TestModel;
+import org.wildfly.bot.utils.testing.model.PullRequestGitHubEventPayload;
 
-import java.io.IOException;
 import java.util.List;
 
-import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -33,19 +34,23 @@ import static org.wildfly.bot.model.RuntimeConstants.FAILED_CONFIGFILE_COMMENT;
 @GitHubAppTest
 public class PRConfigFileChangeTest {
 
-    private static SsePullRequestPayload ssePullRequestPayload;
+    private static PullRequestJson pullRequestJson;
 
     @BeforeAll
-    static void setUpGitHubJson() throws IOException {
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
+    static void setPullRequestJson() throws Exception {
+        TestModel.setAllCallables(
+                () -> SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON),
+                PullRequestGitHubEventPayload::new);
+
+        pullRequestJson = TestModel.getPullRequestJson();
     }
 
     @Test
-    void testUpdateIncorrectlyIndentedFile() throws IOException {
-        given().github(mocks -> {
+    void testUpdateIncorrectlyIndentedFile() throws Throwable {
+        TestModel.given(mocks -> {
             GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
             GHContent mockGHContent = mock(GHContent.class);
-            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, ssePullRequestPayload.commitSHA()))
+            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, pullRequestJson.commitSHA()))
                     .thenReturn(mockGHContent);
             when(mockGHContent.read()).thenReturn(IOUtils.toInputStream("""
                     wildfly:
@@ -58,32 +63,35 @@ public class PRConfigFileChangeTest {
                         - address@email.com""",
                     "UTF-8"));
 
-            MockedGHPullRequest.builder(ssePullRequestPayload.id())
+            MockedGHPullRequest.builder(pullRequestJson.id())
                     .files(".github/wildfly-bot.yml")
                     .mock(mocks);
         })
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
-                    verify(mocks.pullRequest(ssePullRequestPayload.id())).listFiles();
-                    verify(mocks.pullRequest(ssePullRequestPayload.id())).listComments();
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
+                    verify(mocks.pullRequest(pullRequestJson.id())).listFiles();
+                    verify(mocks.pullRequest(pullRequestJson.id())).listComments();
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    verify(repo).getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, ssePullRequestPayload.commitSHA());
-                    Mockito.verify(repo).createCommitStatus(ssePullRequestPayload.commitSHA(),
+                    verify(repo).getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME,
+                            pullRequestJson.commitSHA());
+                    Mockito.verify(repo).createCommitStatus(pullRequestJson.commitSHA(),
                             GHCommitState.ERROR, "", "Unable to parse the configuration file. " +
                                     "Make sure it can be loaded to model at https://github.com/wildfly/wildfly-github-bot/blob/main/CONFIGURATION.yml",
                             "Configuration File");
 
-                    verifyNoMoreInteractions(mocks.pullRequest(ssePullRequestPayload.id()));
-                });
+                    verifyNoMoreInteractions(mocks.pullRequest(pullRequestJson.id()));
+                })
+                .run();
     }
 
     @Test
-    void testUpdateToCorrectFile() throws IOException {
-        given().github(mocks -> {
+    void testUpdateToCorrectFile() throws Throwable {
+        TestModel.given(mocks -> {
             GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
             GHContent mockGHContent = mock(GHContent.class);
-            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, ssePullRequestPayload.commitSHA()))
+            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, pullRequestJson.commitSHA()))
                     .thenReturn(mockGHContent);
             when(mockGHContent.read()).thenReturn(IOUtils.toInputStream("""
                     wildfly:
@@ -98,30 +106,33 @@ public class PRConfigFileChangeTest {
                         - address@email.com""",
                     "UTF-8"));
 
-            MockedGHPullRequest.builder(ssePullRequestPayload.id())
+            MockedGHPullRequest.builder(pullRequestJson.id())
                     .files(".github/wildfly-bot.yml")
                     .mock(mocks);
         })
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
-                    verify(mocks.pullRequest(ssePullRequestPayload.id())).listFiles();
-                    verify(mocks.pullRequest(ssePullRequestPayload.id()), times(2)).listComments();
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
+                    verify(mocks.pullRequest(pullRequestJson.id())).listFiles();
+                    verify(mocks.pullRequest(pullRequestJson.id()), times(2)).listComments();
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    verify(repo).getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, ssePullRequestPayload.commitSHA());
-                    Mockito.verify(repo).createCommitStatus(ssePullRequestPayload.commitSHA(),
+                    verify(repo).getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME,
+                            pullRequestJson.commitSHA());
+                    Mockito.verify(repo).createCommitStatus(pullRequestJson.commitSHA(),
                             GHCommitState.SUCCESS, "", "Valid", "Configuration File");
 
-                    verifyNoMoreInteractions(mocks.pullRequest(ssePullRequestPayload.id()));
-                });
+                    verifyNoMoreInteractions(mocks.pullRequest(pullRequestJson.id()));
+                })
+                .run();
     }
 
     @Test
-    void testUpdateWithIncorrectRulesFile() throws IOException {
-        given().github(mocks -> {
+    void testUpdateWithIncorrectRulesFile() throws Throwable {
+        TestModel.given(mocks -> {
             GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
             GHContent mockGHContent = mock(GHContent.class);
-            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, ssePullRequestPayload.commitSHA()))
+            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, pullRequestJson.commitSHA()))
                     .thenReturn(mockGHContent);
             when(mockGHContent.read()).thenReturn(IOUtils.toInputStream("""
                     wildfly:
@@ -136,27 +147,30 @@ public class PRConfigFileChangeTest {
                         - address@email.com""",
                     "UTF-8"));
 
-            MockedGHPullRequest.builder(ssePullRequestPayload.id())
+            MockedGHPullRequest.builder(pullRequestJson.id())
                     .files(".github/wildfly-bot.yml")
                     .mock(mocks);
         })
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
-                    verify(mocks.pullRequest(ssePullRequestPayload.id())).listFiles();
-                    verify(mocks.pullRequest(ssePullRequestPayload.id()), times(2)).listComments();
-                    verify(mocks.pullRequest(ssePullRequestPayload.id())).comment(FAILED_CONFIGFILE_COMMENT.formatted(
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
+                    verify(mocks.pullRequest(pullRequestJson.id())).listFiles();
+                    verify(mocks.pullRequest(pullRequestJson.id()), times(2)).listComments();
+                    verify(mocks.pullRequest(pullRequestJson.id())).comment(FAILED_CONFIGFILE_COMMENT.formatted(
                             String.join("\n\n",
                                     List.of(
                                             "- [WARN] - Rule [title=test] is missing an id",
                                             "- [WARN] - Rule [body=test, notify=[The-non-existing-user]] is missing an id",
                                             "- [ERROR] - Rule [id=directory-error, directories=[non-existing]] has the following non-existing directory specified: non-existing"))));
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    verify(repo).getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, ssePullRequestPayload.commitSHA());
-                    Mockito.verify(repo).createCommitStatus(ssePullRequestPayload.commitSHA(),
+                    verify(repo).getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME,
+                            pullRequestJson.commitSHA());
+                    Mockito.verify(repo).createCommitStatus(pullRequestJson.commitSHA(),
                             GHCommitState.ERROR, "",
                             "One or multiple rules are invalid, please see the comment stating the problems",
                             "Configuration File");
-                });
+                })
+                .run();
     }
 }

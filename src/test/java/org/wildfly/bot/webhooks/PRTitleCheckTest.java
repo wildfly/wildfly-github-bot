@@ -3,6 +3,7 @@ package org.wildfly.bot.webhooks;
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHRepository;
@@ -15,10 +16,10 @@ import org.wildfly.bot.utils.mocking.Mockable;
 import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
 import org.wildfly.bot.utils.model.Action;
 import org.wildfly.bot.utils.model.SsePullRequestPayload;
+import org.wildfly.bot.utils.testing.PullRequestJson;
+import org.wildfly.bot.utils.testing.internal.TestModel;
+import org.wildfly.bot.utils.testing.model.PullRequestGitHubEventPayload;
 
-import java.io.IOException;
-
-import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -34,8 +35,15 @@ import static org.wildfly.bot.model.RuntimeConstants.PROJECT_PATTERN_REGEX;
 public class PRTitleCheckTest {
 
     private static String wildflyConfigFile;
-    private static SsePullRequestPayload ssePullRequestPayload;
+    private static PullRequestJson pullRequestJson;
     private Mockable mockedContext;
+
+    @BeforeAll
+    static void setPullRequestJson() {
+        TestModel.setAllCallables(
+                () -> SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON),
+                PullRequestGitHubEventPayload::new);
+    }
 
     @Test
     void configFileNullTest() {
@@ -47,434 +55,456 @@ public class PRTitleCheckTest {
     }
 
     @Test
-    void incorrectTitleCheckFailTest() throws IOException {
+    void incorrectTitleCheckFailTest() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   format:
                     title:
                       enabled: true
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .title(TestConstants.INVALID_TITLE)
-                .build();
+        pullRequestJson = TestModel.setPullRequestJsonBuilderBuild(
+                pullRequestJsonBuilder -> pullRequestJsonBuilder.title(TestConstants.INVALID_TITLE));
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatFailure(repo, ssePullRequestPayload, "title");
-                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, ssePullRequestPayload,
+                    WildflyGitHubBotTesting.verifyFormatFailure(repo, pullRequestJson, "title");
+                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, pullRequestJson,
                             "- " + String.format(DEFAULT_TITLE_MESSAGE,
                                     PROJECT_PATTERN_REGEX.formatted("WFLY")));
-                });
+                })
+                .run();
     }
 
     @Test
-    void incorrectTitleCheckFailFormatConfigMissingTest() throws IOException {
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .title(TestConstants.INVALID_TITLE)
-                .build();
+    void incorrectTitleCheckFailFormatConfigMissingTest() throws Throwable {
+        pullRequestJson = TestModel.setPullRequestJsonBuilderBuild(
+                pullRequestJsonBuilder -> pullRequestJsonBuilder.title(TestConstants.INVALID_TITLE));
         wildflyConfigFile = """
                 wildfly:
                 """;
 
-        given()
-                .github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatFailure(repo, ssePullRequestPayload, "title");
-                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, ssePullRequestPayload,
+                    WildflyGitHubBotTesting.verifyFormatFailure(repo, pullRequestJson, "title");
+                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, pullRequestJson,
                             "- " + String.format(DEFAULT_TITLE_MESSAGE,
                                     PROJECT_PATTERN_REGEX.formatted("WFLY", "WFLY")));
-                });
+                })
+                .run();
     }
 
     @Test
-    void correctTitleCheckFailFormatConfigMissingTest() throws IOException {
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .build();
+    void correctTitleCheckFailFormatConfigMissingTest() throws Throwable {
+        pullRequestJson = TestModel.getPullRequestJson();
         wildflyConfigFile = """
                 wildfly:
                 """;
 
-        given()
-                .github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
-                });
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                })
+                .run();
     }
 
     @Test
-    void incorrectTitleCheckFailFormatConfigNullTest() throws IOException {
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .title(TestConstants.INVALID_TITLE)
-                .build();
+    void incorrectTitleCheckFailFormatConfigNullTest() throws Throwable {
+        pullRequestJson = TestModel.setPullRequestJsonBuilderBuild(
+                pullRequestJsonBuilder -> pullRequestJsonBuilder.title(TestConstants.INVALID_TITLE));
         wildflyConfigFile = """
                 wildfly:
                   format:
                 """;
 
-        given()
-                .github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatFailure(repo, ssePullRequestPayload, "title");
-                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, ssePullRequestPayload,
+                    WildflyGitHubBotTesting.verifyFormatFailure(repo, pullRequestJson, "title");
+                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, pullRequestJson,
                             "- " + String.format(DEFAULT_TITLE_MESSAGE,
                                     PROJECT_PATTERN_REGEX.formatted("WFLY", "WFLY")));
-                });
+                })
+                .run();
     }
 
     @Test
-    void correctTitleCheckFailFormatConfigNullTest() throws IOException {
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .build();
+    void correctTitleCheckFailFormatConfigNullTest() throws Throwable {
+        pullRequestJson = TestModel.getPullRequestJson();
         wildflyConfigFile = """
                 wildfly:
                   format:
                 """;
 
-        given()
-                .github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
-                });
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                })
+                .run();
     }
 
     @Test
-    void incorrectTitleCheckFailFormatTitleConfigNullTest() throws IOException {
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .title(TestConstants.INVALID_TITLE)
-                .build();
+    void incorrectTitleCheckFailFormatTitleConfigNullTest() throws Throwable {
+        pullRequestJson = TestModel.setPullRequestJsonBuilderBuild(
+                pullRequestJsonBuilder -> pullRequestJsonBuilder.title(TestConstants.INVALID_TITLE));
         wildflyConfigFile = """
                 wildfly:
                   format:
                     title:
                 """;
 
-        given()
-                .github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatFailure(repo, ssePullRequestPayload, "title");
-                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, ssePullRequestPayload,
+                    WildflyGitHubBotTesting.verifyFormatFailure(repo, pullRequestJson, "title");
+                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, pullRequestJson,
                             "- " + String.format(DEFAULT_TITLE_MESSAGE,
                                     PROJECT_PATTERN_REGEX.formatted("WFLY", "WFLY")));
-                });
+                })
+                .run();
     }
 
     @Test
-    void correctTitleCheckFailFormatTitleConfigNullTest() throws IOException {
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .build();
+    void correctTitleCheckFailFormatTitleConfigNullTest() throws Throwable {
+        pullRequestJson = TestModel.getPullRequestJson();
         wildflyConfigFile = """
                 wildfly:
                   format:
                     title:
                 """;
 
-        given()
-                .github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
-                });
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                })
+                .run();
     }
 
     @Test
-    void correctTitleCheckSuccessMultipleJirasWithTextTest() throws IOException {
+    void correctTitleCheckSuccessMultipleJirasWithTextTest() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   format:
                     commit:
                       enabled: false
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .action(Action.EDITED)
-                .title("WFLY-00001 jira,WFLY-00002 title")
-                .build();
+        pullRequestJson = TestModel
+                .setPullRequestJsonBuilderBuild(pullRequestJsonBuilder -> pullRequestJsonBuilder.action(Action.EDITED)
+                        .title("WFLY-00001 jira,WFLY-00002 title"));
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
-                });
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                })
+                .run();
     }
 
     @Test
-    void correctTitleCheckFailMultipleJirasBracketsMissingBracketTest() throws IOException {
+    void correctTitleCheckFailMultipleJirasBracketsMissingBracketTest() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   format:
                     commit:
                       enabled: false
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .action(Action.EDITED)
-                .title("[WFLY-00001,WFLY-00002 title")
-                .build();
+        pullRequestJson = TestModel
+                .setPullRequestJsonBuilderBuild(pullRequestJsonBuilder -> pullRequestJsonBuilder.action(Action.EDITED)
+                        .title("[WFLY-00001,WFLY-00002 title"));
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
-                });
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                })
+                .run();
     }
 
     @Test
-    void correctTitleCheckSuccessMultipleJirasBracketsIncorrectIssuePlacementTest() throws IOException {
+    void correctTitleCheckSuccessMultipleJirasBracketsIncorrectIssuePlacementTest() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   format:
                     commit:
                       enabled: false
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .action(Action.EDITED)
-                .title("[WFLY-00001 jira,WFLY-00002] title")
-                .build();
+        pullRequestJson = TestModel
+                .setPullRequestJsonBuilderBuild(pullRequestJsonBuilder -> pullRequestJsonBuilder.action(Action.EDITED)
+                        .title("[WFLY-00001 jira,WFLY-00002] title"));
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
-                });
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                })
+                .run();
     }
 
     @Test
-    void correctTitleCheckSuccessMultipleJirasBracketsIncorrectEndingBracketPlacementTest() throws IOException {
+    void correctTitleCheckSuccessMultipleJirasBracketsIncorrectEndingBracketPlacementTest() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   format:
                     commit:
                       enabled: false
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .action(Action.EDITED)
-                .title("[WFLY-00001, WFLY-00002 jira] title")
-                .build();
+        pullRequestJson = TestModel
+                .setPullRequestJsonBuilderBuild(pullRequestJsonBuilder -> pullRequestJsonBuilder.action(Action.EDITED)
+                        .title("[WFLY-00001, WFLY-00002 jira] title"));
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
-                });
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                })
+                .run();
     }
 
     @Test
-    void correctTitleCheckSuccessTest() throws IOException {
+    void correctTitleCheckSuccessTest() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   format:
                     title:
                       enabled: true
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
+        pullRequestJson = TestModel.getPullRequestJson();
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
-                });
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                })
+                .run();
     }
 
     @Test
-    void testDisabledTitleCheck() throws IOException {
+    void testDisabledTitleCheck() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   format:
                     title:
                       enabled: false
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .title(TestConstants.INVALID_TITLE)
-                .build();
+        pullRequestJson = TestModel.setPullRequestJsonBuilderBuild(
+                pullRequestJsonBuilder -> pullRequestJsonBuilder.title(TestConstants.INVALID_TITLE));
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
-                });
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                })
+                .run();
     }
 
     @Test
-    public void testOverridingTitleMessage() throws IOException {
+    public void testOverridingTitleMessage() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   format:
                     title:
                       message: "Custom title message"
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .title(TestConstants.INVALID_TITLE)
-                .build();
-        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
+        pullRequestJson = TestModel.setPullRequestJsonBuilderBuild(
+                pullRequestJsonBuilder -> pullRequestJsonBuilder.title(TestConstants.INVALID_TITLE));
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit("WFLY-00000 commit");
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatFailure(repo, ssePullRequestPayload, "title");
-                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, ssePullRequestPayload, "- Custom title message");
-                });
+                    WildflyGitHubBotTesting.verifyFormatFailure(repo, pullRequestJson, "title");
+                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, pullRequestJson, "- Custom title message");
+                })
+                .run();
     }
 
     @Test
-    public void testDisableGlobalFormatCheck() throws IOException {
+    public void testDisableGlobalFormatCheck() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   format:
                     enabled: false
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .title(TestConstants.INVALID_TITLE)
-                .build();
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+
+        pullRequestJson = TestModel.setPullRequestJsonBuilderBuild(
+                pullRequestJsonBuilder -> pullRequestJsonBuilder.title(TestConstants.INVALID_TITLE));
+
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     Mockito.verify(repo, never()).createCommitStatus(anyString(), any(), anyString(), anyString());
                     Mockito.verify(repo, never()).createCommitStatus(anyString(), any(), anyString(), anyString(), anyString());
-                });
+                })
+                .run();
     }
 
     @Test
-    void correctTitleCheckSuccessSingleJiraBracketsTest() throws IOException {
+    void correctTitleCheckSuccessSingleJiraBracketsTest() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   format:
                     commit:
                       enabled: false
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .action(Action.EDITED)
-                .title("[WFLY-00001] title")
-                .build();
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        pullRequestJson = TestModel
+                .setPullRequestJsonBuilderBuild(pullRequestJsonBuilder -> pullRequestJsonBuilder.action(Action.EDITED)
+                        .title("[WFLY-00001] title"));
+
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
-                });
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                })
+                .run();
     }
 
     @Test
-    void correctTitleCheckSuccessMultipleJirasTest() throws IOException {
+    void correctTitleCheckSuccessMultipleJirasTest() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   format:
                     commit:
                       enabled: false
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .action(Action.EDITED)
-                .title("WFLY-00001,WFLY-00002 title")
-                .build();
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        pullRequestJson = TestModel
+                .setPullRequestJsonBuilderBuild(pullRequestJsonBuilder -> pullRequestJsonBuilder.action(Action.EDITED)
+                        .title("WFLY-00001,WFLY-00002 title"));
+
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
-                });
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                })
+                .run();
     }
 
     @Test
-    void correctTitleCheckSuccessMultipleJirasWithSpacesTest() throws IOException {
+    void correctTitleCheckSuccessMultipleJirasWithSpacesTest() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   format:
                     commit:
                       enabled: false
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .action(Action.EDITED)
-                .title("WFLY-00001, WFLY-00002 title")
-                .build();
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        pullRequestJson = TestModel
+                .setPullRequestJsonBuilderBuild(pullRequestJsonBuilder -> pullRequestJsonBuilder.action(Action.EDITED)
+                        .title("WFLY-00001, WFLY-00002 title"));
+
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
-                });
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                })
+                .run();
     }
 
     @Test
-    void correctTitleCheckSuccessMultipleJirasBracketsTest() throws IOException {
+    void correctTitleCheckSuccessMultipleJirasBracketsTest() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   format:
                     commit:
                       enabled: false
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .action(Action.EDITED)
-                .title("[WFLY-00001,WFLY-00002] title")
-                .build();
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        pullRequestJson = TestModel
+                .setPullRequestJsonBuilderBuild(pullRequestJsonBuilder -> pullRequestJsonBuilder.action(Action.EDITED)
+                        .title("[WFLY-00001,WFLY-00002] title"));
+
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
-                });
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                })
+                .run();
     }
 
     @Test
-    void correctTitleCheckSuccessMultipleJirasBracketsWithSpacesTest() throws IOException {
+    void correctTitleCheckSuccessMultipleJirasBracketsWithSpacesTest() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   format:
                     commit:
                       enabled: false
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .action(Action.EDITED)
-                .title("[WFLY-00001, WFLY-00002] title")
-                .build();
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        pullRequestJson = TestModel
+                .setPullRequestJsonBuilderBuild(pullRequestJsonBuilder -> pullRequestJsonBuilder.action(Action.EDITED)
+                        .title("[WFLY-00001, WFLY-00002] title"));
+
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
-                });
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                })
+                .run();
     }
 }

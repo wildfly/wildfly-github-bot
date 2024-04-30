@@ -2,6 +2,7 @@ package org.wildfly.bot.webhooks;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHPullRequest;
@@ -12,10 +13,9 @@ import org.wildfly.bot.utils.WildflyGitHubBotTesting;
 import org.wildfly.bot.utils.mocking.Mockable;
 import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
 import org.wildfly.bot.utils.model.SsePullRequestPayload;
-
-import java.io.IOException;
-
-import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
+import org.wildfly.bot.utils.testing.PullRequestJson;
+import org.wildfly.bot.utils.testing.internal.TestModel;
+import org.wildfly.bot.utils.testing.model.PullRequestGitHubEventPayload;
 
 /**
  * Tests containing multiple/all checks at the same time.
@@ -25,11 +25,18 @@ import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 public class PRChecksTest {
 
     private static String wildflyConfigFile;
-    private static SsePullRequestPayload ssePullRequestPayload;
+    private static PullRequestJson pullRequestJson;
     private Mockable mockedContext;
 
+    @BeforeAll
+    static void setPullRequestJson() throws Exception {
+        TestModel.setAllCallables(
+                () -> SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON),
+                PullRequestGitHubEventPayload::new);
+    }
+
     @Test
-    void testNoConfigFile() throws IOException {
+    void testNoConfigFile() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   format:
@@ -38,24 +45,27 @@ public class PRChecksTest {
                     commit:
                       enabled: false
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .title(TestConstants.INVALID_TITLE)
-                .description(TestConstants.INVALID_DESCRIPTION)
-                .build();
-        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
+        pullRequestJson = TestModel.setPullRequestJsonBuilderBuild(
+                pullRequestJsonBuilder -> pullRequestJsonBuilder.title(TestConstants.INVALID_TITLE)
+                        .description(TestConstants.INVALID_DESCRIPTION));
+
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit(TestConstants.INVALID_COMMIT_MESSAGE);
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        TestModel.given(
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
-                });
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                })
+                .run();
     }
 
     @Test
-    void testAllChecksPass() throws IOException {
+    void testAllChecksPass() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   rules:
@@ -71,21 +81,23 @@ public class PRChecksTest {
                            - pattern: "JIRA:\\\\s+https://issues.redhat.com/browse/WFLY-\\\\d+|https://issues.redhat.com/browse/WFLY-\\\\d+"
                              message: "The PR description must contain a link to the JIRA issue"
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
+        pullRequestJson = TestModel.getPullRequestJson();
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
-                    GHPullRequest mockedPR = mocks.pullRequest(ssePullRequestPayload.id());
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
                     Mockito.verify(mockedPR).comment("/cc @Butterfly, @Tadpole");
-                });
+                })
+                .run();
     }
 
     @Test
-    void testAllChecksFail() throws IOException {
+    void testAllChecksFail() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   rules:
@@ -101,21 +113,24 @@ public class PRChecksTest {
                            - pattern: "JIRA:\\\\s+https://issues.redhat.com/browse/WFLY-\\\\d+|https://issues.redhat.com/browse/WFLY-\\\\d+"
                              message: "The PR description must contain a link to the JIRA issue"
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .title(TestConstants.INVALID_TITLE)
-                .description(TestConstants.INVALID_DESCRIPTION)
-                .build();
-        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
+        pullRequestJson = TestModel.setPullRequestJsonBuilderBuild(
+                pullRequestJsonBuilder -> pullRequestJsonBuilder.title(TestConstants.INVALID_TITLE)
+                        .description(TestConstants.INVALID_DESCRIPTION));
+
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit(TestConstants.INVALID_COMMIT_MESSAGE);
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        TestModel.given(
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatFailure(repo, ssePullRequestPayload, "commit, description, title");
-                    GHPullRequest mockedPR = mocks.pullRequest(ssePullRequestPayload.id());
+                    WildflyGitHubBotTesting.verifyFormatFailure(repo, pullRequestJson, "commit, description, title");
+                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
                     Mockito.verify(mockedPR, Mockito.never()).comment("/cc @Butterfly, @Tadpole");
-                });
+                })
+                .run();
     }
 }

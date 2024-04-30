@@ -20,15 +20,16 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.wildfly.bot.config.WildFlyBotConfig;
 import org.wildfly.bot.model.RuntimeConstants;
-import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
 import org.wildfly.bot.utils.TestConstants;
+import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
+import org.wildfly.bot.utils.testing.internal.TestModel;
+import org.wildfly.bot.utils.testing.model.PushGitHubEventPayload;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.LogManager;
 
-import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -40,8 +41,8 @@ import static org.wildfly.bot.model.RuntimeConstants.LABEL_NEEDS_REBASE;
 @GitHubAppTest
 public class PushEventTest {
 
-    private static final String PAYLOAD = "/webhooks/push.json";
-    private long sleepTimeMilis;
+    private static final String SSE_PAYLOAD = "/webhooks/push.json";
+    private long sleepTimeMillis;
 
     private static final java.util.logging.Logger rootLogger = LogManager.getLogManager().getLogger("org.wildfly.bot");
     private static final InMemoryLogHandler inMemoryLogHandler = new InMemoryLogHandler(
@@ -57,7 +58,7 @@ public class PushEventTest {
     @BeforeEach
     void setup() {
         inMemoryLogHandler.getRecords().clear();
-        sleepTimeMilis = (long) (wildFlyBotConfig.timeout() + 1) * 1_000;
+        sleepTimeMillis = (long) (wildFlyBotConfig.timeout() + 1) * 1_000;
     }
 
     /**
@@ -66,9 +67,9 @@ public class PushEventTest {
      * Note: We are not mocking PushCommit, that's why we have exception thrown in the log of the tests
      */
     @Test
-    void applyRebaseThisLabelOnUnmergablePullRequestsTest() throws Exception {
+    void applyRebaseThisLabelOnUnmergablePullRequestsTest() throws Throwable {
         int pullRequestCount = 4;
-        given().github(mocks -> {
+        TestModel.given(mocks -> {
             GHRepository repository = mocks.repository(TestConstants.TEST_REPO);
             List<GHPullRequest> pullRequests = new ArrayList<>();
             for (int i = 0; i < pullRequestCount; i++) {
@@ -117,10 +118,13 @@ public class PushEventTest {
 
             when(pullRequestsPagedIterable.toList()).thenReturn(pullRequests);
         })
-                .when().payloadFromClasspath(PAYLOAD).event(GHEvent.PUSH)
-                .then().github(mocks -> {
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromClasspath(SSE_PAYLOAD)
+                        .event(GHEvent.PUSH))
+                .pollingEventOptions(
+                        eventSenderOptions -> eventSenderOptions.eventFromPayload((new PushGitHubEventPayload()).toString()))
+                .then(mocks -> {
                     // we sleep in order to finish the asynchronous execution
-                    Thread.sleep(sleepTimeMilis);
+                    Thread.sleep(sleepTimeMillis);
                     verify(mocks.repository(TestConstants.TEST_REPO)).queryPullRequests();
                     for (int i = 0; i < pullRequestCount; i++) {
                         Mockito.verify(mocks.pullRequest(i), times(4)).getMergeable();
@@ -136,15 +140,16 @@ public class PushEventTest {
                     // Same as above... This happens as we mock repository content and on second mocking we invoke the mocked method...
                     verify(mocks.repository(TestConstants.TEST_REPO)).getDirectoryContent(anyString());
                     Mockito.verifyNoMoreInteractions(mocks.repository(TestConstants.TEST_REPO));
-                });
+                })
+                .run();
     }
 
     /**
      * We test that a queue is created and the Push Events are run reactively
      */
     @Test
-    void creatingQueueOnPushEventTest() throws Exception {
-        given().github(mocks -> {
+    void creatingQueueOnPushEventTest() throws Throwable {
+        TestModel.given(mocks -> {
             GHRepository repository = mocks.repository(TestConstants.TEST_REPO);
             List<GHPullRequest> pullRequests = new ArrayList<>();
             GHPullRequest mockedPR = mocks.pullRequest(123);
@@ -176,10 +181,15 @@ public class PushEventTest {
 
             when(pullRequestsPagedIterable.toList()).thenReturn(pullRequests);
         })
-                .when().payloadFromClasspath(PAYLOAD).event(GHEvent.PUSH)
-                .then();
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromClasspath(SSE_PAYLOAD)
+                        .event(GHEvent.PUSH))
+                .pollingEventOptions(
+                        eventSenderOptions -> eventSenderOptions.eventFromPayload((new PushGitHubEventPayload()).toString()))
+                .then(mocks -> {
+                })
+                .run();
 
-        given().github(mocks -> {
+        TestModel.given(mocks -> {
             GHRepository repository = mocks.repository(TestConstants.TEST_REPO);
             List<GHPullRequest> pullRequests = new ArrayList<>();
             GHPullRequest mockedPR = mocks.pullRequest(123);
@@ -211,17 +221,21 @@ public class PushEventTest {
 
             when(pullRequestsPagedIterable.toList()).thenReturn(pullRequests);
         })
-                .when().payloadFromClasspath(PAYLOAD).event(GHEvent.PUSH)
-                .then().github(mocks -> {
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromClasspath(SSE_PAYLOAD)
+                        .event(GHEvent.PUSH))
+                .pollingEventOptions(
+                        eventSenderOptions -> eventSenderOptions.eventFromPayload((new PushGitHubEventPayload()).toString()))
+                .then(mocks -> {
                     Assertions.assertEquals(1, inMemoryLogHandler.getRecords().stream().filter(
                             logRecord -> logRecord.getMessage()
                                     .equals("Scheduling a mergable status update for open pull requests for new head [%s - \"%s\"]"))
                             .count());
-                    Thread.sleep(sleepTimeMilis);
+                    Thread.sleep(sleepTimeMillis);
                     Assertions.assertEquals(2, inMemoryLogHandler.getRecords().stream().filter(
                             logRecord -> logRecord.getMessage()
                                     .equals("Scheduling a mergable status update for open pull requests for new head [%s - \"%s\"]"))
                             .count());
-                });
+                })
+                .run();
     }
 }

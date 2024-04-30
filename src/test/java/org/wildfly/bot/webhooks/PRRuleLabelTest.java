@@ -16,12 +16,13 @@ import org.wildfly.bot.utils.WildflyGitHubBotTesting;
 import org.wildfly.bot.utils.mocking.Mockable;
 import org.wildfly.bot.utils.mocking.MockedGHRepository;
 import org.wildfly.bot.utils.model.SsePullRequestPayload;
+import org.wildfly.bot.utils.testing.PullRequestJson;
+import org.wildfly.bot.utils.testing.internal.TestModel;
+import org.wildfly.bot.utils.testing.model.PullRequestGitHubEventPayload;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Set;
 
-import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 import static org.wildfly.bot.utils.model.Action.SYNCHRONIZE;
 
 @QuarkusTest
@@ -29,18 +30,21 @@ import static org.wildfly.bot.utils.model.Action.SYNCHRONIZE;
 public class PRRuleLabelTest {
 
     private String wildflyConfigFile;
-    private static SsePullRequestPayload ssePullRequestPayload;
+    private static PullRequestJson pullRequestJson;
     private Mockable mockedContext;
 
     @BeforeAll
-    static void setupTests() throws IOException {
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .action(SYNCHRONIZE)
-                .build();
+    static void setPullRequestJson() throws Exception {
+        TestModel.setAllCallables(
+                () -> SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON),
+                PullRequestGitHubEventPayload::new);
+
+        pullRequestJson = TestModel
+                .setPullRequestJsonBuilderBuild(pullRequestJsonBuilder -> pullRequestJsonBuilder.action(SYNCHRONIZE));
     }
 
     @Test
-    public void testHittingLabelRuleLabelInRepository() throws IOException {
+    public void testHittingLabelRuleLabelInRepository() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   rules:
@@ -50,16 +54,18 @@ public class PRRuleLabelTest {
                        """;
         mockedContext = MockedGHRepository.builder()
                 .labels(Set.of("label1"));
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(ssePullRequestPayload.id())).addLabels("label1");
-                });
+
+        TestModel.given(
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> Mockito.verify(mocks.pullRequest(pullRequestJson.id())).addLabels("label1"))
+                .run();
     }
 
     @Test
-    public void testHittingLabelRuleLabelMissingInRepository() throws IOException {
+    public void testHittingLabelRuleLabelMissingInRepository() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   rules:
@@ -67,20 +73,22 @@ public class PRRuleLabelTest {
                       title: WFLY
                       labels: [label1]
                        """;
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repository = mocks.repository(TestConstants.TEST_REPO);
                     Mockito.verify(repository).createLabel(ArgumentMatchers.eq("label1"), ArgumentMatchers.anyString());
                     final ArgumentCaptor<String[]> argumentCaptor = ArgumentCaptor.forClass(String[].class);
-                    Mockito.verify(mocks.pullRequest(ssePullRequestPayload.id())).addLabels(argumentCaptor.capture());
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).addLabels(argumentCaptor.capture());
                     MatcherAssert.assertThat(Arrays.asList(argumentCaptor.getValue()), Matchers.containsInAnyOrder("label1"));
-                });
+                })
+                .run();
     }
 
     @Test
-    public void testHittingLabelRuleSomeLabelsMissingInRepository() throws IOException {
+    public void testHittingLabelRuleSomeLabelsMissingInRepository() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   rules:
@@ -90,17 +98,21 @@ public class PRRuleLabelTest {
                        """;
         mockedContext = MockedGHRepository.builder()
                 .labels(Set.of("label2", "label4"));
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+
+        TestModel.given(
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repository = mocks.repository(TestConstants.TEST_REPO);
                     Mockito.verify(repository).createLabel(ArgumentMatchers.eq("label1"), ArgumentMatchers.anyString());
                     Mockito.verify(repository).createLabel(ArgumentMatchers.eq("label3"), ArgumentMatchers.anyString());
                     final ArgumentCaptor<String[]> argumentCaptor = ArgumentCaptor.forClass(String[].class);
-                    Mockito.verify(mocks.pullRequest(ssePullRequestPayload.id())).addLabels(argumentCaptor.capture());
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).addLabels(argumentCaptor.capture());
                     MatcherAssert.assertThat(Arrays.asList(argumentCaptor.getValue()),
                             Matchers.containsInAnyOrder("label1", "label2", "label3", "label4"));
-                });
+                })
+                .run();
     }
 }

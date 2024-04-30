@@ -159,6 +159,14 @@ Run your application in dev mode that enables live coding using:
 
 Try to create a PR and update it a few times. The format check sends commit statuses that you will see in the PR.
 
+### Testing
+
+Our application currently runs in 2 different modes.
+* **SSE** - Events received by GitHub
+* **Event Polling** - Retrieve manually events in scheduled intervals
+
+For such use case, we have profile aware tests, where by default we test **SSE** events. To run **Event Polling** you should set `quarkus.test.profile=polling`.
+
 ## Deployment on OpenShift
 
 ### Requirements

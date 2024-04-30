@@ -16,10 +16,10 @@ import org.wildfly.bot.utils.mocking.Mockable;
 import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
 import org.wildfly.bot.utils.mocking.MockedGHRepository;
 import org.wildfly.bot.utils.model.SsePullRequestPayload;
+import org.wildfly.bot.utils.testing.PullRequestJson;
+import org.wildfly.bot.utils.testing.internal.TestModel;
+import org.wildfly.bot.utils.testing.model.PullRequestGitHubEventPayload;
 
-import java.io.IOException;
-
-import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -27,26 +27,30 @@ import static org.mockito.Mockito.when;
 @GitHubAppTest
 public class PRDirectoriesVerificationTest {
 
-    private static SsePullRequestPayload ssePullRequestPayload;
+    private static PullRequestJson pullRequestJson;
     private Mockable mockedContext;
 
     @BeforeAll
-    public static void setupTests() throws IOException {
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .build();
+    public static void setPullRequestJson() throws Exception {
+        TestModel.setAllCallables(
+                () -> SsePullRequestPayload.builder((TestConstants.VALID_PR_TEMPLATE_JSON)),
+                PullRequestGitHubEventPayload::new);
+
+        pullRequestJson = TestModel.getPullRequestJson();
     }
 
     @Test
-    public void existingDirectoryTest() throws IOException {
-        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
+    public void existingDirectoryTest() throws Throwable {
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .files(".github/wildfly-bot.yml")
                 .mockNext(MockedGHRepository.builder())
                 .directories("src");
-        given().github(mocks -> {
+
+        TestModel.given(mocks -> {
             mockedContext.mock(mocks);
             GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
             GHContent mockGHContent = mock(GHContent.class);
-            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, ssePullRequestPayload.commitSHA()))
+            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, pullRequestJson.commitSHA()))
                     .thenReturn(mockGHContent);
             when(mockGHContent.read()).thenReturn(IOUtils.toInputStream("""
                     wildfly:
@@ -56,25 +60,28 @@ public class PRDirectoriesVerificationTest {
                     "UTF-8"));
 
         })
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     Mockito.verify(repo).getDirectoryContent("src");
-                    Mockito.verify(repo).createCommitStatus(ssePullRequestPayload.commitSHA(),
+                    Mockito.verify(repo).createCommitStatus(pullRequestJson.commitSHA(),
                             GHCommitState.SUCCESS, "", "Valid", "Configuration File");
-                });
+                })
+                .run();
     }
 
     @Test
-    public void nonExistingDirectoryTest() throws IOException {
-        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
+    public void nonExistingDirectoryTest() throws Throwable {
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .files(".github/wildfly-bot.yml");
-        given().github(mocks -> {
+
+        TestModel.given(mocks -> {
             mockedContext.mock(mocks);
             GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
             GHContent mockGHContent = mock(GHContent.class);
-            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, ssePullRequestPayload.commitSHA()))
+            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, pullRequestJson.commitSHA()))
                     .thenReturn(mockGHContent);
             when(mockGHContent.read()).thenReturn(IOUtils.toInputStream("""
                     wildfly:
@@ -84,29 +91,32 @@ public class PRDirectoriesVerificationTest {
                     "UTF-8"));
 
         })
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     Mockito.verify(repo).getDirectoryContent("src");
-                    Mockito.verify(repo).createCommitStatus(ssePullRequestPayload.commitSHA(),
+                    Mockito.verify(repo).createCommitStatus(pullRequestJson.commitSHA(),
                             GHCommitState.ERROR, "",
                             "One or multiple rules are invalid, please see the comment stating the problems",
                             "Configuration File");
-                });
+                })
+                .run();
     }
 
     @Test
-    public void existingFileTest() throws IOException {
-        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
+    public void existingFileTest() throws Throwable {
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .files(".github/wildfly-bot.yml")
                 .mockNext(MockedGHRepository.builder())
                 .files("pom.xml");
-        given().github(mocks -> {
+
+        TestModel.given(mocks -> {
             mockedContext.mock(mocks);
             GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
             GHContent mockGHContent = mock(GHContent.class);
-            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, ssePullRequestPayload.commitSHA()))
+            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, pullRequestJson.commitSHA()))
                     .thenReturn(mockGHContent);
             when(mockGHContent.read()).thenReturn(IOUtils.toInputStream("""
                     wildfly:
@@ -116,25 +126,28 @@ public class PRDirectoriesVerificationTest {
                     "UTF-8"));
 
         })
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     Mockito.verify(repo).getDirectoryContent("pom.xml");
-                });
+                })
+                .run();
     }
 
     @Test
-    public void oneExistingSubdirectoryTest() throws IOException {
-        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
+    public void oneExistingSubdirectoryTest() throws Throwable {
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .files(".github/wildfly-bot.yml")
                 .mockNext(MockedGHRepository.builder())
                 .directories("src", "src/main", "src/main/java");
-        given().github(mocks -> {
+
+        TestModel.given(mocks -> {
             mockedContext.mock(mocks);
             GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
             GHContent mockGHContent = mock(GHContent.class);
-            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, ssePullRequestPayload.commitSHA()))
+            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, pullRequestJson.commitSHA()))
                     .thenReturn(mockGHContent);
             when(mockGHContent.read()).thenReturn(IOUtils.toInputStream("""
                     wildfly:
@@ -144,31 +157,34 @@ public class PRDirectoriesVerificationTest {
                     "UTF-8"));
 
         })
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     Mockito.verify(repo).getDirectoryContent("src/main");
                     Mockito.verify(repo).getDirectoryContent("src/test");
-                    Mockito.verify(repo).createCommitStatus(ssePullRequestPayload.commitSHA(),
+                    Mockito.verify(repo).createCommitStatus(pullRequestJson.commitSHA(),
                             GHCommitState.ERROR, "",
                             "One or multiple rules are invalid, please see the comment stating the problems",
                             "Configuration File");
-                });
+                })
+                .run();
     }
 
     @Test
-    public void oneExistingFileInSubdirectoryTest() throws IOException {
-        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
+    public void oneExistingFileInSubdirectoryTest() throws Throwable {
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .files(".github/wildfly-bot.yml")
                 .mockNext(MockedGHRepository.builder())
                 .directories("src", "src/main", "src/main/java")
                 .files("src/main/resources/application.properties");
-        given().github(mocks -> {
+
+        TestModel.given(mocks -> {
             mockedContext.mock(mocks);
             GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
             GHContent mockGHContent = mock(GHContent.class);
-            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, ssePullRequestPayload.commitSHA()))
+            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, pullRequestJson.commitSHA()))
                     .thenReturn(mockGHContent);
             when(mockGHContent.read()).thenReturn(IOUtils.toInputStream("""
                     wildfly:
@@ -180,14 +196,16 @@ public class PRDirectoriesVerificationTest {
                     "UTF-8"));
 
         })
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     Mockito.verify(repo).getDirectoryContent("src/main");
                     Mockito.verify(repo).getDirectoryContent("src/main/resources/application.properties");
-                    Mockito.verify(repo).createCommitStatus(ssePullRequestPayload.commitSHA(),
+                    Mockito.verify(repo).createCommitStatus(pullRequestJson.commitSHA(),
                             GHCommitState.SUCCESS, "", "Valid", "Configuration File");
-                });
+                })
+                .run();
     }
 }

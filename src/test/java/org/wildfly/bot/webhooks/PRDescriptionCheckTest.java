@@ -2,6 +2,7 @@ package org.wildfly.bot.webhooks;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHRepository;
@@ -11,10 +12,10 @@ import org.wildfly.bot.model.Description;
 import org.wildfly.bot.utils.TestConstants;
 import org.wildfly.bot.utils.WildflyGitHubBotTesting;
 import org.wildfly.bot.utils.model.SsePullRequestPayload;
+import org.wildfly.bot.utils.testing.PullRequestJson;
+import org.wildfly.bot.utils.testing.internal.TestModel;
+import org.wildfly.bot.utils.testing.model.PullRequestGitHubEventPayload;
 
-import java.io.IOException;
-
-import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -29,7 +30,14 @@ import static org.mockito.Mockito.never;
 public class PRDescriptionCheckTest {
 
     private static String wildflyConfigFile;
-    private static SsePullRequestPayload ssePullRequestPayload;
+    private static PullRequestJson pullRequestJson;
+
+    @BeforeAll
+    static void setPullRequestJson() {
+        TestModel.setAllCallables(
+                () -> SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON),
+                PullRequestGitHubEventPayload::new);
+    }
 
     @Test
     void configFileNullTest() {
@@ -41,7 +49,7 @@ public class PRDescriptionCheckTest {
     }
 
     @Test
-    void testDescriptionCheckFail() throws IOException {
+    void testDescriptionCheckFail() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   format:
@@ -51,23 +59,25 @@ public class PRDescriptionCheckTest {
                         - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
                           message: "The PR description must contain a link to the JIRA issue"
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .description(TestConstants.INVALID_DESCRIPTION)
-                .build();
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        pullRequestJson = TestModel.setPullRequestJsonBuilderBuild(
+                pullRequestJsonBuilder -> pullRequestJsonBuilder.description(TestConstants.INVALID_DESCRIPTION));
+
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatFailure(repo, ssePullRequestPayload, "description");
-                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, ssePullRequestPayload,
+                    WildflyGitHubBotTesting.verifyFormatFailure(repo, pullRequestJson, "description");
+                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, pullRequestJson,
                             "- The PR description must contain a link to the JIRA issue");
-                });
+                })
+                .run();
     }
 
     @Test
-    void testNoMessageInConfigFile() throws IOException {
+    void testNoMessageInConfigFile() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   format:
@@ -75,22 +85,25 @@ public class PRDescriptionCheckTest {
                       regexes:
                         - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .description(TestConstants.INVALID_DESCRIPTION)
-                .build();
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        pullRequestJson = TestModel.setPullRequestJsonBuilderBuild(
+                pullRequestJsonBuilder -> pullRequestJsonBuilder.description(TestConstants.INVALID_DESCRIPTION));
+
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatFailure(repo, ssePullRequestPayload, "description");
-                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, ssePullRequestPayload, "- Invalid description content");
-                });
+                    WildflyGitHubBotTesting.verifyFormatFailure(repo, pullRequestJson, "description");
+                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, pullRequestJson,
+                            "- Invalid description content");
+                })
+                .run();
     }
 
     @Test
-    void testDescriptionCheckSuccess() throws IOException {
+    void testDescriptionCheckSuccess() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   format:
@@ -100,37 +113,43 @@ public class PRDescriptionCheckTest {
                         - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
                           message: "The PR description must contain a link to the JIRA issue"
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        pullRequestJson = TestModel.getPullRequestJson();
+
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
-                });
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                })
+                .run();
     }
 
     @Test
-    void testDescriptionCheckSuccessDescriptionConfigNull() throws IOException {
+    void testDescriptionCheckSuccessDescriptionConfigNull() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   format:
                     description:
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        pullRequestJson = TestModel.getPullRequestJson();
+
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
-                });
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                })
+                .run();
     }
 
     @Test
-    void testMultipleLineDescription() throws IOException {
+    void testMultipleLineDescription() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   format:
@@ -140,25 +159,27 @@ public class PRDescriptionCheckTest {
                         - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
                           message: "The PR description must contain a link to the JIRA issue"
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+
+        pullRequestJson = TestModel.setPullRequestJsonBuilderBuild(pullRequestJsonBuilder -> pullRequestJsonBuilder
                 .description("""
                         First line of description
                         Additional line of description - JIRA: https://issues.redhat.com/browse/WFLY-666
                         Another line with no JIRA link
-                        """)
-                .build();
+                        """));
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
-                });
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                })
+                .run();
     }
 
     @Test
-    void testMultipleRegexesFirstPatternHit() throws IOException {
+    void testMultipleRegexesFirstPatternHit() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   format:
@@ -169,23 +190,25 @@ public class PRDescriptionCheckTest {
                           message: "The PR description must contain a link to the JIRA issue"
                         - pattern: "JIRA"
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .description("JIRA")
-                .build();
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        pullRequestJson = TestModel
+                .setPullRequestJsonBuilderBuild(pullRequestJsonBuilder -> pullRequestJsonBuilder.description("JIRA"));
+
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatFailure(repo, ssePullRequestPayload, "description");
-                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, ssePullRequestPayload,
+                    WildflyGitHubBotTesting.verifyFormatFailure(repo, pullRequestJson, "description");
+                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, pullRequestJson,
                             "- The PR description must contain a link to the JIRA issue");
-                });
+                })
+                .run();
     }
 
     @Test
-    void testMultipleRegexesSecondPatternHit() throws IOException {
+    void testMultipleRegexesSecondPatternHit() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   format:
@@ -196,22 +219,25 @@ public class PRDescriptionCheckTest {
                           message: "The PR description must contain a link to the JIRA issue"
                         - pattern: "JIRA"
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .description("https://issues.redhat.com/browse/WFLY-123")
-                .build();
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        pullRequestJson = TestModel.setPullRequestJsonBuilderBuild(
+                pullRequestJsonBuilder -> pullRequestJsonBuilder.description("https://issues.redhat.com/browse/WFLY-123"));
+
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatFailure(repo, ssePullRequestPayload, "description");
-                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, ssePullRequestPayload, "- Lorem ipsum dolor sit amet");
-                });
+                    WildflyGitHubBotTesting.verifyFormatFailure(repo, pullRequestJson, "description");
+                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, pullRequestJson,
+                            "- Lorem ipsum dolor sit amet");
+                })
+                .run();
     }
 
     @Test
-    void testMultipleRegexesAllPatternsHit() throws IOException {
+    void testMultipleRegexesAllPatternsHit() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   format:
@@ -222,23 +248,25 @@ public class PRDescriptionCheckTest {
                           message: "The PR description must contain a link to the JIRA issue"
                         - pattern: "JIRA"
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .description(TestConstants.INVALID_DESCRIPTION)
-                .build();
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        pullRequestJson = TestModel.setPullRequestJsonBuilderBuild(
+                pullRequestJsonBuilder -> pullRequestJsonBuilder.description(TestConstants.INVALID_DESCRIPTION));
+
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatFailure(repo, ssePullRequestPayload, "description");
-                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, ssePullRequestPayload,
+                    WildflyGitHubBotTesting.verifyFormatFailure(repo, pullRequestJson, "description");
+                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, pullRequestJson,
                             "- The PR description must contain a link to the JIRA issue");
-                });
+                })
+                .run();
     }
 
     @Test
-    void testMultipleRegexesNoPatternsHit() throws IOException {
+    void testMultipleRegexesNoPatternsHit() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   format:
@@ -249,19 +277,22 @@ public class PRDescriptionCheckTest {
                           message: "The PR description must contain a link to the JIRA issue"
                         - pattern: "JIRA"
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+        pullRequestJson = TestModel.getPullRequestJson();
+
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
-                });
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                })
+                .run();
     }
 
     @Test
-    public void testDisableGlobalFormatCheck() throws IOException {
+    public void testDisableGlobalFormatCheck() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   format:
@@ -273,16 +304,19 @@ public class PRDescriptionCheckTest {
                           message: "The PR description must contain a link to the JIRA issue"
                         - pattern: "JIRA"
                 """;
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .title(TestConstants.INVALID_TITLE)
-                .build();
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+
+        pullRequestJson = TestModel.setPullRequestJsonBuilderBuild(
+                pullRequestJsonBuilder -> pullRequestJsonBuilder.title(TestConstants.INVALID_TITLE));
+
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     Mockito.verify(repo, never()).createCommitStatus(anyString(), any(), anyString(), anyString());
                     Mockito.verify(repo, never()).createCommitStatus(anyString(), any(), anyString(), anyString(), anyString());
-                });
+                })
+                .run();
     }
 }

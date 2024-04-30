@@ -11,10 +11,9 @@ import org.mockito.Mockito;
 import org.wildfly.bot.utils.TestConstants;
 import org.wildfly.bot.utils.WildflyGitHubBotTesting;
 import org.wildfly.bot.utils.model.SsePullRequestPayload;
-
-import java.io.IOException;
-
-import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
+import org.wildfly.bot.utils.testing.PullRequestJson;
+import org.wildfly.bot.utils.testing.internal.TestModel;
+import org.wildfly.bot.utils.testing.model.PullRequestGitHubEventPayload;
 
 /**
  * Tests for the Wildfly -> Rules -> Title checks.
@@ -24,15 +23,19 @@ import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 public class PRRuleTitleCheckTest {
 
     private static String wildflyConfigFile;
-    private static SsePullRequestPayload ssePullRequestPayload;
+    private static PullRequestJson pullRequestJson;
 
     @BeforeEach
-    void setUpGitHubJson() throws IOException {
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
+    void setPullRequestJson() throws Exception {
+        TestModel.setAllCallables(
+                () -> SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON),
+                PullRequestGitHubEventPayload::new);
+
+        pullRequestJson = TestModel.getPullRequestJson();
     }
 
     @Test
-    void testSuccessfulTitleCheck() throws IOException {
+    void testSuccessfulTitleCheck() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   rules:
@@ -40,19 +43,22 @@ public class PRRuleTitleCheckTest {
                       title: "Title"
                       notify: [Tadpole]
                 """;
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
-                    GHPullRequest mockedPR = mocks.pullRequest(ssePullRequestPayload.id());
+
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
+                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
                     Mockito.verify(mockedPR).comment("/cc @Tadpole");
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
-                });
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                })
+                .run();
     }
 
     @Test
-    void testFailedTitleCheck() throws IOException {
+    void testFailedTitleCheck() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   rules:
@@ -60,19 +66,22 @@ public class PRRuleTitleCheckTest {
                       title: "NonValidTitle"
                       notify: [Tadpole]
                 """;
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
-                    GHPullRequest mockedPR = mocks.pullRequest(ssePullRequestPayload.id());
+
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
+                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
                     Mockito.verify(mockedPR, Mockito.never()).comment("/cc @Tadpole");
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
-                });
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                })
+                .run();
     }
 
     @Test
-    void testTitleBodyCheckForTitleCaseInsensitive() throws IOException {
+    void testTitleBodyCheckForTitleCaseInsensitive() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   rules:
@@ -81,15 +90,16 @@ public class PRRuleTitleCheckTest {
                       notify: [Tadpole]
                 """;
 
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
-                    GHPullRequest mockedPR = mocks.pullRequest(ssePullRequestPayload.id());
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
+                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
                     Mockito.verify(mockedPR).comment("/cc @Tadpole");
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
-                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, ssePullRequestPayload);
-                });
+                    WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
+                })
+                .run();
     }
-
 }

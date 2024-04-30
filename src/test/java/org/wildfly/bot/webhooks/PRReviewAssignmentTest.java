@@ -26,14 +26,14 @@ import org.wildfly.bot.utils.mocking.Mockable;
 import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
 import org.wildfly.bot.utils.mocking.MockedGHRepository;
 import org.wildfly.bot.utils.model.SsePullRequestPayload;
+import org.wildfly.bot.utils.testing.PullRequestJson;
+import org.wildfly.bot.utils.testing.internal.TestModel;
+import org.wildfly.bot.utils.testing.model.PullRequestGitHubEventPayload;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.LogManager;
 import java.util.stream.Collectors;
-
-import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 
 @QuarkusTest
 @GitHubAppTest
@@ -62,15 +62,19 @@ public class PRReviewAssignmentTest {
                 - foo@bar.baz
             """;
 
-    private static SsePullRequestPayload ssePullRequestPayload;
+    private static PullRequestJson pullRequestJson;
     private Mockable mockedContext;
 
     @Inject
     MockMailbox mailbox;
 
     @BeforeAll
-    static void setupTests() throws IOException {
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
+    static void setupTests() throws Exception {
+        TestModel.setAllCallables(
+                () -> SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON),
+                PullRequestGitHubEventPayload::new);
+
+        pullRequestJson = TestModel.getPullRequestJson();
     }
 
     @BeforeEach
@@ -79,14 +83,17 @@ public class PRReviewAssignmentTest {
     }
 
     @Test
-    public void testOnlyMissingCollaboratorsNoReviewAssignment() throws IOException {
-        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
+    public void testOnlyMissingCollaboratorsNoReviewAssignment() throws Throwable {
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .files("src/main/java/resource/application.properties");
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(ssePullRequestPayload.id()), Mockito.never())
+
+        TestModel.given(
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never())
                             .comment(ArgumentMatchers.anyString());
                     Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
                             logRecord -> logRecord.getMessage().contains(
@@ -97,46 +104,54 @@ public class PRReviewAssignmentTest {
                     Assertions.assertEquals(sent.get(0).getSubject(),
                             GithubProcessor.COLLABORATOR_MISSING_SUBJECT.formatted(TestConstants.TEST_REPO));
                     Assertions.assertEquals(sent.get(0).getText(), GithubProcessor.COLLABORATOR_MISSING_BODY.formatted(
-                            TestConstants.TEST_REPO, ssePullRequestPayload.number(), List.of("Butterfly", "Tadpole")));
-                });
+                            TestConstants.TEST_REPO, pullRequestJson.number(), List.of("Butterfly", "Tadpole")));
+                })
+                .run();
     }
 
     @Test
-    public void testNoCommentOnlyReviewAssignment() throws IOException {
-        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
+    public void testNoCommentOnlyReviewAssignment() throws Throwable {
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .files("src/main/java/resource/application.properties")
                 .mockNext(MockedGHRepository.builder())
                 .users("Tadpole", "Butterfly");
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(ssePullRequestPayload.id()), Mockito.never())
+
+        TestModel.given(
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never())
                             .comment(ArgumentMatchers.anyString());
                     ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
-                    Mockito.verify(mocks.pullRequest(ssePullRequestPayload.id()), Mockito.times(2))
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.times(2))
                             .requestReviewers(captor.capture());
                     List<GHUser> requestedReviewers = captor.getAllValues().stream().flatMap(List::stream).toList();
                     Set<String> requestedReviewersLogins = requestedReviewers.stream().map(GHUser::getLogin)
                             .collect(Collectors.toSet());
                     Assertions.assertEquals(requestedReviewersLogins, Set.of("Tadpole", "Butterfly"));
-                });
+                })
+                .run();
     }
 
     @Test
-    public void testCommentAndReviewAssignmentCombination() throws IOException {
-        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
+    public void testCommentAndReviewAssignmentCombination() throws Throwable {
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .files("src/main/java/resource/application.properties")
                 .mockNext(MockedGHRepository.builder())
                 .users("Tadpole");
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(ssePullRequestPayload.id()), Mockito.never())
+
+        TestModel.given(
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never())
                             .comment(ArgumentMatchers.anyString());
                     ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
-                    Mockito.verify(mocks.pullRequest(ssePullRequestPayload.id())).requestReviewers(captor.capture());
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).requestReviewers(captor.capture());
                     Assertions.assertEquals(captor.getValue().size(), 1);
                     MatcherAssert.assertThat(captor.getValue().stream()
                             .map(GHPerson::getLogin)
@@ -150,7 +165,8 @@ public class PRReviewAssignmentTest {
                     Assertions.assertEquals(sent.get(0).getSubject(),
                             GithubProcessor.COLLABORATOR_MISSING_SUBJECT.formatted(TestConstants.TEST_REPO));
                     Assertions.assertEquals(sent.get(0).getText(), GithubProcessor.COLLABORATOR_MISSING_BODY.formatted(
-                            TestConstants.TEST_REPO, ssePullRequestPayload.number(), List.of("Butterfly")));
-                });
+                            TestConstants.TEST_REPO, pullRequestJson.number(), List.of("Butterfly")));
+                })
+                .run();
     }
 }

@@ -36,7 +36,8 @@ public abstract class Mockable {
         Set<Mockable> requiredMockableCollector = new HashSet<>();
         requiredMockableCollector.add(MockedGHRepository.builder());
         try {
-            SsePullRequestPayload ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
+            SsePullRequestPayload ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
+                    .build();
             requiredMockableCollector.add(MockedGHPullRequest.builder(ssePullRequestPayload.id()));
         } catch (IOException e) {
             throw new InitializationException("Unable to initialize MockedGHPullRequest", e);

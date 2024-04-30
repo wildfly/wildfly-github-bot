@@ -21,11 +21,12 @@ import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
 import org.wildfly.bot.utils.mocking.MockedGHRepository;
 import org.wildfly.bot.utils.model.Action;
 import org.wildfly.bot.utils.model.SsePullRequestPayload;
+import org.wildfly.bot.utils.testing.PullRequestJson;
+import org.wildfly.bot.utils.testing.internal.TestModel;
+import org.wildfly.bot.utils.testing.model.PullRequestGitHubEventPayload;
 
-import java.io.IOException;
 import java.util.List;
 
-import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 
@@ -34,21 +35,24 @@ import static org.mockito.ArgumentMatchers.anyString;
 public class PRNotifyChangeOnPREditTest {
 
     private String wildflyConfigFile;
-    private static SsePullRequestPayload ssePullRequestPayload;
+    private static PullRequestJson pullRequestJson;
     private Mockable mockedContext;
 
     @Inject
     WildFlyBotConfig wildFlyBotConfig;
 
     @BeforeAll
-    static void setupTests() throws IOException {
-        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON)
-                .action(Action.EDITED)
-                .build();
+    static void setPullRequestJson() throws Exception {
+        TestModel.setAllCallables(
+                () -> SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON),
+                PullRequestGitHubEventPayload::new);
+
+        pullRequestJson = TestModel
+                .setPullRequestJsonBuilderBuild(pullRequestJsonBuilder -> pullRequestJsonBuilder.action(Action.EDITED));
     }
 
     @Test
-    public void updateReviewNoMentionsTest() throws IOException {
+    public void updateReviewNoMentionsTest() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   rules:
@@ -58,29 +62,34 @@ public class PRNotifyChangeOnPREditTest {
                     - id: "previous rule"
                       directories: [app]
                       notify: [Tadpole]""";
-        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
+
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit("WFLY-123 commit")
                 .files("src/pom.xml", "app/pom.xml")
                 .reviewers("Tadpole")
                 .mockNext(MockedGHRepository.builder())
                 .users("Tadpole", "Butterfly");
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(ssePullRequestPayload.id()), Mockito.never())
+
+        TestModel.given(
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never())
                             .comment(anyString());
                     ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
-                    Mockito.verify(mocks.pullRequest(ssePullRequestPayload.id())).requestReviewers(captor.capture());
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).requestReviewers(captor.capture());
                     Assertions.assertEquals(captor.getValue().size(), 1);
                     MatcherAssert.assertThat(captor.getValue().stream()
                             .map(GHPerson::getLogin)
                             .toList(), Matchers.containsInAnyOrder("Butterfly"));
-                });
+                })
+                .run();
     }
 
     @Test
-    public void updateReviewKeepMentionsTest() throws IOException {
+    public void updateReviewKeepMentionsTest() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   rules:
@@ -91,30 +100,35 @@ public class PRNotifyChangeOnPREditTest {
                     - id: "test2"
                       title: "WFLY"
                       notify: [Butterfly, Duke]""";
-        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
+
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .comment("/cc @Duke", wildFlyBotConfig.githubName())
                 .commit("WFLY-123 commit")
                 .files("src/pom.xml", "app/pom.xml")
                 .reviewers("Tadpole")
                 .mockNext(MockedGHRepository.builder())
                 .users("Tadpole", "Butterfly");
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(ssePullRequestPayload.id()), Mockito.never())
+
+        TestModel.given(
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never())
                             .comment(anyString());
                     ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
-                    Mockito.verify(mocks.pullRequest(ssePullRequestPayload.id())).requestReviewers(captor.capture());
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).requestReviewers(captor.capture());
                     Assertions.assertEquals(captor.getValue().size(), 1);
                     MatcherAssert.assertThat(captor.getValue().stream()
                             .map(GHPerson::getLogin)
                             .toList(), Matchers.containsInAnyOrder("Butterfly"));
-                });
+                })
+                .run();
     }
 
     @Test
-    public void updateReviewUpdateMentionsTest() throws IOException {
+    public void updateReviewUpdateMentionsTest() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   rules:
@@ -125,28 +139,33 @@ public class PRNotifyChangeOnPREditTest {
                     - id: "test2"
                       title: "WFLY"
                       notify: [Butterfly, Duke]""";
-        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
+
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit("WFLY-123 commit")
                 .files("src/pom.xml", "app/pom.xml")
                 .reviewers("Tadpole")
                 .mockNext(MockedGHRepository.builder())
                 .users("Tadpole", "Butterfly");
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(ssePullRequestPayload.id())).comment("/cc @Duke");
+
+        TestModel.given(
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).comment("/cc @Duke");
                     ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
-                    Mockito.verify(mocks.pullRequest(ssePullRequestPayload.id())).requestReviewers(captor.capture());
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).requestReviewers(captor.capture());
                     Assertions.assertEquals(captor.getValue().size(), 1);
                     MatcherAssert.assertThat(captor.getValue().stream()
                             .map(GHPerson::getLogin)
                             .toList(), Matchers.containsInAnyOrder("Butterfly"));
-                });
+                })
+                .run();
     }
 
     @Test
-    public void noReviewUpdateMentionsTest() throws IOException {
+    public void noReviewUpdateMentionsTest() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   rules:
@@ -156,20 +175,25 @@ public class PRNotifyChangeOnPREditTest {
                     - id: "previous rule"
                       titleBody: "WFLY"
                       notify: [Tadpole]""";
-        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
+
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .comment("/cc @Tadpole", wildFlyBotConfig.githubName())
                 .commit("WFLY-123 commit");
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
+
+        TestModel.given(
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
                     Mockito.verify(mocks.issueComment(0L)).update("/cc @Tadpole, @Butterfly");
-                    Mockito.verify(mocks.pullRequest(ssePullRequestPayload.id()), Mockito.never()).requestReviewers(anyList());
-                });
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never()).requestReviewers(anyList());
+                })
+                .run();
     }
 
     @Test
-    public void keepReviewUpdateMentionsTest() throws IOException {
+    public void keepReviewUpdateMentionsTest() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   rules:
@@ -180,18 +204,23 @@ public class PRNotifyChangeOnPREditTest {
                     - id: "test2"
                       title: "WFLY"
                       notify: [Butterfly, Duke]""";
-        mockedContext = MockedGHPullRequest.builder(ssePullRequestPayload.id())
+
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit("WFLY-123 commit")
                 .files("src/pom.xml", "app/pom.xml")
                 .reviewers("Tadpole", "Butterfly")
                 .mockNext(MockedGHRepository.builder())
                 .users("Tadpole", "Butterfly");
-        given().github(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, ssePullRequestPayload, mockedContext))
-                .when().payloadFromString(ssePullRequestPayload.jsonString())
-                .event(GHEvent.PULL_REQUEST)
-                .then().github(mocks -> {
-                    Mockito.verify(mocks.pullRequest(ssePullRequestPayload.id())).comment("/cc @Duke");
-                    Mockito.verify(mocks.pullRequest(ssePullRequestPayload.id()), Mockito.never()).requestReviewers(anyList());
-                });
+
+        TestModel.given(
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST))
+                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .then(mocks -> {
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).comment("/cc @Duke");
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never()).requestReviewers(anyList());
+                })
+                .run();
     }
 }
