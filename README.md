@@ -40,6 +40,7 @@ Fields to fill in:
 - Go to [smee.io](https://smee.io/) and press `Start a new channel`
 - Add this link to `Webhook URL`
 4. Set up permissions
+- `Actions` - `Access: Read and write`
 - `Commit statuses` - `Access: Read and write`
 - `Contents` - `Access Read-only`
 - `Metadata` - `Access: Read-only`
@@ -49,6 +50,7 @@ Fields to fill in:
 - `Pull requests`
 - `Pull request review`
 - `Pull request review comment`
+- `Workflow run`
 6. Create a private key
 
    After creating the app scroll down and press `Generate a private key`
