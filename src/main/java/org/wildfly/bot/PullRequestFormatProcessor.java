@@ -126,6 +126,11 @@ public class PullRequestFormatProcessor {
     private void generateAppendedMessage(GHPullRequest pullRequest, Pattern projectPattern) throws IOException {
         String originalBody = pullRequest.getBody();
         final StringBuilder sb = new StringBuilder();
+        Set<String> missingIssues = getMissingIssues(originalBody, pullRequest, projectPattern);
+
+        if (missingIssues.isEmpty()) {
+            return;
+        }
 
         if (originalBody != null) {
             final String trimmedOriginalBody = originalBody.replaceAll("\\r", "");
@@ -134,7 +139,7 @@ public class PullRequestFormatProcessor {
                     .append(BOT_MESSAGE_DELIMINER);
         }
 
-        appendJiraIssues(sb, pullRequest, projectPattern);
+        appendMissingIssues(sb, missingIssues);
         appendInfoFooter(sb);
 
         String newBody = sb.toString();
@@ -146,33 +151,30 @@ public class PullRequestFormatProcessor {
         }
     }
 
-    private void appendJiraIssues(StringBuilder sb, GHPullRequest pullRequest, Pattern projectPattern) {
+    private Set<String> getMissingIssues(String originalBody, GHPullRequest pullRequest, Pattern projectPattern) {
         Set<String> jiraIssues = parseJiraIssues(pullRequest, projectPattern);
-        String currentBody = sb.toString();
+        String body = originalBody == null ? "" : originalBody;
         if (jiraIssues.isEmpty()) {
             LOG.debugf("No JIRA issues found for Pull Request [#%s]: \"%s\"", pullRequest.getNumber(), pullRequest.getTitle());
         }
-
         // we create links, search for ones contained in the original body
         Set<String> jiraLinks = jiraIssues.stream()
                 .map(s -> String.format(BOT_JIRA_LINK_TEMPLATE, s))
                 .collect(Collectors.toSet());
 
         // collect back jira issues from links, which are missing in the description
-        jiraIssues = jiraLinks.stream()
-                .filter(s -> !currentBody.contains(s))
+        return jiraLinks.stream()
+                .filter(s -> !body.contains(s))
                 .map(s -> {
                     Matcher matcher = projectPattern.matcher(s);
                     matcher.find();
                     return matcher.group();
                 })
                 .collect(Collectors.toSet());
+    }
 
-        if (jiraIssues.isEmpty()) {
-            return;
-        }
-
-        if (!currentBody.isEmpty()) {
+    private void appendMissingIssues(StringBuilder sb, Set<String> jiraIssues) {
+        if (!sb.isEmpty()) {
             sb.append("\n\n");
         }
 
@@ -180,7 +182,6 @@ public class PullRequestFormatProcessor {
                 .append(blockQuoted(BOT_JIRA_LINKS_HEADER));
 
         for (String jira : jiraIssues) {
-
             sb.append(blockQuoted(String.format(BOT_JIRA_LINK_COMMENT_TEMPLATE, jira)));
         }
 
