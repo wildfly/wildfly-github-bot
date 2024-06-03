@@ -8,22 +8,18 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHPerson;
 import org.kohsuke.github.GHUser;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.wildfly.bot.config.WildFlyBotConfig;
-import org.wildfly.bot.utils.TestConstants;
 import org.wildfly.bot.utils.WildflyGitHubBotTesting;
 import org.wildfly.bot.utils.mocking.Mockable;
 import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
 import org.wildfly.bot.utils.mocking.MockedGHRepository;
 import org.wildfly.bot.utils.model.Action;
-import org.wildfly.bot.utils.model.SsePullRequestPayload;
 import org.wildfly.bot.utils.testing.PullRequestJson;
 import org.wildfly.bot.utils.testing.internal.TestModel;
-import org.wildfly.bot.utils.testing.model.PullRequestGitHubEventPayload;
 
 import java.util.List;
 
@@ -43,12 +39,10 @@ public class PRNotifyChangeOnPREditTest {
 
     @BeforeAll
     static void setPullRequestJson() throws Exception {
-        TestModel.setAllCallables(
-                () -> SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON),
-                PullRequestGitHubEventPayload::new);
+        TestModel.defaultBeforeEachJsons();
 
         pullRequestJson = TestModel
-                .setPullRequestJsonBuilderBuild(pullRequestJsonBuilder -> pullRequestJsonBuilder.action(Action.EDITED));
+                .setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder.action(Action.EDITED));
     }
 
     @Test
@@ -72,9 +66,7 @@ public class PRNotifyChangeOnPREditTest {
 
         TestModel.given(
                 mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never())
                             .comment(anyString());
@@ -84,8 +76,7 @@ public class PRNotifyChangeOnPREditTest {
                     MatcherAssert.assertThat(captor.getValue().stream()
                             .map(GHPerson::getLogin)
                             .toList(), Matchers.containsInAnyOrder("Butterfly"));
-                })
-                .run();
+                });
     }
 
     @Test
@@ -111,9 +102,7 @@ public class PRNotifyChangeOnPREditTest {
 
         TestModel.given(
                 mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never())
                             .comment(anyString());
@@ -123,8 +112,7 @@ public class PRNotifyChangeOnPREditTest {
                     MatcherAssert.assertThat(captor.getValue().stream()
                             .map(GHPerson::getLogin)
                             .toList(), Matchers.containsInAnyOrder("Butterfly"));
-                })
-                .run();
+                });
     }
 
     @Test
@@ -149,9 +137,7 @@ public class PRNotifyChangeOnPREditTest {
 
         TestModel.given(
                 mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id())).comment("/cc @Duke");
                     ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
@@ -160,8 +146,7 @@ public class PRNotifyChangeOnPREditTest {
                     MatcherAssert.assertThat(captor.getValue().stream()
                             .map(GHPerson::getLogin)
                             .toList(), Matchers.containsInAnyOrder("Butterfly"));
-                })
-                .run();
+                });
     }
 
     @Test
@@ -182,14 +167,11 @@ public class PRNotifyChangeOnPREditTest {
 
         TestModel.given(
                 mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     Mockito.verify(mocks.issueComment(0L)).update("/cc @Tadpole, @Butterfly");
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never()).requestReviewers(anyList());
-                })
-                .run();
+                });
     }
 
     @Test
@@ -214,13 +196,10 @@ public class PRNotifyChangeOnPREditTest {
 
         TestModel.given(
                 mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id())).comment("/cc @Duke");
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never()).requestReviewers(anyList());
-                })
-                .run();
+                });
     }
 }

@@ -34,10 +34,10 @@ public class EventPollingProcessor implements GitHubEventEmitter<Throwable> {
      *           https://docs.github.com/en/rest/using-the-rest-api/github-event-types?apiVersion=2022-11-28
      *           and Events sent by GitHub SSE https://docs.github.com/en/webhooks/webhook-events-and-payloads
      */
-    private static final Map<GHEvent, Tuple2<String, Boolean>> typeToEventMap = Map.of(
-            GHEvent.PULL_REQUEST, Tuple2.of("pull_request", true),
-            GHEvent.PULL_REQUEST_REVIEW, Tuple2.of("pull_request_review", true),
-            GHEvent.PUSH, Tuple2.of("push", false));
+    private static final Map<GHEvent, EventInfo> typeToEventMap = Map.of(
+            GHEvent.PULL_REQUEST, new EventInfo("pull_request", true),
+            GHEvent.PULL_REQUEST_REVIEW, new EventInfo("pull_request_review", true),
+            GHEvent.PUSH, new EventInfo("push", false));
 
     private static final Map<GHEvent, GitHubEventPreprocessor> eventProcessorMap = Map.of(
             GHEvent.PUSH, new PushEventPreprocessor());
@@ -65,6 +65,7 @@ public class EventPollingProcessor implements GitHubEventEmitter<Throwable> {
                         String type = eventTuple.getItem1();
                         if (type == null) {
                             LOG.infof("Unable to determine the type of event with payload\n%s", payload);
+                            continue;
                         }
                         GitHubEvent gitHubEvent = new GitHubEvent(app.getId(),
                                 null, null, eventInfo.getRepository().getFullName(),
@@ -96,14 +97,12 @@ public class EventPollingProcessor implements GitHubEventEmitter<Throwable> {
     /**
      * Retrieves the event name and event action, if applicable
      *
-     * @param payload
-     * @param event
      * @return Tuple2 of event name and event action, if event contains action
      */
     private static Tuple2<String, String> getEventTuple(String payload, GHEvent event) {
-        Tuple2<String, Boolean> eventTuple = typeToEventMap.getOrDefault(event, Tuple2.of(null, false));
-        Tuple2<String, String> noActionTuple = Tuple2.of(eventTuple.getItem1(), null);
-        if (!eventTuple.getItem2()) {
+        EventInfo eventInfo = typeToEventMap.getOrDefault(event, new EventInfo(null, false));
+        Tuple2<String, String> noActionTuple = Tuple2.of(eventInfo.name(), null);
+        if (!eventInfo.hasAction()) {
             return noActionTuple;
         }
         try {
@@ -112,11 +111,11 @@ public class EventPollingProcessor implements GitHubEventEmitter<Throwable> {
             if (!jsonNode.has(ACTION)) {
                 LOG.warnf(
                         "For event [%s] there was an \"%s\" attribute in the json expected, but none found. Make sure, this attribute is defined",
-                        eventTuple.getItem1(), ACTION);
+                        eventInfo.name(), ACTION);
                 return noActionTuple;
             }
 
-            return Tuple2.of(eventTuple.getItem1(), jsonNode.get(ACTION).asText());
+            return Tuple2.of(eventInfo.name(), jsonNode.get(ACTION).asText());
         } catch (JsonProcessingException e) {
             return noActionTuple;
         }
@@ -126,15 +125,15 @@ public class EventPollingProcessor implements GitHubEventEmitter<Throwable> {
      * Retrieves payload from {@link GHEventInfo} using reflection. Unfortunately, there is no other way
      * to retrieve this raw payload attribute
      *
-     * @param ghEventInfo
      * @return full String representation of the payload in Json.
-     * @throws NoSuchFieldException
-     * @throws IllegalAccessException
      */
     public static String payload(GHEventInfo ghEventInfo) throws NoSuchFieldException, IllegalAccessException {
         Field payloadField = GHEventInfo.class.getDeclaredField("payload");
         payloadField.setAccessible(true);
 
         return payloadField.get(ghEventInfo).toString();
+    }
+
+    private record EventInfo(String name, boolean hasAction) {
     }
 }

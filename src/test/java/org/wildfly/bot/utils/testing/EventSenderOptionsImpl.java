@@ -11,7 +11,6 @@ import org.wildfly.bot.polling.GitHubEventEmitter;
 import org.wildfly.bot.utils.testing.dsl.EventSenderOptions;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +18,7 @@ import java.util.concurrent.CompletionException;
 
 import static org.wildfly.bot.utils.TestConstants.INSTALLATION_ID;
 import static org.wildfly.bot.utils.testing.reflection.ExposeGitHubAppTestingContext.getFromClassPath;
+import static org.wildfly.bot.utils.testing.reflection.ExposeGitHubAppTestingContext.invokeReflectionMethod;
 
 final class EventSenderOptionsImpl implements EventSenderOptions {
 
@@ -133,13 +133,7 @@ final class EventSenderOptionsImpl implements EventSenderOptions {
 
     @Override
     public EventHandlingResponse eventFromClassPath(String path) throws IOException {
-        try {
-            return eventFromPayload(getFromClassPath(testingContext.getTestingContext(), path));
-        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-            throw new RuntimeException(
-                    "Unable to call the original method from quarkus-github-app. Perhaps the declaration of method has changed?",
-                    e);
-        }
+        return invokeReflectionMethod(() -> eventFromPayload(getFromClassPath(testingContext.getTestingContext(), path)));
     }
 
     private static boolean containsValidEvents(String payload) {

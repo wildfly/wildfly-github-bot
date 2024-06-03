@@ -4,17 +4,14 @@ import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHRepository;
 import org.mockito.Mockito;
 import org.wildfly.bot.format.DescriptionCheck;
 import org.wildfly.bot.model.Description;
 import org.wildfly.bot.utils.TestConstants;
 import org.wildfly.bot.utils.WildflyGitHubBotTesting;
-import org.wildfly.bot.utils.model.SsePullRequestPayload;
 import org.wildfly.bot.utils.testing.PullRequestJson;
 import org.wildfly.bot.utils.testing.internal.TestModel;
-import org.wildfly.bot.utils.testing.model.PullRequestGitHubEventPayload;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -33,10 +30,8 @@ public class PRDescriptionCheckTest {
     private static PullRequestJson pullRequestJson;
 
     @BeforeAll
-    static void setPullRequestJson() {
-        TestModel.setAllCallables(
-                () -> SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON),
-                PullRequestGitHubEventPayload::new);
+    static void setPullRequestJson() throws Exception {
+        TestModel.defaultBeforeEachJsons();
     }
 
     @Test
@@ -60,20 +55,17 @@ public class PRDescriptionCheckTest {
                           message: "The PR description must contain a link to the JIRA issue"
                 """;
 
-        pullRequestJson = TestModel.setPullRequestJsonBuilderBuild(
+        pullRequestJson = TestModel.setPullRequestJsonBuilder(
                 pullRequestJsonBuilder -> pullRequestJsonBuilder.description(TestConstants.INVALID_DESCRIPTION));
 
         TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     WildflyGitHubBotTesting.verifyFormatFailure(repo, pullRequestJson, "description");
                     WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, pullRequestJson,
                             "- The PR description must contain a link to the JIRA issue");
-                })
-                .run();
+                });
     }
 
     @Test
@@ -86,20 +78,17 @@ public class PRDescriptionCheckTest {
                         - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
                 """;
 
-        pullRequestJson = TestModel.setPullRequestJsonBuilderBuild(
+        pullRequestJson = TestModel.setPullRequestJsonBuilder(
                 pullRequestJsonBuilder -> pullRequestJsonBuilder.description(TestConstants.INVALID_DESCRIPTION));
 
         TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     WildflyGitHubBotTesting.verifyFormatFailure(repo, pullRequestJson, "description");
                     WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, pullRequestJson,
                             "- Invalid description content");
-                })
-                .run();
+                });
     }
 
     @Test
@@ -117,14 +106,11 @@ public class PRDescriptionCheckTest {
         pullRequestJson = TestModel.getPullRequestJson();
 
         TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
-                })
-                .run();
+                });
     }
 
     @Test
@@ -138,14 +124,11 @@ public class PRDescriptionCheckTest {
         pullRequestJson = TestModel.getPullRequestJson();
 
         TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
-                })
-                .run();
+                });
     }
 
     @Test
@@ -160,7 +143,7 @@ public class PRDescriptionCheckTest {
                           message: "The PR description must contain a link to the JIRA issue"
                 """;
 
-        pullRequestJson = TestModel.setPullRequestJsonBuilderBuild(pullRequestJsonBuilder -> pullRequestJsonBuilder
+        pullRequestJson = TestModel.setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder
                 .description("""
                         First line of description
                         Additional line of description - JIRA: https://issues.redhat.com/browse/WFLY-666
@@ -168,14 +151,11 @@ public class PRDescriptionCheckTest {
                         """));
 
         TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
-                })
-                .run();
+                });
     }
 
     @Test
@@ -192,19 +172,16 @@ public class PRDescriptionCheckTest {
                 """;
 
         pullRequestJson = TestModel
-                .setPullRequestJsonBuilderBuild(pullRequestJsonBuilder -> pullRequestJsonBuilder.description("JIRA"));
+                .setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder.description("JIRA"));
 
         TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     WildflyGitHubBotTesting.verifyFormatFailure(repo, pullRequestJson, "description");
                     WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, pullRequestJson,
                             "- The PR description must contain a link to the JIRA issue");
-                })
-                .run();
+                });
     }
 
     @Test
@@ -220,20 +197,17 @@ public class PRDescriptionCheckTest {
                         - pattern: "JIRA"
                 """;
 
-        pullRequestJson = TestModel.setPullRequestJsonBuilderBuild(
+        pullRequestJson = TestModel.setPullRequestJsonBuilder(
                 pullRequestJsonBuilder -> pullRequestJsonBuilder.description("https://issues.redhat.com/browse/WFLY-123"));
 
         TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     WildflyGitHubBotTesting.verifyFormatFailure(repo, pullRequestJson, "description");
                     WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, pullRequestJson,
                             "- Lorem ipsum dolor sit amet");
-                })
-                .run();
+                });
     }
 
     @Test
@@ -249,20 +223,17 @@ public class PRDescriptionCheckTest {
                         - pattern: "JIRA"
                 """;
 
-        pullRequestJson = TestModel.setPullRequestJsonBuilderBuild(
+        pullRequestJson = TestModel.setPullRequestJsonBuilder(
                 pullRequestJsonBuilder -> pullRequestJsonBuilder.description(TestConstants.INVALID_DESCRIPTION));
 
         TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     WildflyGitHubBotTesting.verifyFormatFailure(repo, pullRequestJson, "description");
                     WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, pullRequestJson,
                             "- The PR description must contain a link to the JIRA issue");
-                })
-                .run();
+                });
     }
 
     @Test
@@ -281,14 +252,11 @@ public class PRDescriptionCheckTest {
         pullRequestJson = TestModel.getPullRequestJson();
 
         TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
-                })
-                .run();
+                });
     }
 
     @Test
@@ -305,18 +273,15 @@ public class PRDescriptionCheckTest {
                         - pattern: "JIRA"
                 """;
 
-        pullRequestJson = TestModel.setPullRequestJsonBuilderBuild(
+        pullRequestJson = TestModel.setPullRequestJsonBuilder(
                 pullRequestJsonBuilder -> pullRequestJsonBuilder.title(TestConstants.INVALID_TITLE));
 
         TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     Mockito.verify(repo, never()).createCommitStatus(anyString(), any(), anyString(), anyString());
                     Mockito.verify(repo, never()).createCommitStatus(anyString(), any(), anyString(), anyString(), anyString());
-                })
-                .run();
+                });
     }
 }

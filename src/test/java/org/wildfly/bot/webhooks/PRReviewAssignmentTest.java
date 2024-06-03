@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHPerson;
 import org.kohsuke.github.GHUser;
 import org.mockito.ArgumentCaptor;
@@ -25,10 +24,8 @@ import org.wildfly.bot.utils.WildflyGitHubBotTesting;
 import org.wildfly.bot.utils.mocking.Mockable;
 import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
 import org.wildfly.bot.utils.mocking.MockedGHRepository;
-import org.wildfly.bot.utils.model.SsePullRequestPayload;
 import org.wildfly.bot.utils.testing.PullRequestJson;
 import org.wildfly.bot.utils.testing.internal.TestModel;
-import org.wildfly.bot.utils.testing.model.PullRequestGitHubEventPayload;
 
 import java.util.List;
 import java.util.Set;
@@ -70,11 +67,7 @@ public class PRReviewAssignmentTest {
 
     @BeforeAll
     static void setupTests() throws Exception {
-        TestModel.setAllCallables(
-                () -> SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON),
-                PullRequestGitHubEventPayload::new);
-
-        pullRequestJson = TestModel.getPullRequestJson();
+        pullRequestJson = TestModel.defaultBeforeEachJsons();
     }
 
     @BeforeEach
@@ -89,9 +82,7 @@ public class PRReviewAssignmentTest {
 
         TestModel.given(
                 mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never())
                             .comment(ArgumentMatchers.anyString());
@@ -105,8 +96,7 @@ public class PRReviewAssignmentTest {
                             GithubProcessor.COLLABORATOR_MISSING_SUBJECT.formatted(TestConstants.TEST_REPO));
                     Assertions.assertEquals(sent.get(0).getText(), GithubProcessor.COLLABORATOR_MISSING_BODY.formatted(
                             TestConstants.TEST_REPO, pullRequestJson.number(), List.of("Butterfly", "Tadpole")));
-                })
-                .run();
+                });
     }
 
     @Test
@@ -118,9 +108,7 @@ public class PRReviewAssignmentTest {
 
         TestModel.given(
                 mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never())
                             .comment(ArgumentMatchers.anyString());
@@ -131,8 +119,7 @@ public class PRReviewAssignmentTest {
                     Set<String> requestedReviewersLogins = requestedReviewers.stream().map(GHUser::getLogin)
                             .collect(Collectors.toSet());
                     Assertions.assertEquals(requestedReviewersLogins, Set.of("Tadpole", "Butterfly"));
-                })
-                .run();
+                });
     }
 
     @Test
@@ -144,9 +131,7 @@ public class PRReviewAssignmentTest {
 
         TestModel.given(
                 mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never())
                             .comment(ArgumentMatchers.anyString());
@@ -166,7 +151,6 @@ public class PRReviewAssignmentTest {
                             GithubProcessor.COLLABORATOR_MISSING_SUBJECT.formatted(TestConstants.TEST_REPO));
                     Assertions.assertEquals(sent.get(0).getText(), GithubProcessor.COLLABORATOR_MISSING_BODY.formatted(
                             TestConstants.TEST_REPO, pullRequestJson.number(), List.of("Butterfly")));
-                })
-                .run();
+                });
     }
 }

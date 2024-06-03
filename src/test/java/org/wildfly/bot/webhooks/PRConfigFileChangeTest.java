@@ -7,16 +7,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHContent;
-import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHRepository;
 import org.mockito.Mockito;
 import org.wildfly.bot.model.RuntimeConstants;
 import org.wildfly.bot.utils.TestConstants;
 import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
-import org.wildfly.bot.utils.model.SsePullRequestPayload;
 import org.wildfly.bot.utils.testing.PullRequestJson;
 import org.wildfly.bot.utils.testing.internal.TestModel;
-import org.wildfly.bot.utils.testing.model.PullRequestGitHubEventPayload;
 
 import java.util.List;
 
@@ -38,11 +35,7 @@ public class PRConfigFileChangeTest {
 
     @BeforeAll
     static void setPullRequestJson() throws Exception {
-        TestModel.setAllCallables(
-                () -> SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON),
-                PullRequestGitHubEventPayload::new);
-
-        pullRequestJson = TestModel.getPullRequestJson();
+        pullRequestJson = TestModel.defaultBeforeEachJsons();
     }
 
     @Test
@@ -67,9 +60,7 @@ public class PRConfigFileChangeTest {
                     .files(".github/wildfly-bot.yml")
                     .mock(mocks);
         })
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     verify(mocks.pullRequest(pullRequestJson.id())).listFiles();
                     verify(mocks.pullRequest(pullRequestJson.id())).listComments();
@@ -82,8 +73,7 @@ public class PRConfigFileChangeTest {
                             "Configuration File");
 
                     verifyNoMoreInteractions(mocks.pullRequest(pullRequestJson.id()));
-                })
-                .run();
+                });
     }
 
     @Test
@@ -110,9 +100,7 @@ public class PRConfigFileChangeTest {
                     .files(".github/wildfly-bot.yml")
                     .mock(mocks);
         })
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     verify(mocks.pullRequest(pullRequestJson.id())).listFiles();
                     verify(mocks.pullRequest(pullRequestJson.id()), times(2)).listComments();
@@ -123,8 +111,7 @@ public class PRConfigFileChangeTest {
                             GHCommitState.SUCCESS, "", "Valid", "Configuration File");
 
                     verifyNoMoreInteractions(mocks.pullRequest(pullRequestJson.id()));
-                })
-                .run();
+                });
     }
 
     @Test
@@ -151,9 +138,7 @@ public class PRConfigFileChangeTest {
                     .files(".github/wildfly-bot.yml")
                     .mock(mocks);
         })
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     verify(mocks.pullRequest(pullRequestJson.id())).listFiles();
                     verify(mocks.pullRequest(pullRequestJson.id()), times(2)).listComments();
@@ -170,7 +155,6 @@ public class PRConfigFileChangeTest {
                             GHCommitState.ERROR, "",
                             "One or multiple rules are invalid, please see the comment stating the problems",
                             "Configuration File");
-                })
-                .run();
+                });
     }
 }

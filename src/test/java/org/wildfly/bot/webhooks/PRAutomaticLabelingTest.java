@@ -6,18 +6,14 @@ import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.kohsuke.github.GHEvent;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
-import org.wildfly.bot.utils.TestConstants;
 import org.wildfly.bot.utils.WildflyGitHubBotTesting;
 import org.wildfly.bot.utils.mocking.Mockable;
 import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
-import org.wildfly.bot.utils.model.SsePullRequestPayload;
 import org.wildfly.bot.utils.testing.PullRequestJson;
 import org.wildfly.bot.utils.testing.internal.TestModel;
-import org.wildfly.bot.utils.testing.model.PullRequestGitHubEventPayload;
 
 import java.util.Arrays;
 
@@ -35,12 +31,10 @@ public class PRAutomaticLabelingTest {
 
     @BeforeAll
     static void setupTests() throws Exception {
-        TestModel.setAllCallables(
-                () -> SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON),
-                PullRequestGitHubEventPayload::new);
+        TestModel.defaultBeforeEachJsons();
 
         pullRequestJson = TestModel
-                .setPullRequestJsonBuilderBuild(pullRequestJsonBuilder -> pullRequestJsonBuilder.action(SYNCHRONIZE));
+                .setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder.action(SYNCHRONIZE));
     }
 
     @Test
@@ -56,9 +50,7 @@ public class PRAutomaticLabelingTest {
 
         TestModel.given(
                 mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never())
                             .addLabels(ArgumentMatchers.anyString());
@@ -66,8 +58,7 @@ public class PRAutomaticLabelingTest {
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id())).removeLabels(argumentCaptor.capture());
                     MatcherAssert.assertThat(Arrays.asList(argumentCaptor.getValue()),
                             Matchers.containsInAnyOrder(LABEL_NEEDS_REBASE, LABEL_FIX_ME));
-                })
-                .run();
+                });
     }
 
     @Test
@@ -83,9 +74,7 @@ public class PRAutomaticLabelingTest {
 
         TestModel.given(
                 mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     ArgumentCaptor<String[]> argumentCaptor = ArgumentCaptor.forClass(String[].class);
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id())).addLabels(argumentCaptor.capture());
@@ -95,7 +84,6 @@ public class PRAutomaticLabelingTest {
                     //  any() fails on ambigious call, which is only matcher for vararg params
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never())
                             .removeLabels(argumentCaptor.capture());
-                })
-                .run();
+                });
     }
 }

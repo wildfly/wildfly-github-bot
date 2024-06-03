@@ -20,6 +20,30 @@ import java.lang.reflect.Method;
  */
 public class ExposeGitHubAppTestingContext {
 
+    public static <T> T invokeReflectionMethod(ReflectionSupplier<T> supplier) {
+        try {
+            return supplier.get();
+        } catch (NoSuchFieldException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+            throw new RuntimeException(
+                    "Unable to call the original method from quarkus-github-app. Perhaps the declaration of method has changed?",
+                    e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void invokeReflectionMethod(ReflectionRunnable runnable) {
+        try {
+            runnable.run();
+        } catch (NoSuchFieldException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+            throw new RuntimeException(
+                    "Unable to call the original method from quarkus-github-app. Perhaps the declaration of method has changed?",
+                    e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static void init(GitHubAppTestingContext testingContext)
             throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         Method privateMethod = GitHubMockContextImpl.class.getDeclaredMethod("init");

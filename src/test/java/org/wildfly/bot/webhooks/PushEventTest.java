@@ -140,8 +140,7 @@ public class PushEventTest {
                     // Same as above... This happens as we mock repository content and on second mocking we invoke the mocked method...
                     verify(mocks.repository(TestConstants.TEST_REPO)).getDirectoryContent(anyString());
                     Mockito.verifyNoMoreInteractions(mocks.repository(TestConstants.TEST_REPO));
-                })
-                .run();
+                });
     }
 
     /**
@@ -186,8 +185,7 @@ public class PushEventTest {
                 .pollingEventOptions(
                         eventSenderOptions -> eventSenderOptions.eventFromPayload((new PushGitHubEventPayload()).toString()))
                 .then(mocks -> {
-                })
-                .run();
+                });
 
         TestModel.given(mocks -> {
             GHRepository repository = mocks.repository(TestConstants.TEST_REPO);
@@ -235,7 +233,6 @@ public class PushEventTest {
                             logRecord -> logRecord.getMessage()
                                     .equals("Scheduling a mergable status update for open pull requests for new head [%s - \"%s\"]"))
                             .count());
-                })
-                .run();
+                });
     }
 }

@@ -5,7 +5,6 @@ import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHIssueComment;
 import org.kohsuke.github.GHRepository;
 import org.mockito.Mockito;
@@ -15,10 +14,8 @@ import org.wildfly.bot.utils.mocking.Mockable;
 import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
 import org.wildfly.bot.utils.mocking.MockedGHRepository;
 import org.wildfly.bot.utils.model.Action;
-import org.wildfly.bot.utils.model.SsePullRequestPayload;
 import org.wildfly.bot.utils.testing.PullRequestJson;
 import org.wildfly.bot.utils.testing.internal.TestModel;
-import org.wildfly.bot.utils.testing.model.PullRequestGitHubEventPayload;
 
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -30,7 +27,6 @@ import static org.wildfly.bot.model.RuntimeConstants.PROJECT_PATTERN_REGEX;
 import static org.wildfly.bot.utils.TestConstants.INVALID_DESCRIPTION;
 import static org.wildfly.bot.utils.TestConstants.INVALID_TITLE;
 import static org.wildfly.bot.utils.TestConstants.TEST_REPO;
-import static org.wildfly.bot.utils.TestConstants.VALID_PR_TEMPLATE_JSON;
 
 @QuarkusTest
 @GitHubAppTest
@@ -44,10 +40,8 @@ public class PRUpdateCommentOnEditTest {
     WildFlyBotConfig wildFlyBotConfig;
 
     @BeforeAll
-    static void setPullRequestJson() {
-        TestModel.setAllCallables(
-                () -> SsePullRequestPayload.builder(VALID_PR_TEMPLATE_JSON),
-                PullRequestGitHubEventPayload::new);
+    static void setPullRequestJson() throws Exception {
+        TestModel.defaultBeforeEachJsons();
     }
 
     @Test
@@ -61,7 +55,7 @@ public class PRUpdateCommentOnEditTest {
                       enabled: false
                 """;
         pullRequestJson = TestModel
-                .setPullRequestJsonBuilderBuild(pullRequestJsonBuilder -> pullRequestJsonBuilder.title(INVALID_TITLE)
+                .setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder.title(INVALID_TITLE)
                         .description(INVALID_DESCRIPTION));
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .comment(FAILED_FORMAT_COMMENT.formatted(Stream.of(
@@ -73,16 +67,13 @@ public class PRUpdateCommentOnEditTest {
 
         TestModel.given(
                 mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHIssueComment comment = mocks.issueComment(0);
                     Mockito.verify(comment).delete();
                     GHRepository repo = mocks.repository(TEST_REPO);
                     WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
-                })
-                .run();
+                });
     }
 
     @Test
@@ -92,7 +83,7 @@ public class PRUpdateCommentOnEditTest {
                   format:
                 """;
         pullRequestJson = TestModel
-                .setPullRequestJsonBuilderBuild(pullRequestJsonBuilder -> pullRequestJsonBuilder.title(INVALID_TITLE)
+                .setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder.title(INVALID_TITLE)
                         .description("@%s skip format".formatted(wildFlyBotConfig.githubName()))
                         .action(Action.EDITED));
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
@@ -107,14 +98,11 @@ public class PRUpdateCommentOnEditTest {
 
         TestModel.given(
                 mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHIssueComment comment = mocks.issueComment(0);
                     Mockito.verify(comment).delete();
                     WildflyGitHubBotTesting.verifyFormatSkipped(mocks.repository(TEST_REPO), pullRequestJson);
-                })
-                .run();
+                });
     }
 }

@@ -4,15 +4,12 @@ import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.kohsuke.github.GHEvent;
 import org.wildfly.bot.utils.TestConstants;
 import org.wildfly.bot.utils.WildflyGitHubBotTesting;
 import org.wildfly.bot.utils.mocking.Mockable;
 import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
-import org.wildfly.bot.utils.model.SsePullRequestPayload;
 import org.wildfly.bot.utils.testing.PullRequestJson;
 import org.wildfly.bot.utils.testing.internal.TestModel;
-import org.wildfly.bot.utils.testing.model.PullRequestGitHubEventPayload;
 
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -34,15 +31,13 @@ public class PRSkipPullRequestTest {
             """;
 
     @BeforeAll
-    static void setPullRequestJson() {
-        TestModel.setAllCallables(
-                () -> SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON),
-                PullRequestGitHubEventPayload::new);
+    static void setPullRequestJson() throws Exception {
+        TestModel.defaultBeforeEachJsons();
     }
 
     @Test
     void testSkippingFormatCheck() throws Throwable {
-        pullRequestJson = TestModel.setPullRequestJsonBuilderBuild(pullRequestJsonBuilder -> pullRequestJsonBuilder
+        pullRequestJson = TestModel.setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder
                 .title(TestConstants.INVALID_TITLE)
                 .description("""
                         Hi
@@ -56,9 +51,7 @@ public class PRSkipPullRequestTest {
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id()).commit(TestConstants.INVALID_COMMIT_MESSAGE);
 
         TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     verify(mocks.pullRequest(pullRequestJson.id()), times(2)).getBody();
                     verify(mocks.pullRequest(pullRequestJson.id())).listFiles();
@@ -67,21 +60,18 @@ public class PRSkipPullRequestTest {
                     verify(mocks.pullRequest(pullRequestJson.id()), times(2)).getNumber();
                     // commit status should not be set
                     verifyNoMoreInteractions(mocks.pullRequest(pullRequestJson.id()));
-                })
-                .run();
+                });
     }
 
     @Test
     void testSkippingFormatCheckOnDraft() throws Throwable {
-        pullRequestJson = TestModel.setPullRequestJsonBuilderBuild(
+        pullRequestJson = TestModel.setPullRequestJsonBuilder(
                 pullRequestJsonBuilder -> pullRequestJsonBuilder.title(TestConstants.INVALID_TITLE));
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id()).draft();
 
         TestModel.given(
                 mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     verify(mocks.pullRequest(pullRequestJson.id()), times(2)).getBody();
                     verify(mocks.pullRequest(pullRequestJson.id())).listFiles();
@@ -89,7 +79,6 @@ public class PRSkipPullRequestTest {
                     verify(mocks.pullRequest(pullRequestJson.id())).listComments();
                     // commit status should not be set
                     verifyNoMoreInteractions(mocks.pullRequest(pullRequestJson.id()));
-                })
-                .run();
+                });
     }
 }

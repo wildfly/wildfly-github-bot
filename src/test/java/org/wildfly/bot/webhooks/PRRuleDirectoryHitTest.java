@@ -7,22 +7,18 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHPerson;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHUser;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
-import org.wildfly.bot.utils.TestConstants;
 import org.wildfly.bot.utils.WildflyGitHubBotTesting;
 import org.wildfly.bot.utils.mocking.Mockable;
 import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
 import org.wildfly.bot.utils.mocking.MockedGHRepository;
-import org.wildfly.bot.utils.model.SsePullRequestPayload;
 import org.wildfly.bot.utils.testing.PullRequestJson;
 import org.wildfly.bot.utils.testing.internal.TestModel;
-import org.wildfly.bot.utils.testing.model.PullRequestGitHubEventPayload;
 
 import java.util.List;
 
@@ -39,11 +35,7 @@ public class PRRuleDirectoryHitTest {
 
     @BeforeAll
     static void setPullRequestJson() throws Exception {
-        TestModel.setAllCallables(
-                () -> SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON),
-                PullRequestGitHubEventPayload::new);
-
-        pullRequestJson = TestModel.getPullRequestJson();
+        pullRequestJson = TestModel.defaultBeforeEachJsons();
     }
 
     @Test
@@ -70,16 +62,13 @@ public class PRRuleDirectoryHitTest {
 
         TestModel.given(
                 mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
                     Mockito.verify(mockedPR, Mockito.times(2)).listFiles();
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id())).requestReviewers(ArgumentMatchers.anyList());
                     Mockito.verify(mockedPR, Mockito.times(2)).listComments();
-                })
-                .run();
+                });
     }
 
     @Test
@@ -101,9 +90,7 @@ public class PRRuleDirectoryHitTest {
 
         TestModel.given(
                 mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
                     Mockito.verify(mockedPR, Mockito.times(2)).listFiles();
@@ -114,8 +101,7 @@ public class PRRuleDirectoryHitTest {
                             .map(GHPerson::getLogin)
                             .toList(), Matchers.containsInAnyOrder("Tadpole"));
                     Mockito.verify(mockedPR, Mockito.times(2)).listComments();
-                })
-                .run();
+                });
     }
 
     @Test
@@ -137,9 +123,7 @@ public class PRRuleDirectoryHitTest {
 
         TestModel.given(
                 mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
                     Mockito.verify(mockedPR, Mockito.times(2)).listFiles();
@@ -150,8 +134,7 @@ public class PRRuleDirectoryHitTest {
                             .map(GHPerson::getLogin)
                             .toList(), Matchers.containsInAnyOrder("Tadpole"));
                     Mockito.verify(mockedPR, Mockito.times(2)).listComments();
-                })
-                .run();
+                });
     }
 
     @Test
@@ -171,17 +154,14 @@ public class PRRuleDirectoryHitTest {
 
         TestModel.given(
                 mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
                     Mockito.verify(mockedPR, Mockito.times(2)).listFiles();
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never())
                             .requestReviewers(ArgumentMatchers.any());
                     Mockito.verify(mockedPR, Mockito.times(2)).listComments();
-                })
-                .run();
+                });
     }
 
     @Test
@@ -201,15 +181,12 @@ public class PRRuleDirectoryHitTest {
 
         TestModel.given(
                 mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
                     Mockito.verify(mockedPR, Mockito.times(2)).listFiles();
                     Mockito.verify(mockedPR, Mockito.times(2)).listComments();
                     Mockito.verify(mockedPR, Mockito.never()).comment("/cc @Tadpole");
-                })
-                .run();
+                });
     }
 }

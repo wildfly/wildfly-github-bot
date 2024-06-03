@@ -8,9 +8,12 @@ import io.quarkus.test.junit.callback.QuarkusTestMethodContext;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.graphql.NonNull;
 import org.wildfly.bot.utils.PullRequestJsonBuildable;
-import org.wildfly.bot.utils.testing.CheckedFunction;
+import org.wildfly.bot.utils.TestConstants;
+import org.wildfly.bot.utils.model.SsePullRequestPayload;
+import org.wildfly.bot.utils.testing.IOExceptionFunction;
 import org.wildfly.bot.utils.testing.PullRequestJson;
 import org.wildfly.bot.utils.testing.PullRequestJsonBuilder;
+import org.wildfly.bot.utils.testing.model.PullRequestGitHubEventPayload;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,7 +26,7 @@ public class TestModel implements QuarkusTestBeforeEachCallback, QuarkusTestAfte
     private static Optional<Callable<? extends PullRequestJsonBuilder>> pullRequestJsonBuilderCallableSse;
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     private static Optional<Callable<? extends PullRequestJsonBuilder>> pullRequestJsonBuilderCallablePooling;
-    private static CheckedFunction<PullRequestJsonBuilder, ? extends PullRequestJsonBuilder> pullRequestJsonBuilderFunction = builder -> builder;
+    private static IOExceptionFunction<PullRequestJsonBuilder, ? extends PullRequestJsonBuilder> pullRequestJsonBuilderFunction = builder -> builder;
     private static PullRequestJson pullRequestJson;
 
     /**
@@ -38,7 +41,7 @@ public class TestModel implements QuarkusTestBeforeEachCallback, QuarkusTestAfte
 
     /**
      * @implNote We cache Builder providers for all tests. For individual tests
-     *           you should change the behavior of the builder by {@code setPullRequestJsonBuilderBuild}
+     *           you should change the behavior of the builder by {@code setPullRequestJsonBuilder}
      */
     @Override
     public void afterAll(QuarkusTestContext context) {
@@ -46,14 +49,19 @@ public class TestModel implements QuarkusTestBeforeEachCallback, QuarkusTestAfte
         TestModel.pullRequestJsonBuilderCallablePooling = Optional.empty();
     }
 
+    public static PullRequestJson defaultBeforeEachJsons() throws Exception {
+        setJsons(
+                () -> SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON),
+                PullRequestGitHubEventPayload::new);
+
+        return getPullRequestJson();
+    }
+
     /**
      * Provides callables for initializing {@code PullRequestJsonBuilder}. This method is just a single
      * wrapper for individual calls to {@code sseJsonCallable} and {@code pollingJsonCallable}
-     *
-     * @param ssePullRequestJsonBuilderCallable
-     * @param pollingPullRequestJsonBuilderCallable
      */
-    public static void setAllCallables(
+    public static void setJsons(
             @NonNull Callable<? extends PullRequestJsonBuilder> ssePullRequestJsonBuilderCallable,
             @NonNull Callable<? extends PullRequestJsonBuilder> pollingPullRequestJsonBuilderCallable) {
         sseJsonCallable(ssePullRequestJsonBuilderCallable);
@@ -63,8 +71,6 @@ public class TestModel implements QuarkusTestBeforeEachCallback, QuarkusTestAfte
     /**
      * Provides callable for initializing {@code PullRequestJsonBuilder} when tests are running
      * for sse mode.
-     *
-     * @param pullRequestJsonBuilderCallableSse
      */
     public static void sseJsonCallable(@NonNull Callable<? extends PullRequestJsonBuilder> pullRequestJsonBuilderCallableSse) {
         TestModel.pullRequestJsonBuilderCallableSse = Optional.of(pullRequestJsonBuilderCallableSse);
@@ -73,19 +79,30 @@ public class TestModel implements QuarkusTestBeforeEachCallback, QuarkusTestAfte
     /**
      * Provides callable for initializing {@code PullRequestJsonBuilder} when tests are running
      * for pooling mode.
-     *
-     * @param pullRequestJsonBuilderCallablePooling
      */
     public static void pollingJsonCallable(
             @NonNull Callable<? extends PullRequestJsonBuilder> pullRequestJsonBuilderCallablePooling) {
         TestModel.pullRequestJsonBuilderCallablePooling = Optional.of(pullRequestJsonBuilderCallablePooling);
     }
 
-    // We use generics here to help the user with intelli-sense
-    public static <T extends PullRequestJsonBuilder> PullRequestJson setPullRequestJsonBuilderBuild(
-            @NonNull CheckedFunction<T, PullRequestJsonBuilder> builder) throws Exception {
+    /**
+     * Provides builder for {@code PullRequestJsonBuilder} or superclass.
+     * Please, use generics, if you want your IDE to help with intelli-sense.
+     * <p>
+     * i.e. when using {@code org.wildfly.bot.utils.testing.PullRequestReviewJsonBuilder}
+     * you would write following:
+     *
+     * <pre>
+     * pullRequestReviewJson = TestModel.<PullRequestReviewJsonBuilder> setPullRequestJsonBuilder(
+     *         pullRequestReviewJsonBuilder -> pullRequestReviewJsonBuilder.state(ReviewState.APPROVE));
+     * </pre>
+     *
+     * which converts the builder into the correct type, in this example {@code PullRequestReviewJsonBuilder}
+     */
+    public static <T extends PullRequestJsonBuilder> PullRequestJson setPullRequestJsonBuilder(
+            @NonNull IOExceptionFunction<T, PullRequestJsonBuilder> builder) throws Exception {
         //noinspection unchecked
-        TestModel.pullRequestJsonBuilderFunction = (CheckedFunction<PullRequestJsonBuilder, ? extends PullRequestJsonBuilder>) builder;
+        TestModel.pullRequestJsonBuilderFunction = (IOExceptionFunction<PullRequestJsonBuilder, ? extends PullRequestJsonBuilder>) builder;
         return getPullRequestJson();
     }
 

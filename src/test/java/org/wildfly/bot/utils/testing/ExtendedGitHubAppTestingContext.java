@@ -26,7 +26,6 @@ import org.mockito.quality.Strictness;
 import org.wildfly.bot.utils.testing.reflection.ExposeGitHubAppTestingContext;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -37,6 +36,7 @@ import java.util.Map;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
+import static org.wildfly.bot.utils.testing.reflection.ExposeGitHubAppTestingContext.invokeReflectionMethod;
 import static org.wildfly.bot.utils.testing.reflection.ExposeGitHubAppTestingContext.setPayload;
 
 public final class ExtendedGitHubAppTestingContext {
@@ -81,24 +81,11 @@ public final class ExtendedGitHubAppTestingContext {
     void init() {
         reset();
 
-        try {
-            ExposeGitHubAppTestingContext.init(testingContext);
-        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-            throw new RuntimeException(
-                    "Unable to call the original method from quarkus-github-app. Perhaps the declaration of method has changed?",
-                    e);
-        }
+        invokeReflectionMethod(() -> ExposeGitHubAppTestingContext.init(testingContext));
     }
 
     void initEventStubs(long installationId, String payload) throws IOException {
-        try {
-            ExposeGitHubAppTestingContext.initEventStubs(testingContext,
-                    installationId);
-        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-            throw new RuntimeException(
-                    "Unable to call the original method from quarkus-github-app. Perhaps the declaration of method has changed?",
-                    e);
-        }
+        invokeReflectionMethod(() -> ExposeGitHubAppTestingContext.initEventStubs(testingContext, installationId));
 
         GitHub gitHub = testingContext.mocks.applicationClient();
         when(gitHub.getApp()).thenReturn(ghApp);
@@ -117,24 +104,18 @@ public final class ExtendedGitHubAppTestingContext {
         Collection<GHRepository> mockedRepositories = repositories.entrySet().stream().map(entry -> {
             GHRepository mockedRepo = this.testingContext.mocks.repository(entry.getKey());
             when(mockedRepo.getFullName()).thenReturn(entry.getKey());
-            List<GHEventInfo> repoEvents = entry.getValue().stream().map(s -> {
-                try {
-                    JsonNode payloadJson = objectMapper.readTree(s);
-                    JsonNode payloadNode = ((ObjectNode) payloadJson).remove(PAYLOAD);
+            List<GHEventInfo> repoEvents = entry.getValue().stream().map(s -> invokeReflectionMethod(() -> {
+                JsonNode payloadJson = objectMapper.readTree(s);
+                JsonNode payloadNode = ((ObjectNode) payloadJson).remove(PAYLOAD);
 
-                    GHEventInfo ghEventInfo = objectMapper.reader(new InjectableValues.Std(injected)).forType(GHEventInfo.class)
-                            .readValue(payloadJson);
+                GHEventInfo ghEventInfo = objectMapper.reader(new InjectableValues.Std(injected)).forType(GHEventInfo.class)
+                        .readValue(payloadJson);
 
-                    setPayload(ghEventInfo, payloadNode);
+                setPayload(ghEventInfo, payloadNode);
 
-                    when(ghEventInfo.getRepository()).thenReturn(mockedRepo);
-                    return ghEventInfo;
-                } catch (IOException | NoSuchFieldException | IllegalAccessException e) {
-                    throw new RuntimeException(
-                            "Unable to call the original method from quarkus-github-app. Perhaps the declaration of method has changed?",
-                            e);
-                }
-            }).toList();
+                when(ghEventInfo.getRepository()).thenReturn(mockedRepo);
+                return ghEventInfo;
+            })).toList();
             PagedSearchIterable<GHEventInfo> mockedRepoEvents = mockPagedSearchIterable(repoEvents);
             try {
                 when(mockedRepo.listEvents()).thenReturn(mockedRepoEvents);
@@ -166,9 +147,7 @@ public final class ExtendedGitHubAppTestingContext {
     /**
      * Retrieves all repositories from the payload. For these repositories we will mock the events.
      *
-     * @param payload
      * @return Map of repositories and List of events for the corresponding repository
-     * @throws JsonProcessingException
      */
     private static Map<String, List<String>> collectRepos(String payload) throws JsonProcessingException {
         JsonNode jsonNode = objectMapper.readTree(payload);

@@ -3,7 +3,9 @@ package org.wildfly.bot.utils.testing.internal;
 import io.quarkiverse.githubapp.testing.dsl.EventHandlingResponse;
 import io.quarkiverse.githubapp.testing.dsl.EventSenderOptions;
 import io.quarkiverse.githubapp.testing.dsl.GitHubMockSetup;
-import org.wildfly.bot.utils.testing.CheckedFunction;
+import org.kohsuke.github.GHEvent;
+import org.wildfly.bot.utils.testing.IOExceptionFunction;
+import org.wildfly.bot.utils.testing.PullRequestJson;
 
 public class GivenTest {
     private final GitHubMockSetup<? extends Throwable> gitHubMockSetup;
@@ -22,10 +24,15 @@ public class GivenTest {
      * <p>
      * Would be converted into following lambda
      * eventSenderOptions -> eventSenderOptions.payloadFromString(..omitted..).event(GHEvent.PULL_REQUEST)
-     *
-     * @param trigger
      */
-    public final SseEventOptions sseEventOptions(CheckedFunction<EventSenderOptions, EventHandlingResponse> trigger) {
+    public final SseEventOptions sseEventOptions(IOExceptionFunction<EventSenderOptions, EventHandlingResponse> trigger) {
         return new SseEventOptions(gitHubMockSetup, trigger);
+    }
+
+    public PollingEventOptions pullRequestEvent(PullRequestJson pullRequestJson) {
+        return new PollingEventOptions(gitHubMockSetup,
+                eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
+                        .event(GHEvent.PULL_REQUEST),
+                eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()));
     }
 }

@@ -7,7 +7,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHContent;
-import org.kohsuke.github.GHEvent;
 import org.kohsuke.github.GHRepository;
 import org.mockito.Mockito;
 import org.wildfly.bot.model.RuntimeConstants;
@@ -15,10 +14,8 @@ import org.wildfly.bot.utils.TestConstants;
 import org.wildfly.bot.utils.mocking.Mockable;
 import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
 import org.wildfly.bot.utils.mocking.MockedGHRepository;
-import org.wildfly.bot.utils.model.SsePullRequestPayload;
 import org.wildfly.bot.utils.testing.PullRequestJson;
 import org.wildfly.bot.utils.testing.internal.TestModel;
-import org.wildfly.bot.utils.testing.model.PullRequestGitHubEventPayload;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -32,11 +29,7 @@ public class PRDirectoriesVerificationTest {
 
     @BeforeAll
     public static void setPullRequestJson() throws Exception {
-        TestModel.setAllCallables(
-                () -> SsePullRequestPayload.builder((TestConstants.VALID_PR_TEMPLATE_JSON)),
-                PullRequestGitHubEventPayload::new);
-
-        pullRequestJson = TestModel.getPullRequestJson();
+        pullRequestJson = TestModel.defaultBeforeEachJsons();
     }
 
     @Test
@@ -60,16 +53,13 @@ public class PRDirectoriesVerificationTest {
                     "UTF-8"));
 
         })
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     Mockito.verify(repo).getDirectoryContent("src");
                     Mockito.verify(repo).createCommitStatus(pullRequestJson.commitSHA(),
                             GHCommitState.SUCCESS, "", "Valid", "Configuration File");
-                })
-                .run();
+                });
     }
 
     @Test
@@ -91,9 +81,7 @@ public class PRDirectoriesVerificationTest {
                     "UTF-8"));
 
         })
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     Mockito.verify(repo).getDirectoryContent("src");
@@ -101,8 +89,7 @@ public class PRDirectoriesVerificationTest {
                             GHCommitState.ERROR, "",
                             "One or multiple rules are invalid, please see the comment stating the problems",
                             "Configuration File");
-                })
-                .run();
+                });
     }
 
     @Test
@@ -126,14 +113,11 @@ public class PRDirectoriesVerificationTest {
                     "UTF-8"));
 
         })
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     Mockito.verify(repo).getDirectoryContent("pom.xml");
-                })
-                .run();
+                });
     }
 
     @Test
@@ -157,9 +141,7 @@ public class PRDirectoriesVerificationTest {
                     "UTF-8"));
 
         })
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     Mockito.verify(repo).getDirectoryContent("src/main");
@@ -168,8 +150,7 @@ public class PRDirectoriesVerificationTest {
                             GHCommitState.ERROR, "",
                             "One or multiple rules are invalid, please see the comment stating the problems",
                             "Configuration File");
-                })
-                .run();
+                });
     }
 
     @Test
@@ -196,16 +177,13 @@ public class PRDirectoriesVerificationTest {
                     "UTF-8"));
 
         })
-                .sseEventOptions(eventSenderOptions -> eventSenderOptions.payloadFromString(pullRequestJson.jsonString())
-                        .event(GHEvent.PULL_REQUEST))
-                .pollingEventOptions(eventSenderOptions -> eventSenderOptions.eventFromPayload(pullRequestJson.jsonString()))
+                .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     Mockito.verify(repo).getDirectoryContent("src/main");
                     Mockito.verify(repo).getDirectoryContent("src/main/resources/application.properties");
                     Mockito.verify(repo).createCommitStatus(pullRequestJson.commitSHA(),
                             GHCommitState.SUCCESS, "", "Valid", "Configuration File");
-                })
-                .run();
+                });
     }
 }
