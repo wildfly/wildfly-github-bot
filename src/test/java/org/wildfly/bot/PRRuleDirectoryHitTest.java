@@ -27,7 +27,7 @@ import java.util.List;
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 
 /**
- * Tests for the Wildfly -> Rules -> Directories checks.
+ * Tests for the WildFly -> Rules -> Directories checks.
  */
 @QuarkusTest
 @GitHubAppTest

@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class LifecycleProcessor {
 
-    public static final String EMAIL_SUBJECT = "Unsuccessful installation of Wildfly Bot Application";
+    public static final String EMAIL_SUBJECT = "Unsuccessful installation of WildFly Bot Application";
     public static final String EMAIL_TEXT = """
             Hello,
 

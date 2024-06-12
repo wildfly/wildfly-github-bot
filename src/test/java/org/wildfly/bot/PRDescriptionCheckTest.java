@@ -22,7 +22,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 
 /**
- * Tests for the Wildfly -> Format -> Description checks.
+ * Tests for the WildFly -> Format -> Description checks.
  */
 @QuarkusTest
 @GitHubAppTest
