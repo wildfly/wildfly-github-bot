@@ -16,7 +16,7 @@ import java.io.IOException;
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 
 /**
- * Tests for the Wildfly -> Rules -> Body checks.
+ * Tests for the WildFly -> Rules -> Body checks.
  */
 @QuarkusTest
 @GitHubAppTest

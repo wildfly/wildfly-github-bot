@@ -17,7 +17,7 @@ import java.io.IOException;
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
 
 /**
- * Tests for the Wildfly -> Rules -> Notify function.
+ * Tests for the WildFly -> Rules -> Notify function.
  */
 @QuarkusTest
 @GitHubAppTest
