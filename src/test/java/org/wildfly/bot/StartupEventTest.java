@@ -12,11 +12,6 @@ import io.quarkus.test.InMemoryLogHandler;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestExtension;
-import org.wildfly.bot.model.RuntimeConstants;
-import org.wildfly.bot.utils.Mockable;
-import org.wildfly.bot.utils.MockedGHPullRequest;
-import org.wildfly.bot.utils.MockedGHRepository;
-import org.wildfly.bot.utils.PullRequestJson;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import org.jboss.logmanager.Level;
@@ -35,7 +30,12 @@ import org.kohsuke.github.HttpException;
 import org.kohsuke.github.PagedIterable;
 import org.kohsuke.github.PagedIterator;
 import org.kohsuke.github.PagedSearchIterable;
+import org.wildfly.bot.model.RuntimeConstants;
 import org.wildfly.bot.utils.TestConstants;
+import org.wildfly.bot.utils.mocking.Mockable;
+import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
+import org.wildfly.bot.utils.mocking.MockedGHRepository;
+import org.wildfly.bot.utils.model.SsePullRequestPayload;
 
 import java.io.IOException;
 import java.util.List;
@@ -44,8 +44,6 @@ import java.util.function.Consumer;
 import java.util.logging.LogManager;
 
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
-import static org.wildfly.bot.model.RuntimeConstants.LABEL_FIX_ME;
-import static org.wildfly.bot.model.RuntimeConstants.LABEL_NEEDS_REBASE;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -54,6 +52,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.wildfly.bot.model.RuntimeConstants.LABEL_FIX_ME;
+import static org.wildfly.bot.model.RuntimeConstants.LABEL_NEEDS_REBASE;
 
 /**
  * Tests for the startup of the application.
@@ -73,7 +73,7 @@ public class StartupEventTest {
     @Inject
     MockMailbox mailbox;
 
-    private static PullRequestJson pullRequestJson;
+    private static SsePullRequestPayload ssePullRequestPayload;
 
     private static final java.util.logging.Logger rootLogger = LogManager.getLogManager().getLogger("org.wildfly.bot");
     private static final InMemoryLogHandler inMemoryLogHandler = new InMemoryLogHandler(
@@ -147,7 +147,7 @@ public class StartupEventTest {
 
     @BeforeAll
     static void setUpGitHubJson() throws IOException {
-        pullRequestJson = PullRequestJson.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
+        ssePullRequestPayload = SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON).build();
     }
 
     @BeforeEach
@@ -161,11 +161,11 @@ public class StartupEventTest {
                 wildfly:
                   rules:
                     - title: "Test"
-                      notify: [7125767235,0979986727]
+                      notify: [Tadpole,Duke]
                   emails:
                     - foo@bar.baz
                 """))
-                .when().payloadFromString(pullRequestJson.jsonString())
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.STAR)
                 .then().github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
                         logRecord -> logRecord.getMessage().equals(
@@ -178,11 +178,11 @@ public class StartupEventTest {
                 wildfly:
                   rules:
                     - title: "Test"
-                      notify: [7125767235,0979986727]
+                      notify: [Tadpole,Duke]
                   emails:
                     - foo@bar.baz
                 """))
-                .when().payloadFromString(pullRequestJson.jsonString())
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.STAR)
                 .then().github(mocks -> {
                     GHRepository repository = mocks.repository(TestConstants.TEST_REPO);
@@ -192,7 +192,7 @@ public class StartupEventTest {
                     Assertions.assertEquals(sent.get(0).getSubject(), LifecycleProcessor.EMAIL_SUBJECT);
                     Assertions.assertEquals(sent.get(0).getText(), LifecycleProcessor.EMAIL_TEXT.formatted(
                             RuntimeConstants.CONFIG_FILE_NAME, repository.getHttpTransportUrl(),
-                            "- [WARN] - Rule [title=Test, notify=[7125767235, 0979986727]] is missing an id"));
+                            "- [WARN] - Rule [title=Test, notify=[Tadpole, Duke]] is missing an id"));
                 });
     }
 
@@ -203,11 +203,11 @@ public class StartupEventTest {
                   rules:
                     - id: Test
                       title: "Test"
-                      notify: [7125767235,0979986727]
+                      notify: [Tadpole,Duke]
                   emails:
                     - foo@bar.baz
                 """))
-                .when().payloadFromString(pullRequestJson.jsonString())
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.STAR)
                 .then().github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
                         logRecord -> logRecord.getMessage().equals(
@@ -226,7 +226,7 @@ public class StartupEventTest {
                   emails:
                     - foo@bar.baz
                 """))
-                .when().payloadFromString(pullRequestJson.jsonString())
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.STAR)
                 .then().github(mocks -> {
                     GHRepository repository = mocks.repository(TestConstants.TEST_REPO);
@@ -255,7 +255,7 @@ public class StartupEventTest {
                   emails:
                     - foo@bar.baz
                 """))
-                .when().payloadFromString(pullRequestJson.jsonString())
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.STAR)
                 .then()
                 .github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(logRecord -> logRecord
@@ -268,7 +268,7 @@ public class StartupEventTest {
                 wildfly:
                   rules:
                     - title: "Test"
-                      notify: [7125767235,0979986727]
+                      notify: [Tadpole,Duke]
                   emails:
                     - foo@bar.baz
                 """, (mocks) -> {
@@ -293,7 +293,7 @@ public class StartupEventTest {
                     - title: "Test"
                       id: "test"
                 """))
-                .when().payloadFromString(pullRequestJson.jsonString())
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.STAR)
                 .then().github(mocks -> {
                     GHRepository repository = mocks.repository(TestConstants.TEST_REPO);
@@ -311,7 +311,7 @@ public class StartupEventTest {
                     - title: "Test"
                       id: "test"
                 """))
-                .when().payloadFromString(pullRequestJson.jsonString())
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
                 .event(GHEvent.STAR)
                 .then().github(mocks -> {
                     GHRepository repository = mocks.repository(TestConstants.TEST_REPO);

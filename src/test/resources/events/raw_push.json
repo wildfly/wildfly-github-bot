@@ -1,0 +1,40 @@
+{
+  "id": "37365081883",
+  "type": "PushEvent",
+  "actor": {
+    "id": 78657734,
+    "login": "Tadpole",
+    "display_login": "Tadpole",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/Tadpole",
+    "avatar_url": "https://avatars.githubusercontent.com/u/78657734?"
+  },
+  "repo": {
+    "id": 655654457,
+    "name": "Tadpole/wildfly-github-bot",
+    "url": "https://api.github.com/repos/Tadpole/wildfly-github-bot"
+  },
+  "payload": {
+    "repository_id": 655654457,
+    "push_id": 17949553218,
+    "size": 1,
+    "distinct_size": 1,
+    "ref": "refs/heads/main",
+    "head": "b5ab219b4110eb631200927d577095550c56a4ce",
+    "before": "ab8dbaf882a017a4cfab71bee2d240cb2079c3a1",
+    "commits": [
+      {
+        "sha": "b5ab219b4110eb631200927d577095550c56a4ce",
+        "author": {
+          "email": "rastislavbudinsky@gmail.com",
+          "name": "Rastislav Budinsky"
+        },
+        "message": "Update README.md",
+        "distinct": true,
+        "url": "https://api.github.com/repos/Tadpole/wildfly-github-bot/commits/b5ab219b4110eb631200927d577095550c56a4ce"
+      }
+    ]
+  },
+  "public": true,
+  "created_at": "2024-04-11T08:40:33Z"
+}

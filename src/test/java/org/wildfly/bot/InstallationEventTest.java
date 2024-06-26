@@ -27,7 +27,7 @@ public class InstallationEventTest {
 
     @Test
     public void testUnsuspendingApp() throws IOException {
-        given().when().payloadFromClasspath("/installation.json")
+        given().when().payloadFromClasspath("/webhooks/installation.json")
                 .event(GHEvent.INSTALLATION)
                 .then().github(mocks -> Assertions.assertTrue(inMemoryLogHandler.getRecords().stream()
                         .anyMatch(logRecord -> logRecord.getMessage().equals(
