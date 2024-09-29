@@ -13,7 +13,7 @@ import org.wildfly.bot.utils.testing.PullRequestJson;
 import org.wildfly.bot.utils.testing.internal.TestModel;
 
 /**
- * Tests for the Wildfly -> Rules -> Notify function.
+ * Tests for the WildFly -> Rules -> Notify function.
  */
 @QuarkusTest
 @GitHubAppTest

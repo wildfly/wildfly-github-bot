@@ -14,7 +14,7 @@ import org.wildfly.bot.utils.testing.PullRequestJson;
 import org.wildfly.bot.utils.testing.internal.TestModel;
 
 /**
- * Tests for the Wildfly -> Rules -> TitleBody checks.
+ * Tests for the WildFly -> Rules -> TitleBody checks.
  */
 @QuarkusTest
 @GitHubAppTest

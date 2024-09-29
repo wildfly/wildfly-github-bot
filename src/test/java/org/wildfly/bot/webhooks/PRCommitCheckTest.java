@@ -20,7 +20,7 @@ import static org.wildfly.bot.model.RuntimeConstants.DEFAULT_COMMIT_MESSAGE;
 import static org.wildfly.bot.model.RuntimeConstants.PROJECT_PATTERN_REGEX;
 
 /**
- * Tests for the Wildfly -> Format -> Commit checks.
+ * Tests for the WildFly -> Format -> Commit checks.
  */
 @QuarkusTest
 @GitHubAppTest
