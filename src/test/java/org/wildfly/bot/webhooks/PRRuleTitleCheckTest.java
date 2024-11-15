@@ -13,7 +13,7 @@ import org.wildfly.bot.utils.testing.PullRequestJson;
 import org.wildfly.bot.utils.testing.internal.TestModel;
 
 /**
- * Tests for the Wildfly -> Rules -> Title checks.
+ * Tests for the WildFly -> Rules -> Title checks.
  */
 @QuarkusTest
 @GitHubAppTest

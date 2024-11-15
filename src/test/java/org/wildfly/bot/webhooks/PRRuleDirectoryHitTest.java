@@ -23,7 +23,7 @@ import org.wildfly.bot.utils.testing.internal.TestModel;
 import java.util.List;
 
 /**
- * Tests for the Wildfly -> Rules -> Directories checks.
+ * Tests for the WildFly -> Rules -> Directories checks.
  */
 @QuarkusTest
 @GitHubAppTest

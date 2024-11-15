@@ -25,7 +25,7 @@ import static org.wildfly.bot.model.RuntimeConstants.DEFAULT_TITLE_MESSAGE;
 import static org.wildfly.bot.model.RuntimeConstants.PROJECT_PATTERN_REGEX;
 
 /**
- * Tests for the Wildfly -> Format -> Title checks.
+ * Tests for the WildFly -> Format -> Title checks.
  */
 @QuarkusTest
 @GitHubAppTest
