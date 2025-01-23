@@ -88,7 +88,7 @@ public class PRReviewAssignmentTest {
                             .comment(ArgumentMatchers.anyString());
                     Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
                             logRecord -> logRecord.getMessage().contains(
-                                    "Bot can not request PR review from the following people: [Butterfly, Tadpole]")));
+                                    "Bot failed to request PR review from the following people: [Butterfly, Tadpole]")));
 
                     List<Mail> sent = mailbox.getMailsSentTo("foo@bar.baz");
                     Assertions.assertEquals(sent.size(), 1);
@@ -143,7 +143,7 @@ public class PRReviewAssignmentTest {
                             .toList(), Matchers.containsInAnyOrder("Tadpole"));
                     Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
                             logRecord -> logRecord.getMessage().contains(
-                                    "Bot can not request PR review from the following people: [Butterfly]")));
+                                    "Bot failed to request PR review from the following people: [Butterfly]")));
 
                     List<Mail> sent = mailbox.getMailsSentTo("foo@bar.baz");
                     Assertions.assertEquals(sent.size(), 1);
