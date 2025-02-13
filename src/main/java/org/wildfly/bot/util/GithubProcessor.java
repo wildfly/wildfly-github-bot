@@ -104,7 +104,11 @@ public class GithubProcessor {
                 .map(GHPerson::getLogin)
                 .toList();
 
+        LOG.infof("Current reviewers already added to the PR: %s", currentReviewers);
+
         reviewers.removeAll(currentReviewers);
+
+        LOG.infof("Reviewers to be added to the PR: %s", reviewers);
 
         updateCCMentions(pullRequest, ccMentions);
 
@@ -118,22 +122,53 @@ public class GithubProcessor {
                     try {
                         GHUser ghUser = gitHub.getUser(requestedReviewer);
                         pullRequest.requestReviewers(List.of(ghUser));
-                    } catch (HttpException | RuntimeException e) {
+                    } catch (HttpException e) {
+                        String responseMessage = e.getResponseMessage() != null ? e.getResponseMessage()
+                                : "No response message available.";
                         LOG.warnf(
-                                "The request of getting GHUser or requesting the user as Pull Request reviewer has failed due to %s",
-                                e.getMessage());
+                                "Failed to add reviewer '%s'. Error: %s, Response: %s",
+                                requestedReviewer, e.getMessage(), responseMessage);
+                        failedReviewers.add(requestedReviewer);
+                    } catch (RuntimeException e) {
+                        LOG.warnf(
+                                "Unexpected error while adding reviewer '%s'. Error: %s",
+                                requestedReviewer, e.getMessage());
                         failedReviewers.add(requestedReviewer);
                     }
                 }
 
+                // TODO Revert after debugging request reviewers bug
                 if (!failedReviewers.isEmpty()) {
-                    LOG.warnf("Bot can not request PR review from the following people: %s", failedReviewers);
                     GHRepository repository = pullRequest.getRepository();
-                    sendEmail(
-                            COLLABORATOR_MISSING_SUBJECT.formatted(repository.getFullName()),
-                            COLLABORATOR_MISSING_BODY.formatted(repository.getFullName(), pullRequest.getNumber(),
-                                    failedReviewers),
-                            emails);
+                    // Check if actually failedReviewers are not collaborators
+                    for (String failedReviewer : failedReviewers) {
+                        if (repository.isCollaborator(gitHub.getUser(failedReviewer))) {
+                            LOG.warnf("Reviewer '%s' failed to be added, but they are a collaborator in the '%s' repository.",
+                                    failedReviewer, repository.getFullName());
+                        }
+                    }
+                    List<String> finalRequestedReviewers = pullRequest.getRequestedReviewers()
+                            .stream()
+                            .map(GHPerson::getLogin)
+                            .toList();
+
+                    LOG.infof("Final reviewers added to the PR: %s", finalRequestedReviewers);
+
+                    // Remove successfully added reviewers from the failed list
+                    failedReviewers.removeAll(finalRequestedReviewers);
+
+                    // Log the actual failed reviewers that were not added
+                    if (!failedReviewers.isEmpty()) {
+                        LOG.warnf("Bot failed to request PR review from the following people: %s", failedReviewers);
+
+                        sendEmail(
+                                COLLABORATOR_MISSING_SUBJECT.formatted(repository.getFullName()),
+                                COLLABORATOR_MISSING_BODY.formatted(repository.getFullName(), pullRequest.getNumber(),
+                                        failedReviewers),
+                                emails);
+                    } else {
+                        LOG.info("All initially failed reviewers were successfully added to the PR after verification.");
+                    }
                 }
             }
         }
