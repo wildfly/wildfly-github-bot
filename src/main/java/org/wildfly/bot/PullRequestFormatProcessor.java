@@ -145,7 +145,7 @@ public class PullRequestFormatProcessor {
         String newBody = sb.toString();
 
         if (wildFlyBotConfig.isDryRun()) {
-            LOG.infof("Pull Request #%s - Updated PR body:\n%s", newBody);
+            LOG.infof("Pull Request #%s - Updated PR body:\n%s", pullRequest.getNumber(), newBody);
         } else {
             pullRequest.setBody(newBody);
         }
