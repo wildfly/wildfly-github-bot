@@ -25,14 +25,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
+import java.util.SequencedMap;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.LinkedHashMap;
 
 @Dependent
 public class GithubProcessor {
@@ -90,14 +91,15 @@ public class GithubProcessor {
         }
     }
 
-    public void processNotifies(GHPullRequest pullRequest, GitHub gitHub, Set<String> ccMentions, Set<String> reviewers,
+    public void processNotifies(GHPullRequest pullRequest, GitHub gitHub,
+            SequencedMap<String, List<String>> ccMentionsWithRules, Set<String> reviewers,
             List<String> emails) throws IOException {
-        if (ccMentions.isEmpty() && reviewers.isEmpty()) {
-            updateCCMentions(pullRequest, Collections.emptySet());
+        if (ccMentionsWithRules.isEmpty() && reviewers.isEmpty()) {
+            updateCCMentions(pullRequest, new LinkedHashMap<>());
             return;
         }
 
-        ccMentions.removeAll(reviewers);
+        reviewers.forEach(ccMentionsWithRules::remove);
 
         List<String> currentReviewers = pullRequest.getRequestedReviewers()
                 .stream()
@@ -106,11 +108,11 @@ public class GithubProcessor {
 
         LOG.infof("Current reviewers already added to the PR: %s", currentReviewers);
 
-        reviewers.removeAll(currentReviewers);
+        currentReviewers.forEach(reviewers::remove);
 
         LOG.infof("Reviewers to be added to the PR: %s", reviewers);
 
-        updateCCMentions(pullRequest, ccMentions);
+        updateCCMentions(pullRequest, ccMentionsWithRules);
 
         if (!reviewers.isEmpty()) {
             if (wildFlyBotConfig.isDryRun()) {
@@ -174,33 +176,42 @@ public class GithubProcessor {
         }
     }
 
-    private void updateCCMentions(GHPullRequest pullRequest, Set<String> newMentions) throws IOException {
+    private void updateCCMentions(GHPullRequest pullRequest, SequencedMap<String, List<String>> newMentionsWithRules)
+            throws IOException {
         for (GHIssueComment comment : pullRequest.listComments()) {
             if (comment.getUser().getLogin().equals(wildFlyBotConfig.githubName())
                     && comment.getBody().startsWith("/cc")) {
-                if (newMentions.isEmpty()) {
+                if (newMentionsWithRules.isEmpty()) {
                     if (wildFlyBotConfig.isDryRun()) {
                         LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Delete comment %s"), comment);
                     } else {
                         comment.delete();
                     }
                 } else {
-                    List<String> commentMentions = Arrays.stream(comment.getBody().split(" @"))
-                            .skip(1)
-                            .map(s -> s.endsWith(",")
-                                    ? s.substring(0, s.length() - 1)
-                                    : s)
-                            .collect(Collectors.toList());
+                    // deserializes "/cc @user [rule1, rule2], @user2 [rule3]"
+                    SequencedMap<String, List<String>> commentMentionsAndRules = Arrays.stream(comment.getBody().split(" @"))
+                            .skip(1) // skips "/cc"
+                            .collect(Collectors.toMap(
+                                    s -> s.split(" \\[")[0],
+                                    s -> Arrays.stream(s.split(" \\[")[1]
+                                            .split(", "))
+                                            .map(rule -> rule.endsWith("]")
+                                                    ? rule.substring(0, rule.length() - 1)
+                                                    : rule)
+                                            .toList(),
+                                    (oldVal, newVal) -> newVal, // just for the 4th parameter of the toMap method
+                                    LinkedHashMap::new));
 
-                    if (!new HashSet<>(commentMentions).containsAll(newMentions) ||
-                            commentMentions.size() != newMentions.size()) {
+                    if (!commentMentionsAndRules.keySet().containsAll(newMentionsWithRules.keySet()) ||
+                            commentMentionsAndRules.size() != newMentionsWithRules.size()) {
 
                         // We preserve order of already mentioned people and append new people
-                        commentMentions.removeIf(s -> !newMentions.contains(s));
-                        newMentions.removeAll(commentMentions);
-                        commentMentions.addAll(newMentions);
+                        newMentionsWithRules
+                                .sequencedEntrySet()
+                                .forEach(entry -> commentMentionsAndRules.merge(entry.getKey(), entry.getValue(),
+                                        (oldMention, newMention) -> newMention));
 
-                        String updatedBody = "/cc @" + String.join(", @", commentMentions);
+                        String updatedBody = createCCMentionComment(commentMentionsAndRules);
                         if (wildFlyBotConfig.isDryRun()) {
                             LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Update comment %s to %s"), comment.getBody(),
                                     updatedBody);
@@ -213,11 +224,11 @@ public class GithubProcessor {
             }
         }
 
-        if (newMentions.isEmpty()) {
+        if (newMentionsWithRules.isEmpty()) {
             return;
         }
 
-        String updatedBody = "/cc @" + String.join(", @", newMentions);
+        String updatedBody = createCCMentionComment(newMentionsWithRules);
         if (wildFlyBotConfig.isDryRun()) {
             LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Add new comment %s"), updatedBody);
         } else {
@@ -366,5 +377,16 @@ public class GithubProcessor {
                 pullRequest.comment(updatedBody);
             }
         }
+    }
+
+    private String createCCMentionComment(SequencedMap<String, List<String>> ccMentionsWithRules) {
+        return "/cc @" + String.join(", @", ccMentionsWithRules.sequencedEntrySet().stream()
+                .map(entry -> entry.getKey()
+                        + ((!entry.getValue().stream().allMatch(Objects::isNull))
+                                ? entry.getValue().stream().filter(Objects::nonNull)
+                                        .collect(Collectors.joining(", ", " [", "]"))
+                                : "") // if id (rule) was not provided
+                )
+                .toList());
     }
 }

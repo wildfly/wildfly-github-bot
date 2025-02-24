@@ -17,8 +17,11 @@ import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.SequencedMap;
 import java.util.Set;
 
 @RequestScoped
@@ -44,7 +47,7 @@ public class PullRequestRuleProcessor {
         }
 
         GHRepository repository = pullRequest.getRepository();
-        Set<String> ccMentions = new HashSet<>();
+        SequencedMap<String, List<String>> ccMentionsWithRules = new LinkedHashMap<>();
         Set<String> reviewers = new HashSet<>();
         Set<String> labels = new HashSet<>();
 
@@ -60,13 +63,13 @@ public class PullRequestRuleProcessor {
                 if (!rule.notify.isEmpty()) {
                     LOG.infof("title \"%s\" was matched with a rule, containing notify, with the id: %s.",
                             pullRequest.getTitle(), rule.id != null ? rule.id : "N/A");
-                    ccMentions.addAll(rule.notify);
+                    rule.notify.forEach(user -> ccMentionsWithRules.computeIfAbsent(user, v -> new ArrayList<>()).add(rule.id));
                 }
                 labels.addAll(rule.labels);
             }
         }
 
-        ccMentions.remove(pullRequest.getUser().getLogin());
+        ccMentionsWithRules.remove(pullRequest.getUser().getLogin());
         reviewers.remove(pullRequest.getUser().getLogin());
 
         githubProcessor.createLabelsIfMissing(repository, labels);
@@ -81,6 +84,7 @@ public class PullRequestRuleProcessor {
             pullRequest.addLabels(labels.toArray(String[]::new));
         }
 
-        githubProcessor.processNotifies(pullRequest, gitHub, ccMentions, reviewers, wildflyBotConfigFile.wildfly.emails);
+        githubProcessor.processNotifies(pullRequest, gitHub, ccMentionsWithRules, reviewers,
+                wildflyBotConfigFile.wildfly.emails);
     }
 }

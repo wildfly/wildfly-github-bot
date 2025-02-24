@@ -186,7 +186,7 @@ public class PRRuleDirectoryHitTest {
                     GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
                     Mockito.verify(mockedPR, Mockito.times(2)).listFiles();
                     Mockito.verify(mockedPR, Mockito.times(2)).listComments();
-                    Mockito.verify(mockedPR, Mockito.never()).comment("/cc @Tadpole");
+                    Mockito.verify(mockedPR, Mockito.never()).comment("/cc @Tadpole [Directory Test]");
                 });
     }
 }
