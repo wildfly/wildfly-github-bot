@@ -93,7 +93,7 @@ public class PRNotifyChangeOnPREditTest {
                       notify: [Butterfly, Duke]""";
 
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
-                .comment("/cc @Duke", wildFlyBotConfig.githubName())
+                .comment("/cc @Duke [WFLY]", wildFlyBotConfig.githubName())
                 .commit("WFLY-123 commit")
                 .files("src/pom.xml", "app/pom.xml")
                 .reviewers("Tadpole")
@@ -139,7 +139,7 @@ public class PRNotifyChangeOnPREditTest {
                 mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
-                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).comment("/cc @Duke");
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).comment("/cc @Duke [test2]");
                     ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id())).requestReviewers(captor.capture());
                     Assertions.assertEquals(captor.getValue().size(), 1);
@@ -162,14 +162,14 @@ public class PRNotifyChangeOnPREditTest {
                       notify: [Tadpole]""";
 
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
-                .comment("/cc @Tadpole", wildFlyBotConfig.githubName())
+                .comment("/cc @Tadpole [previous rule]", wildFlyBotConfig.githubName())
                 .commit("WFLY-123 commit");
 
         TestModel.given(
                 mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
-                    Mockito.verify(mocks.issueComment(0L)).update("/cc @Tadpole, @Butterfly");
+                    Mockito.verify(mocks.issueComment(0L)).update("/cc @Tadpole [previous rule], @Butterfly [new rule]");
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never()).requestReviewers(anyList());
                 });
     }
@@ -198,7 +198,7 @@ public class PRNotifyChangeOnPREditTest {
                 mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
-                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).comment("/cc @Duke");
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).comment("/cc @Duke [test2]");
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never()).requestReviewers(anyList());
                 });
     }

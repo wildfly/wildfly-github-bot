@@ -97,7 +97,7 @@ public class PRMentionsReviewsCombinationTest {
                 mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
-                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).comment("/cc @Butterfly, @Tadpole");
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).comment("/cc @Tadpole [test], @Butterfly [test]");
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.never())
                             .requestReviewers(ArgumentMatchers.anyList());
                 });
@@ -213,7 +213,7 @@ public class PRMentionsReviewsCombinationTest {
                 mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
-                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).comment("/cc @Duke");
+                    Mockito.verify(mocks.pullRequest(pullRequestJson.id())).comment("/cc @Duke [test2]");
                     ArgumentCaptor<List<GHUser>> captor = ArgumentCaptor.forClass(List.class);
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id()), Mockito.times(2))
                             .requestReviewers(captor.capture());

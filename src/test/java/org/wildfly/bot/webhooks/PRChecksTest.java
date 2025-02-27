@@ -81,7 +81,7 @@ public class PRChecksTest {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
                     GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
-                    Mockito.verify(mockedPR).comment("/cc @Butterfly, @Tadpole");
+                    Mockito.verify(mockedPR).comment("/cc @Tadpole [Title], @Butterfly [Description]");
                 });
     }
 
@@ -116,7 +116,7 @@ public class PRChecksTest {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     WildflyGitHubBotTesting.verifyFormatFailure(repo, pullRequestJson, "commit, description, title");
                     GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
-                    Mockito.verify(mockedPR, Mockito.never()).comment("/cc @Butterfly, @Tadpole");
+                    Mockito.verify(mockedPR, Mockito.never()).comment("/cc @Tadpole [Title], @Butterfly [Description]");
                 });
     }
 }
