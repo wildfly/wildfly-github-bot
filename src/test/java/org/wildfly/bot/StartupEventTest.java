@@ -98,9 +98,13 @@ public class StartupEventTest {
         private final String configFile;
         private final Consumer<GitHubMockSetupContext> additionalMocking;
 
+        // no config file (wildfly-bot.yml) was provided
+        private CustomGithubMockSetup() {
+            this(null);
+        }
+
         private CustomGithubMockSetup(String configFile) {
-            this.configFile = configFile;
-            this.additionalMocking = null;
+            this(configFile, null);
         }
 
         private CustomGithubMockSetup(String configFile, Consumer<GitHubMockSetupContext> additionalMocking) {
@@ -118,7 +122,9 @@ public class StartupEventTest {
             GHAuthenticatedAppInstallation mockGHAuthenticatedAppInstallation = mock(GHAuthenticatedAppInstallation.class);
             PagedSearchIterable<GHRepository> mockGHRepositories = mock(PagedSearchIterable.class);
             PagedIterator<GHRepository> mockIterator = mock(PagedIterator.class);
-            mocks.configFile(RuntimeConstants.CONFIG_FILE_NAME).fromString(configFile);
+            if (configFile != null) {
+                mocks.configFile(RuntimeConstants.CONFIG_FILE_NAME).fromString(configFile);
+            }
 
             GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
 
@@ -318,5 +324,29 @@ public class StartupEventTest {
                     verify(repository).createLabel(eq(LABEL_NEEDS_REBASE), anyString());
                     verify(repository, never()).createLabel(eq(LABEL_FIX_ME), anyString());
                 });
+    }
+
+    @Test
+    public void testMissingConfigFile() {
+        final String expectedErrorLog = "Unable to retrieve or parse the configuration file from the repository %s";
+        final String expectedExceptionMessage = "Unable to read file .github/wildfly-bot.yml for repository";
+
+        given().github(new CustomGithubMockSetup())
+                .when().payloadFromString(ssePullRequestPayload.jsonString())
+                .event(GHEvent.STAR);
+
+        Assertions.assertTrue(inMemoryLogHandler.getRecords().stream().anyMatch(
+                logRecord -> logRecord.getMessage().equals(expectedErrorLog)
+                        && assertThrowable(logRecord.getThrown(), IllegalStateException.class, expectedExceptionMessage)));
+
+    }
+
+    private boolean assertThrowable(Throwable throwable, Class<? extends Throwable> expectedExceptionClass,
+            String expectedMessage) {
+        Assertions.assertEquals(expectedExceptionClass, throwable.getClass());
+        Assertions.assertTrue(throwable.getMessage().contains(expectedMessage),
+                "Expected message: \n%s\nwas not found in the throwable message: \n%s\n".formatted(expectedMessage,
+                        throwable.getMessage()));
+        return true; // for lazy evaluation of .anyMatch()
     }
 }

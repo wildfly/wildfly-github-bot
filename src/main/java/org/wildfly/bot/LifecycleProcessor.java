@@ -72,7 +72,12 @@ public class LifecycleProcessor {
                 for (GHRepository repository : app.getInstallation().listRepositories()) {
                     try {
                         WildFlyConfigFile wildflyBotConfigFile = fileProvider.fetchConfigFile(repository,
-                                RuntimeConstants.CONFIG_FILE_NAME, ConfigFile.Source.DEFAULT, WildFlyConfigFile.class).get();
+                                RuntimeConstants.CONFIG_FILE_NAME, ConfigFile.Source.DEFAULT, WildFlyConfigFile.class)
+                                .orElseThrow(
+                                        () -> new IllegalStateException(
+                                                "Unable to read file %s for repository %s. Either the file does not exist or the 'Contents' permission has not been set for the application."
+                                                        .formatted(".github/" + RuntimeConstants.CONFIG_FILE_NAME,
+                                                                repository.getFullName())));
                         List<String> emailAddresses = wildflyBotConfigFile.wildfly.emails;
                         List<String> problems = configFileChangeProcessor.validateFile(wildflyBotConfigFile, repository);
 
