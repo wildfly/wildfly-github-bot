@@ -41,7 +41,7 @@ public class PRRuleTitleCheckTest {
                 .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
-                    Mockito.verify(mockedPR).comment("/cc @Tadpole");
+                    Mockito.verify(mockedPR).comment("/cc @Tadpole [Title]");
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
                 });
@@ -61,7 +61,7 @@ public class PRRuleTitleCheckTest {
                 .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
-                    Mockito.verify(mockedPR, Mockito.never()).comment("/cc @Tadpole");
+                    Mockito.verify(mockedPR, Mockito.never()).comment("/cc @Tadpole [Title]");
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
                 });
@@ -81,7 +81,7 @@ public class PRRuleTitleCheckTest {
                 .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
-                    Mockito.verify(mockedPR).comment("/cc @Tadpole");
+                    Mockito.verify(mockedPR).comment("/cc @Tadpole [Title]");
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
                 });
