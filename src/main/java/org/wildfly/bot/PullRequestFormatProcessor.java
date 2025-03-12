@@ -98,6 +98,12 @@ public class PullRequestFormatProcessor {
             return;
         }
 
+        if (pullRequest.getUser().getLogin().equals(DEPENDABOT)
+                && pullRequestPayload.getAction().equals(PullRequest.Opened.NAME)) {
+            LOG.info("Skipping format check on newly opened dependabot PRs.");
+            return;
+        }
+
         if (!wildflyConfigFile.wildfly.format.enabled) {
             LOG.info("Skipping format due to format being disabled");
             return;
