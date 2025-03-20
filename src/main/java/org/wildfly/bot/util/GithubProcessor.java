@@ -7,11 +7,14 @@ import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
+import org.kohsuke.github.GHCommit;
+import org.kohsuke.github.GHCommitQueryBuilder;
 import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHIssueComment;
 import org.kohsuke.github.GHLabel;
 import org.kohsuke.github.GHPerson;
 import org.kohsuke.github.GHPullRequest;
+import org.kohsuke.github.GHPullRequestCommitDetail;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GHUser;
 import org.kohsuke.github.GitHub;
@@ -25,6 +28,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -391,5 +395,30 @@ public class GithubProcessor {
                                 : "") // if id (rule) was not provided
                 )
                 .toList());
+    }
+
+    public boolean hasDuplicateCommitInBase(GHPullRequest pullRequest, GHRepository repository)
+            throws IOException {
+        String baseBranch = pullRequest.getBase().getRef();
+        GHCommitQueryBuilder commitQuery = repository.queryCommits();
+        if (commitQuery == null) {
+            return false;
+        }
+
+        Set<String> baseCommitSHAs = new HashSet<>();
+        for (GHCommit commit : commitQuery.from(baseBranch).pageSize(100).list()) {
+            baseCommitSHAs.add(commit.getSHA1());
+        }
+
+        for (GHPullRequestCommitDetail prCommit : pullRequest.listCommits()) {
+            String prSha = prCommit.getSha();
+            if (baseCommitSHAs.contains(prSha)) {
+                LOG.infof("Skipping rules due to incorrect rebase detected: commit %s is already in the base branch %s",
+                        prSha,
+                        baseBranch);
+                return true;
+            }
+        }
+        return false;
     }
 }
