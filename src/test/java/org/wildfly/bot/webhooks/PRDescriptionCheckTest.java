@@ -284,4 +284,27 @@ public class PRDescriptionCheckTest {
                     Mockito.verify(repo, never()).createCommitStatus(anyString(), any(), anyString(), anyString(), anyString());
                 });
     }
+
+    @Test
+    void testPREmptyBody() throws Throwable {
+        wildflyConfigFile = """
+                wildfly:
+                  format:
+                    description:
+                      regexes:
+                        - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
+                """;
+
+        pullRequestJson = TestModel.setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder
+                .description(null));
+
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
+                .pullRequestEvent(pullRequestJson)
+                .then(mocks -> {
+                    GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
+                    WildflyGitHubBotTesting.verifyFormatFailure(repo, pullRequestJson, "description");
+                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, pullRequestJson,
+                            "- Invalid description content");
+                });
+    }
 }
