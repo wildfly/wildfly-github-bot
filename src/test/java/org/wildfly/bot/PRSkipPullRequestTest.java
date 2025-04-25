@@ -4,6 +4,7 @@ import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.wildfly.bot.model.RuntimeConstants;
 import org.wildfly.bot.utils.TestConstants;
 import org.wildfly.bot.utils.WildflyGitHubBotTesting;
 import org.wildfly.bot.utils.mocking.Mockable;
@@ -77,6 +78,27 @@ public class PRSkipPullRequestTest {
                     verify(mocks.pullRequest(pullRequestJson.id())).listFiles();
                     verify(mocks.pullRequest(pullRequestJson.id()), times(2)).isDraft();
                     verify(mocks.pullRequest(pullRequestJson.id())).listComments();
+                    // commit status should not be set
+                    verifyNoMoreInteractions(mocks.pullRequest(pullRequestJson.id()));
+                });
+    }
+
+    @Test
+    void testSkippingFormatCheckOnWipLabel() throws Throwable {
+        pullRequestJson = TestModel.setPullRequestJsonBuilder(
+                pullRequestJsonBuilder -> pullRequestJsonBuilder
+                        .title(TestConstants.INVALID_TITLE));
+
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id()).labels(RuntimeConstants.LABEL_WIP);
+
+        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
+                .pullRequestEvent(pullRequestJson)
+                .then(mocks -> {
+                    verify(mocks.pullRequest(pullRequestJson.id()), times(2)).getBody();
+                    verify(mocks.pullRequest(pullRequestJson.id())).listFiles();
+                    verify(mocks.pullRequest(pullRequestJson.id()), times(2)).isDraft();
+                    verify(mocks.pullRequest(pullRequestJson.id())).listComments();
+                    verify(mocks.pullRequest(pullRequestJson.id()), times(2)).getLabels(); // important for WIP skip check
                     // commit status should not be set
                     verifyNoMoreInteractions(mocks.pullRequest(pullRequestJson.id()));
                 });

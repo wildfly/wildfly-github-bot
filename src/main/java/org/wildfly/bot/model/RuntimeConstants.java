@@ -13,6 +13,7 @@ public class RuntimeConstants {
     public static final String LABEL_NEEDS_REBASE = "rebase-this";
 
     public static final String LABEL_FIX_ME = "fix-me";
+    public static final String LABEL_WIP = "work-in-progress";
 
     public static final String BOT_MESSAGE_DELIMINER = "\n\n____";
 
