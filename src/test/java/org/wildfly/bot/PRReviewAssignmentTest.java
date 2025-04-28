@@ -1,4 +1,4 @@
-package org.wildfly.bot.webhooks;
+package org.wildfly.bot;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.mailer.Mail;
