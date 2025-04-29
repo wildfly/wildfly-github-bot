@@ -1,8 +1,8 @@
-package org.wildfly.bot.webhooks;
+package org.wildfly.bot;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
@@ -13,27 +13,28 @@ import org.wildfly.bot.utils.testing.PullRequestJson;
 import org.wildfly.bot.utils.testing.internal.TestModel;
 
 /**
- * Tests for the WildFly -> Rules -> Title checks.
+ * Tests for the WildFly -> Rules -> Body checks.
  */
 @QuarkusTest
 @GitHubAppTest
-public class PRRuleTitleCheckTest {
+public class PRRuleDescriptionCheckTest {
 
     private static String wildflyConfigFile;
     private static PullRequestJson pullRequestJson;
 
-    @BeforeEach
-    void setPullRequestJson() throws Exception {
-        pullRequestJson = TestModel.defaultBeforeEachJsons();
+    @BeforeAll
+    static void setPullRequestJson() throws Exception {
+        TestModel.defaultBeforeEachJsons();
     }
 
     @Test
-    void testSuccessfulTitleCheck() throws Throwable {
+    void testSuccessfulBodyCheck() throws Throwable {
+        pullRequestJson = TestModel.getPullRequestJson();
         wildflyConfigFile = """
                 wildfly:
                   rules:
-                    - id: "Title"
-                      title: "Title"
+                    - id: "Description"
+                      body: "issues.redhat.com"
                       notify: [Tadpole]
                 """;
 
@@ -41,19 +42,21 @@ public class PRRuleTitleCheckTest {
                 .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
-                    Mockito.verify(mockedPR).comment("/cc @Tadpole [Title]");
+                    Mockito.verify(mockedPR).comment("/cc @Tadpole [Description]");
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
                 });
     }
 
     @Test
-    void testFailedTitleCheck() throws Throwable {
+    void testFailedBodyCheck() throws Throwable {
+        pullRequestJson = TestModel.setPullRequestJsonBuilder(
+                pullRequestJsonBuilder -> pullRequestJsonBuilder.description(TestConstants.INVALID_DESCRIPTION));
         wildflyConfigFile = """
                 wildfly:
                   rules:
-                    - id: "Title"
-                      title: "NonValidTitle"
+                    - id: "Description"
+                      body: "issues.redhat.com"
                       notify: [Tadpole]
                 """;
 
@@ -61,19 +64,20 @@ public class PRRuleTitleCheckTest {
                 .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
-                    Mockito.verify(mockedPR, Mockito.never()).comment("/cc @Tadpole [Title]");
+                    Mockito.verify(mockedPR, Mockito.never()).comment("/cc @Tadpole [Description]");
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
                 });
     }
 
     @Test
-    void testTitleBodyCheckForTitleCaseInsensitive() throws Throwable {
+    void testTitleBodyCheckForBodyCaseInsensitive() throws Throwable {
+        pullRequestJson = TestModel.getPullRequestJson();
         wildflyConfigFile = """
                 wildfly:
                   rules:
-                    - id: "Title"
-                      title: "TiTle"
+                    - id: "Description"
+                      body: "ISSUES.REDHAT.COM"
                       notify: [Tadpole]
                 """;
 
@@ -81,7 +85,7 @@ public class PRRuleTitleCheckTest {
                 .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
-                    Mockito.verify(mockedPR).comment("/cc @Tadpole [Title]");
+                    Mockito.verify(mockedPR).comment("/cc @Tadpole [Description]");
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
                 });

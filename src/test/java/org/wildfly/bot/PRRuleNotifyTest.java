@@ -1,4 +1,4 @@
-package org.wildfly.bot.webhooks;
+package org.wildfly.bot;
 
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
 import io.quarkus.test.junit.QuarkusTest;
@@ -13,79 +13,84 @@ import org.wildfly.bot.utils.testing.PullRequestJson;
 import org.wildfly.bot.utils.testing.internal.TestModel;
 
 /**
- * Tests for the WildFly -> Rules -> Body checks.
+ * Tests for the WildFly -> Rules -> Notify function.
  */
 @QuarkusTest
 @GitHubAppTest
-public class PRRuleDescriptionCheckTest {
+public class PRRuleNotifyTest {
 
     private static String wildflyConfigFile;
     private static PullRequestJson pullRequestJson;
 
     @BeforeAll
-    static void setPullRequestJson() throws Exception {
-        TestModel.defaultBeforeEachJsons();
+    static void setUpGitHubJson() throws Exception {
+        pullRequestJson = TestModel.defaultBeforeEachJsons();
     }
 
     @Test
-    void testSuccessfulBodyCheck() throws Throwable {
-        pullRequestJson = TestModel.getPullRequestJson();
+    void testMentionsCCComment() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   rules:
+                    - id: "Title"
+                      title: "Title"
+                      notify: [Tadpole,Duke]
                     - id: "Description"
-                      body: "issues.redhat.com"
-                      notify: [Tadpole]
+                      title: "Description"
+                      notify: [Butterfly,Doggo]
                 """;
 
         TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
                 .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
-                    Mockito.verify(mockedPR).comment("/cc @Tadpole [Description]");
+                    Mockito.verify(mockedPR).comment("/cc @Tadpole [Title], @Duke [Title]");
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
                 });
     }
 
     @Test
-    void testFailedBodyCheck() throws Throwable {
-        pullRequestJson = TestModel.setPullRequestJsonBuilder(
-                pullRequestJsonBuilder -> pullRequestJsonBuilder.description(TestConstants.INVALID_DESCRIPTION));
+    void testMentionsCCCommentSeveralHits() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   rules:
-                    - id: "Description"
-                      body: "issues.redhat.com"
-                      notify: [Tadpole]
+                    - id: "WFLY"
+                      title: "WFLY"
+                      notify: [Tadpole,Duke]
+                    - id: "Title"
+                      title: "Title"
+                      notify: [Butterfly,Doggo]
                 """;
 
         TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
                 .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
-                    Mockito.verify(mockedPR, Mockito.never()).comment("/cc @Tadpole [Description]");
+                    Mockito.verify(mockedPR).comment("/cc @Tadpole [WFLY], @Duke [WFLY], @Butterfly [Title], @Doggo [Title]");
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
                 });
     }
 
     @Test
-    void testTitleBodyCheckForBodyCaseInsensitive() throws Throwable {
-        pullRequestJson = TestModel.getPullRequestJson();
+    void testMentionsCCCommentForDuplicateMentions() throws Throwable {
         wildflyConfigFile = """
                 wildfly:
                   rules:
+                    - id: "Title"
+                      title: "Title"
+                      notify: [Tadpole,Duke]
                     - id: "Description"
-                      body: "ISSUES.REDHAT.COM"
-                      notify: [Tadpole]
+                      body: "issues.redhat.com"
+                      notify: [Tadpole,Doggo]
                 """;
 
         TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
                 .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
-                    Mockito.verify(mockedPR).comment("/cc @Tadpole [Description]");
+                    Mockito.verify(mockedPR).comment("/cc @Tadpole [Title, Description], @Duke [Title], @Doggo [Description]");
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     WildflyGitHubBotTesting.verifyFormatSuccess(repo, pullRequestJson);
                 });
