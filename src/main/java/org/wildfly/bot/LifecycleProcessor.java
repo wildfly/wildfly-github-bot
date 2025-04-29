@@ -82,7 +82,8 @@ public class LifecycleProcessor {
                         List<String> problems = configFileChangeProcessor.validateFile(wildflyBotConfigFile, repository);
 
                         githubProcessor.createLabelsIfMissing(repository,
-                                Set.of(RuntimeConstants.LABEL_NEEDS_REBASE, RuntimeConstants.LABEL_FIX_ME));
+                                Set.of(RuntimeConstants.LABEL_NEEDS_REBASE, RuntimeConstants.LABEL_FIX_ME,
+                                        RuntimeConstants.LABEL_WIP));
 
                         if (problems.isEmpty()) {
                             LOG.infof("The configuration file from the repository %s was parsed successfully.",
