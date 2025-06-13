@@ -16,7 +16,7 @@ This project is build with usage of Quarkus GitHub App: https://quarkiverse.gith
   * _Body_ - Regex, used on body of the Pull Request - Rule activation.
   * _TitleBody_ - Regex, used on either title or body of the Pull Request - Rule activation.
   * _Directories_ - List of directories, if corresponding files are changed in the Pull Request - Rule activation.
-* Option to disable format checks on Pull Request by adding message `@wildfly-bot[bot] skip format` in the description.
+* Option to disable format checks on Pull Request by adding message `@<github-app-name>[bot] skip format` in the description.
 * Automatically append JIRA links into description of the Pull Request, if issue tracker number is detected in Title, Description or Commit.
 * Automatically applies/removes labels on a Pull Request:
   * `rebase-this` - depending on conflicts with `main` branch.

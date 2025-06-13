@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHIssueComment;
 import org.kohsuke.github.GHRepository;
 import org.mockito.Mockito;
-import org.wildfly.bot.config.WildFlyBotConfig;
+import org.wildfly.bot.util.GitHubBotContextProvider;
 import org.wildfly.bot.utils.WildflyGitHubBotTesting;
 import org.wildfly.bot.utils.mocking.Mockable;
 import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
@@ -37,7 +37,7 @@ public class PRUpdateCommentOnEditTest {
     private Mockable mockedContext;
 
     @Inject
-    WildFlyBotConfig wildFlyBotConfig;
+    GitHubBotContextProvider botContextProvider;
 
     @BeforeAll
     static void setPullRequestJson() throws Exception {
@@ -63,7 +63,7 @@ public class PRUpdateCommentOnEditTest {
                         DEFAULT_TITLE_MESSAGE.formatted(PROJECT_PATTERN_REGEX.formatted("WFLY")),
                         "The PR description must contain a link to the JIRA issue")
                         .map("- %s"::formatted)
-                        .collect(Collectors.joining("\n\n"))), wildFlyBotConfig.githubName());
+                        .collect(Collectors.joining("\n\n"))), botContextProvider.getBotName());
 
         TestModel.given(
                 mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
@@ -84,7 +84,7 @@ public class PRUpdateCommentOnEditTest {
                 """;
         pullRequestJson = TestModel
                 .setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder.title(INVALID_TITLE)
-                        .description("@%s skip format".formatted(wildFlyBotConfig.githubName()))
+                        .description("@%s skip format".formatted(botContextProvider.getBotName()))
                         .action(Action.EDITED));
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .comment(FAILED_FORMAT_COMMENT.formatted(Stream.of(
@@ -92,9 +92,10 @@ public class PRUpdateCommentOnEditTest {
                         DEFAULT_TITLE_MESSAGE.formatted(PROJECT_PATTERN_REGEX.formatted("WFLY")),
                         "The PR description must contain a link to the JIRA issue")
                         .map("- %s"::formatted)
-                        .collect(Collectors.joining("\n\n"))), wildFlyBotConfig.githubName())
+                        .collect(Collectors.joining("\n\n"))), botContextProvider.getBotName())
                 .mockNext(MockedGHRepository.builder())
-                .commitStatuses(pullRequestJson.commitSHA(), "Format");
+                .commitStatuses(pullRequestJson.commitSHA(), "Format")
+                .commitStatusCreator(botContextProvider.getBotName());
 
         TestModel.given(
                 mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
