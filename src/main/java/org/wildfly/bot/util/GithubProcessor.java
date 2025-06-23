@@ -319,7 +319,7 @@ public class GithubProcessor {
         }
 
         if (!labelsToRemove.isEmpty()) {
-            String logMessage = "Removing the following labels: %s".formatted(labelsToAdd);
+            String logMessage = "Removing the following labels: %s".formatted(labelsToRemove);
             if (!LOG.isPullRequestSet()) {
                 logMessage = "Pull Request [#%d] - %s".formatted(pullRequest.getNumber(), logMessage);
             }
