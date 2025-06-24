@@ -34,10 +34,6 @@ public class WildFlyConfigFile {
             projectPattern = Pattern.compile(String.format(RuntimeConstants.PROJECT_PATTERN_REGEX, key), Pattern.DOTALL);
         }
 
-        public Pattern getIssuePattern() {
-            return projectPattern;
-        }
-
         public Pattern getProjectPattern() {
             return projectPattern;
         }
