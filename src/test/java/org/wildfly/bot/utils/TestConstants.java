@@ -11,4 +11,7 @@ public class TestConstants {
     public static final String INVALID_TITLE = "Invalid title";
     public static final String INVALID_DESCRIPTION = "Invalid description";
     public static final String INVALID_COMMIT_MESSAGE = "Invalid commit message";
+
+    private TestConstants() {
+    }
 }
