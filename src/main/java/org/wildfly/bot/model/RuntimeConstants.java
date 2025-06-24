@@ -53,4 +53,7 @@ public class RuntimeConstants {
 
             Please fix these rules according to these guidelines.
             """;
+
+    private RuntimeConstants() {
+    }
 }
