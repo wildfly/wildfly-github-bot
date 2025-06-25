@@ -9,6 +9,7 @@ import io.quarkus.runtime.StartupEvent;
 import org.wildfly.bot.config.WildFlyBotConfig;
 import org.wildfly.bot.model.RuntimeConstants;
 import org.wildfly.bot.model.WildFlyConfigFile;
+import org.wildfly.bot.util.GitHubBotContextProvider;
 import org.wildfly.bot.util.GithubProcessor;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
@@ -50,6 +51,9 @@ public class LifecycleProcessor {
 
     @Inject
     GitHubConfigFileProvider fileProvider;
+
+    @Inject
+    GitHubBotContextProvider botContextProvider;
 
     @Inject
     @Any
@@ -112,10 +116,10 @@ public class LifecycleProcessor {
                     LOG.warnf(
                             "Your installation has been suspended. No events will be received until you unsuspend the github app installation.");
                 } else {
-                    LOG.errorf(e, "%s is unable to start.", wildFlyBotConfig.githubName());
+                    LOG.errorf(e, "%s is unable to start.", botContextProvider.getBotName());
                 }
             }
-            LOG.errorf(e, "Unable to correctly start %s for following installation id [%d]", wildFlyBotConfig.githubName(),
+            LOG.errorf(e, "Unable to correctly start %s for following installation id [%d]", botContextProvider.getBotName(),
                     installationId);
         }
     }
@@ -124,14 +128,14 @@ public class LifecycleProcessor {
         GHAppInstallation installation = installationPayload.getInstallation();
         LOG.infof(
                 "%s has been suspended for following installation id: %d and will not be able to listen for any incoming Events.",
-                wildFlyBotConfig.githubName(), installation.getAppId());
+                botContextProvider.getBotName(), installation.getAppId());
     }
 
     void unsuspendedInstallation(@Installation.Unsuspend GHEventPayload.Installation installationPayload) {
         GHAppInstallation installation = installationPayload.getInstallation();
         LOG.infof(
                 "%s has been unsuspended for following installation id: %d and has started to listen for new incoming Events.",
-                wildFlyBotConfig.githubName(), installation.getAppId());
+                botContextProvider.getBotName(), installation.getAppId());
     }
 
     private String prettyString(List<String> problems) {

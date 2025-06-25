@@ -31,6 +31,7 @@ public class MockedGHRepository extends Mockable {
     private final Set<String> directories = new LinkedHashSet<>();
     private final Set<String> files = new LinkedHashSet<>();
     private final Set<String> commitStatuses = new LinkedHashSet<>();
+    private String commitStatusCreator;
     private String repository = TestConstants.TEST_REPO;
 
     private MockedGHRepository() {
@@ -83,6 +84,11 @@ public class MockedGHRepository extends Mockable {
         return this;
     }
 
+    public MockedGHRepository commitStatusCreator(String creator) {
+        this.commitStatusCreator = creator;
+        return this;
+    }
+
     @Override
     public AtomicLong mock(GitHubMockContext mocks, AtomicLong idGenerator) throws IOException {
         GHRepository repository = mocks.repository(this.repository);
@@ -91,6 +97,13 @@ public class MockedGHRepository extends Mockable {
         for (String commitStatus : commitStatuses) {
             GHCommitStatus mockedCommitStatus = Mockito.mock(GHCommitStatus.class);
             Mockito.when(mockedCommitStatus.getContext()).thenReturn(commitStatus);
+
+            if (this.commitStatusCreator != null) {
+                GHUser mockedCreator = Mockito.mock(GHUser.class);
+                Mockito.when(mockedCreator.getLogin()).thenReturn(this.commitStatusCreator);
+                Mockito.when(mockedCommitStatus.getCreator()).thenReturn(mockedCreator);
+            }
+
             mockedCommitStatuses.add(mockedCommitStatus);
         }
 

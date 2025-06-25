@@ -17,6 +17,7 @@ import org.wildfly.bot.format.DescriptionCheck;
 import org.wildfly.bot.format.TitleCheck;
 import org.wildfly.bot.model.RegexDefinition;
 import org.wildfly.bot.model.WildFlyConfigFile;
+import org.wildfly.bot.util.GitHubBotContextProvider;
 import org.wildfly.bot.util.GithubProcessor;
 import org.wildfly.bot.util.PullRequestLogger;
 
@@ -57,6 +58,9 @@ public class PullRequestFormatProcessor {
     @Inject
     WildFlyBotConfig wildFlyBotConfig;
 
+    @Inject
+    GitHubBotContextProvider botContextProvider;
+
     void postDependabotInfo(@PullRequest.Opened GHEventPayload.PullRequest pullRequestPayload,
             @ConfigFile(CONFIG_FILE_NAME) WildFlyConfigFile wildflyConfigFile) throws IOException {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
@@ -89,7 +93,8 @@ public class PullRequestFormatProcessor {
             String sha = pullRequest.getHead().getSha();
             for (GHCommitStatus commitStatus : pullRequest.getRepository().listCommitStatuses(sha)) {
                 // only update format check, if it was created
-                if (commitStatus.getContext().equals(CHECK_NAME)) {
+                if (CHECK_NAME.equals(commitStatus.getContext())
+                        && commitStatus.getCreator().getLogin().equals(botContextProvider.getBotName())) {
                     githubProcessor.commitStatusSuccess(pullRequest, CHECK_NAME, "Valid [Skipped]");
                 }
             }
@@ -195,7 +200,7 @@ public class PullRequestFormatProcessor {
     }
 
     private void appendInfoFooter(StringBuilder sb) {
-        String footer = BOT_REPO_REF_FOOTER.formatted((wildFlyBotConfig.githubName()));
+        String footer = BOT_REPO_REF_FOOTER.formatted(botContextProvider.getBotName());
         if (!sb.toString().contains(footer)) {
             if (!sb.toString().isEmpty()) {
                 sb.append("\n\n");

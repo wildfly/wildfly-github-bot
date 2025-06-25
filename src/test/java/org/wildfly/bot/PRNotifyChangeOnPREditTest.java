@@ -12,7 +12,7 @@ import org.kohsuke.github.GHPerson;
 import org.kohsuke.github.GHUser;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.wildfly.bot.config.WildFlyBotConfig;
+import org.wildfly.bot.util.GitHubBotContextProvider;
 import org.wildfly.bot.utils.WildflyGitHubBotTesting;
 import org.wildfly.bot.utils.mocking.Mockable;
 import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
@@ -35,7 +35,7 @@ public class PRNotifyChangeOnPREditTest {
     private Mockable mockedContext;
 
     @Inject
-    WildFlyBotConfig wildFlyBotConfig;
+    GitHubBotContextProvider botContextProvider;
 
     @BeforeAll
     static void setPullRequestJson() throws Exception {
@@ -93,7 +93,7 @@ public class PRNotifyChangeOnPREditTest {
                       notify: [Butterfly, Duke]""";
 
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
-                .comment("/cc @Duke [WFLY]", wildFlyBotConfig.githubName())
+                .comment("/cc @Duke [WFLY]", botContextProvider.getBotName())
                 .commit("WFLY-123 commit")
                 .files("src/pom.xml", "app/pom.xml")
                 .reviewers("Tadpole")
@@ -162,7 +162,7 @@ public class PRNotifyChangeOnPREditTest {
                       notify: [Tadpole]""";
 
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
-                .comment("/cc @Tadpole [previous rule]", wildFlyBotConfig.githubName())
+                .comment("/cc @Tadpole [previous rule]", botContextProvider.getBotName())
                 .commit("WFLY-123 commit");
 
         TestModel.given(

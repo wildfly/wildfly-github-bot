@@ -7,8 +7,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
-import org.wildfly.bot.config.WildFlyBotConfig;
 import org.wildfly.bot.model.RuntimeConstants;
+import org.wildfly.bot.util.GitHubBotContextProvider;
 import org.wildfly.bot.utils.WildflyGitHubBotTesting;
 import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
 import org.wildfly.bot.utils.model.Action;
@@ -39,7 +39,7 @@ public class PRAppendingMessageTest {
     private static final String WITH_DELIMINER = BOT_MESSAGE_DELIMINER + "\n\n";
 
     @Inject
-    WildFlyBotConfig wildFlyBotConfig;
+    GitHubBotContextProvider botContextProvider;
 
     PullRequestJson pullRequestJson;
 
@@ -314,7 +314,7 @@ public class PRAppendingMessageTest {
                 .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     String repoRef = jiraLinkDescription + "\n\n"
-                            + BOT_REPO_REF_FOOTER.formatted(wildFlyBotConfig.githubName());
+                            + BOT_REPO_REF_FOOTER.formatted(botContextProvider.getBotName());
                     Mockito.verify(mocks.pullRequest(pullRequestJson.id())).setBody(repoRef);
                 });
     }

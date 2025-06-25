@@ -58,6 +58,9 @@ public class GithubProcessor {
     WildFlyBotConfig wildFlyBotConfig;
 
     @Inject
+    GitHubBotContextProvider botContextProvider;
+
+    @Inject
     Mailer mailer;
 
     @ConfigProperty(name = "quarkus.mailer.username")
@@ -65,7 +68,7 @@ public class GithubProcessor {
 
     @PostConstruct
     void construct() {
-        SKIP_FORMAT_COMMAND = Pattern.compile("@%s skip format".formatted(wildFlyBotConfig.githubName()),
+        SKIP_FORMAT_COMMAND = Pattern.compile("@%s skip format".formatted(botContextProvider.getBotName()),
                 Pattern.DOTALL | Pattern.LITERAL);
     }
 
@@ -179,7 +182,7 @@ public class GithubProcessor {
     private void updateCCMentions(GHPullRequest pullRequest, SequencedMap<String, List<String>> newMentionsWithRules)
             throws IOException {
         for (GHIssueComment comment : pullRequest.listComments()) {
-            if (comment.getUser().getLogin().equals(wildFlyBotConfig.githubName())
+            if (comment.getUser().getLogin().equals(botContextProvider.getBotName())
                     && comment.getBody().startsWith("/cc")) {
                 if (newMentionsWithRules.isEmpty()) {
                     if (wildFlyBotConfig.isDryRun()) {
@@ -340,7 +343,7 @@ public class GithubProcessor {
         boolean update = false;
         String firstLine = commentBody.split("\n")[0];
         for (GHIssueComment comment : pullRequest.listComments()) {
-            if (comment.getUser().getLogin().equals(wildFlyBotConfig.githubName())
+            if (comment.getUser().getLogin().equals(botContextProvider.getBotName())
                     && comment.getBody().startsWith(firstLine)) {
                 if (errors == null || errors.isEmpty()) {
                     if (wildFlyBotConfig.isDryRun()) {

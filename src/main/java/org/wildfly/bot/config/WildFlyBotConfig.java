@@ -9,9 +9,6 @@ import java.util.Optional;
 @ConfigMapping(prefix = "wildfly-bot")
 public interface WildFlyBotConfig {
 
-    @WithDefault("wildfly-bot[bot]")
-    String githubName();
-
     Optional<Boolean> dryRun();
 
     default boolean isDryRun() {
