@@ -185,6 +185,7 @@ public class PRTriggerTest {
                     Mockito.verify(repo, Mockito.atMostOnce()).listLabels();
                     Mockito.verify(repo, Mockito.atMostOnce()).createLabel(ArgumentMatchers.anyString(),
                             ArgumentMatchers.anyString());
+                    Mockito.verify(repo, Mockito.atMostOnce()).queryCommits();
                     Mockito.verifyNoMoreInteractions(repo);
                 });
     }

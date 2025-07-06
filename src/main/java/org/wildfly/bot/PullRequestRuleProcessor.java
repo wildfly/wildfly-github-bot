@@ -46,6 +46,10 @@ public class PullRequestRuleProcessor {
             return;
         }
 
+        if (githubProcessor.hasDuplicateCommitInBase(pullRequest, pullRequestPayload.getRepository())) {
+            return;
+        }
+
         GHRepository repository = pullRequest.getRepository();
         SequencedMap<String, List<String>> ccMentionsWithRules = new LinkedHashMap<>();
         Set<String> reviewers = new HashSet<>();
