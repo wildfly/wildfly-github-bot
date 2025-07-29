@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class MockedGHPullRequest extends Mockable {
 
-    private final long pullRequest;
+    private final long pullRequestId;
     private Set<String> prFiles = new LinkedHashSet<>();
     private String description;
     private final List<Tuple2<String, String>> comments = new ArrayList<>();
@@ -34,12 +34,12 @@ public class MockedGHPullRequest extends Mockable {
     private Boolean mergeable = Boolean.TRUE;
     private boolean isDraft = false;
 
-    private MockedGHPullRequest(long pullRequest) {
-        this.pullRequest = pullRequest;
+    private MockedGHPullRequest(long pullRequestId) {
+        this.pullRequestId = pullRequestId;
     }
 
-    public static MockedGHPullRequest builder(long pullRequest) {
-        return new MockedGHPullRequest(pullRequest);
+    public static MockedGHPullRequest builder(long pullRequestId) {
+        return new MockedGHPullRequest(pullRequestId);
     }
 
     public MockedGHPullRequest files(String... filenames) {
@@ -53,7 +53,7 @@ public class MockedGHPullRequest extends Mockable {
         return this;
     }
 
-    public MockedGHPullRequest describtion(String description) {
+    public MockedGHPullRequest description(String description) {
         this.description = description;
         return this;
     }
@@ -65,6 +65,27 @@ public class MockedGHPullRequest extends Mockable {
 
     public MockedGHPullRequest commit(String commitMessage) {
         return commit(MockedCommit.commit(commitMessage));
+    }
+
+    public MockedGHPullRequest fixup(MockedCommit commit) {
+        if (this.commits.size() <= 1) {
+            throw new IllegalStateException("Cannot fixup commit when there is no previous commit");
+        }
+        int commitIndex = this.commits.indexOf(commit);
+        if (commitIndex < 1) {
+            throw new IllegalStateException("Cannot fixup commit that does not exist or is the first commit");
+        }
+        this.commits.remove(commitIndex); // simulate fixup by removing the commit
+        return this;
+    }
+
+    public MockedGHPullRequest reword(MockedCommit commit, String newCommitMessage) {
+        int commitIndex = this.commits.indexOf(commit);
+        if (commitIndex < 0) {
+            throw new IllegalArgumentException("Commit to reword not found: " + commit);
+        }
+        this.commits.set(commitIndex, MockedCommit.commit(newCommitMessage));
+        return this;
     }
 
     public MockedGHPullRequest reviewers(String... reviewers) {
@@ -88,7 +109,7 @@ public class MockedGHPullRequest extends Mockable {
     }
 
     public AtomicLong mock(GitHubMockContext mocks, AtomicLong idGenerator) throws IOException {
-        GHPullRequest pullRequest = mocks.pullRequest(this.pullRequest);
+        GHPullRequest pullRequest = mocks.pullRequest(this.pullRequestId);
 
         List<GHPullRequestFileDetail> mockedFileDetails = new ArrayList<>();
         for (String filename : prFiles) {
