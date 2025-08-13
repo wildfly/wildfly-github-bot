@@ -282,6 +282,10 @@ public class GithubProcessor {
             return "pull request being a draft";
         }
 
+        if (pullRequest.getLabels().stream().anyMatch(ghLabel -> ghLabel.getName().equals(RuntimeConstants.LABEL_WIP))) {
+            return "work in progress label found";
+        }
+
         return null;
     }
 
