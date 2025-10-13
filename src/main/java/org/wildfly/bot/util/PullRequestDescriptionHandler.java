@@ -4,7 +4,7 @@ import static java.util.Objects.requireNonNull;
 import static org.wildfly.bot.model.RuntimeConstants.BOT_JIRA_LINKS_HEADER;
 import static org.wildfly.bot.model.RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE;
 import static org.wildfly.bot.model.RuntimeConstants.BOT_JIRA_LINK_TEMPLATE;
-import static org.wildfly.bot.model.RuntimeConstants.BOT_MESSAGE_DELIMINER;
+import static org.wildfly.bot.model.RuntimeConstants.BOT_MESSAGE_DELIMITER;
 import static org.wildfly.bot.model.RuntimeConstants.BOT_MESSAGE_WARNING;
 import static org.wildfly.bot.model.RuntimeConstants.BOT_REPO_REF_FOOTER;
 import static org.wildfly.bot.util.Strings.blockQuoted;
@@ -47,14 +47,14 @@ public final class PullRequestDescriptionHandler {
 
         String body = pullRequest.getBody();
         final String normalizedFullBody = (body != null) ? body.replaceAll("\\r", "") : "";
-        final int startOfBotBodyIndex = normalizedFullBody.lastIndexOf("\n" + BOT_MESSAGE_DELIMINER);
+        final int startOfBotBodyIndex = normalizedFullBody.lastIndexOf("\n" + BOT_MESSAGE_DELIMITER);
 
         if (startOfBotBodyIndex != -1) {
             this.userBody = normalizedFullBody.substring(0, startOfBotBodyIndex);
             this.botBody = normalizedFullBody.substring(startOfBotBodyIndex);
         } else {
             this.userBody = normalizedFullBody;
-            this.botBody = ""; // empty
+            this.botBody = ""; // Empty
         }
 
         List<String> textSources = new ArrayList<>(); // title + commit messages
@@ -86,7 +86,7 @@ public final class PullRequestDescriptionHandler {
     public Optional<String> generateFullDescriptionBody() {
         StringBuilder newBotBody = generateBotBodySection();
         if (newBotBody.toString().equals(botBody)) {
-            return Optional.empty(); // no changes in the bot body
+            return Optional.empty(); // No changes in the bot body
         }
         String fullDescription = generateUserBodySection()
                 .append(newBotBody)
@@ -102,12 +102,12 @@ public final class PullRequestDescriptionHandler {
         StringBuilder botBodySection = new StringBuilder();
 
         if (missingIssueLinksWithinUserBody.isEmpty()) {
-            return botBodySection; // empty bot body section if no issues are missing
+            return botBodySection; // Empty bot body section if no issues are missing
         }
 
         botBodySection
                 .append("\n")
-                .append(BOT_MESSAGE_DELIMINER)
+                .append(BOT_MESSAGE_DELIMITER)
                 .append("\n\n")
                 .append(blockQuoted(BOT_MESSAGE_WARNING))
                 .append("\n\n")

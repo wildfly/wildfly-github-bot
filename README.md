@@ -1,7 +1,7 @@
 # wildfly-github-bot
 wildfly-github-bot helps you to keep your pull requests in the correct format.
 
-This project is build with usage of Quarkus GitHub App: https://quarkiverse.github.io/quarkiverse-docs/quarkus-github-app/dev/index.html
+This project is built with usage of Quarkus GitHub App: https://quarkiverse.github.io/quarkiverse-docs/quarkus-github-app/dev/index.html
 
 ## Functionality
 
@@ -124,15 +124,15 @@ wildfly:
     - user@acme.org
 ```
 1. `id` - The unique identifier of a rule.
-2. `title`- Checks the title of a PR by using a regular expression generated from `projectKey` field, which is by default "WFLY". You can find more information in [wildfly-bot-config-example.yml](wildfly-bot-config-example.yml)
-3. `description`- Checks comments of a PR by using individual regular expressions in the `pattern` fields under `regexes`.
+2. `title` - Checks the title of a PR by using a regular expression generated from `projectKey` field, which is by default "WFLY". You can find more information in [wildfly-bot-config-example.yml](wildfly-bot-config-example.yml)
+3. `description` - Checks comments of a PR by using individual regular expressions in the `pattern` fields under `regexes`.
     > For example, the correct format is "https://issues.jboss.org/browse/WFLY-11".
 4. `message` - The text of an error message in the respective check.
 5. `emails` - List of emails to receive notifications.
 
 > **_NOTE:_**  `title` and `commit` are enabled by default. More [here](wildfly-bot-config-example.yml).
 
-Also, there is a possibility to select checks that you need. Just left in the `wildfly-bot.yml` file checks you need.
+Also, there is a possibility to select checks that you need. Just leave in the `wildfly-bot.yml` file the checks you need.
 
 Like this:
 ```yaml
@@ -148,7 +148,7 @@ wildfly:
     title:
       message: Wrong content of the PR title
   emails:
-    - nonexisistingemail@whatever.com
+    - nonexistingemail@whatever.com
     - whoever@nonexistingmailingservice.com
 ```
 
@@ -177,7 +177,7 @@ For such use case, we have profile aware tests, where by default we test **SSE**
 ### Requirements
 
  - JDK 17+ with **JAVA_HOME** configured appropriately
- - OpenShift (e.g, https://developers.redhat.com/developer-sandbox)
+ - OpenShift (e.g., https://developers.redhat.com/developer-sandbox)
  - [OpenShift CLI](https://docs.openshift.com/container-platform/4.7/cli_reference/openshift_cli/getting-started-cli.html)
  - Apache Maven 3.8.6
 

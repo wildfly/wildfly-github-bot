@@ -15,14 +15,14 @@ import org.kohsuke.github.GHRepository;
  * Due to events retrieved from GitHub's API and events received as SSE,
  * we do not have fully compatible payloads. Thus, if the payload received
  * from SSE has some extra parameters, which are missing in the event retrieved
- * from GitHub's API & you are using these parameters in your reactive CDI
+ * from GitHub's API and you are using these parameters in your reactive CDI
  * beans, you should manually update those fields.
- * For such case you receive a raw value of created {@link GitHubEvent} and
- * you can then create new object with updated values.
- * You can expect authenticated {@link GHRepository} instance for retrieving
+ * For such cases, you receive a raw value of the created {@link GitHubEvent} and
+ * you can then create a new object with updated values.
+ * You can expect an authenticated {@link GHRepository} instance for retrieving
  * the additional info.
- * This would usually involve static info, where there are no further requests made.
- * Opposite to most listSomething methods, which actually fetch up-to-date info.
+ * This would usually involve static info, where there are no further requests made,
+ * as opposed to most listSomething methods, which actually fetch up-to-date info.
  */
 @FunctionalInterface
 public interface GitHubEventPreprocessor {
@@ -47,7 +47,7 @@ public interface GitHubEventPreprocessor {
 
         @Override
         public GitHubEvent process(GitHubEvent gitHubEvent, GHRepository repository) throws JsonProcessingException {
-            // due to static initialization in INSTANCE = new ... we need to inject programmatically
+            // Due to static initialization in INSTANCE = new ... we need to inject programmatically
             if (launchMode == null) {
                 launchMode = Arc.container().instance(LaunchMode.class).get();
             }

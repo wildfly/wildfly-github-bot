@@ -28,7 +28,7 @@ Now you have this repository on your computer!
 ## Issues
 The WildFly Github bot project currently uses Github issues as means of filing new issues.
 
-To create an issue simple click on tab "Issues" and then on the button "New issue"
+To create an issue simply click on tab "Issues" and then on the button "New issue"
 
 ### Good First Issues
 If you would like to contribute, however you are not quite confident, do not hesitate to start with the `good-first-issue` labeled issues. These are a triaged set of issues that are great for getting started on our project. These can be found [here](https://github.com/wildfly/wildfly-github-bot/labels/good%20first%20issue).
@@ -48,7 +48,7 @@ You will need:
 
 First `cd` to the directory where you cloned the project (eg: `cd wildfly-github-bot`)
 
-Add a remote ref to upstream, for pulling future updates, i.e. synchronizing the this repository.
+Add a remote ref to upstream, for pulling future updates, i.e. synchronizing this repository.
 For example:
 
 ```
@@ -76,8 +76,8 @@ When submitting a PR, please keep the following guidelines in mind:
 
 1. In general, it's good practice to squash all of your commits into a single commit. For larger changes, it's ok to have multiple meaningful commits. If you need help with squashing your commits, feel free to ask us how to do this on your pull request. We're more than happy to help!
 
-2. Please include the github issue you worked on in the description of your pull request and in your commit message. For example, working on issue 123 would result in description stating something as `Resolves #123`. This is done in order to automatically link issues and close them with merging the PullRequest see [here](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword)
+2. Please include the github issue you worked on in the description of your pull request and in your commit message. For example, working on issue 123 would result in a description stating something like `Resolves #123`. This is done in order to automatically link issues and close them when merging the Pull Request, see [here](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword)
 
-3. If it so happened, that you solved multiple issues in the same Pull Request, please include all of them in the description.
+3. If it so happens that you solved multiple issues in the same Pull Request, please include all of them in the description.
 
 For example a Pull Request can look like [this](https://github.com/wildfly/wildfly-github-bot/pull/147)

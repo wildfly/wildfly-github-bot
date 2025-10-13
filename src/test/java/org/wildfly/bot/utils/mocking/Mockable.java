@@ -18,14 +18,14 @@ import java.util.concurrent.atomic.AtomicLong;
  * Where you would create a {@code Mockable} for your specific domain and can
  * chain other {@code Mockable}-s together, when mocking. See usage in tests.
  *
- * You can add your implementation of Mockable into {@code requiredMockables} Set.
- * After all registered {@code Mockable}-s (by {@code mockNext}) have been executed
- * and no instances from {@code requiredMockables} have been found, then default implementation
+ * You can add your implementation of Mockable into the {@code requiredMockables} Set.
+ * After all registered {@code Mockable}s (by {@code mockNext}) have been executed
+ * and no instances from {@code requiredMockables} have been found, the default implementation
  * will be executed. This is the implementation you add to the {@code requiredMockables}.
  *
  * Note: Only one {@code Mockable} per domain is allowed to be mocked.
  *
- * Parallel execution is not supported as we are relaying static variables.
+ * Parallel execution is not supported as we are relying on static variables.
  */
 public abstract class Mockable {
 
@@ -54,8 +54,8 @@ public abstract class Mockable {
      * Implement this method to mock your specific domain.
      *
      * @param mocks context passed into {@code io.quarkiverse.githubapp.testing.dsl.GitHubMockVerification} interface
-     * @param idGenerator Common aggregate for mocked id generation, such that no duplicate id-s are created.
-     * @return {code idGenerator} should be returned after it was used.
+     * @param idGenerator Common aggregate for mocked ID generation, such that no duplicate IDs are created.
+     * @return {@code idGenerator} should be returned after it was used.
      * @throws IOException
      */
     abstract AtomicLong mock(GitHubMockContext mocks, AtomicLong idGenerator) throws IOException;
@@ -66,7 +66,7 @@ public abstract class Mockable {
     }
 
     /**
-     * Runs chain of {@code Mockable}-s and checks for duplicates and executes defaults, if no overrides were found.
+     * Runs chain of {@code Mockable}s and checks for duplicates and executes defaults if no overrides were found.
      */
     private void mockNext(GitHubMockContext mocks, AtomicLong idGenerator) throws IOException {
         idGenerator = this.mock(mocks, idGenerator);
@@ -79,7 +79,7 @@ public abstract class Mockable {
         if (previousMock != null) {
             previousMock.mockNext(mocks, idGenerator);
         } else {
-            // executes default implementations if no overrides provided
+            // Executes default implementations if no overrides provided
             for (Mockable requiredMockable : requiredMockables) {
                 Class<?> requiredMockableClazz = requiredMockable.getClass();
                 if (executedMockables.stream().noneMatch(mockable -> mockable.getClass().equals(requiredMockableClazz))) {

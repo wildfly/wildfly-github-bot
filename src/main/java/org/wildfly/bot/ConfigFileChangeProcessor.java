@@ -125,7 +125,7 @@ public class ConfigFileChangeProcessor {
                     try {
                         repository.getDirectoryContent(directory);
                     } catch (IOException e) {
-                        // non-existing directory or it is not a file
+                        // Non-existing directory or it is not a file
                         if (e instanceof GHFileNotFoundException ||
                                 (e instanceof HttpException && !e.getMessage().startsWith(
                                         "Server returned HTTP response code: 200, message: 'null' for URL: https://api.github.com/repos/"))) {

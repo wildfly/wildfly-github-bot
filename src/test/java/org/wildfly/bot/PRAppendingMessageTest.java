@@ -20,7 +20,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.wildfly.bot.model.RuntimeConstants.BOT_JIRA_LINKS_HEADER;
 import static org.wildfly.bot.model.RuntimeConstants.BOT_JIRA_LINK_COMMENT_TEMPLATE;
-import static org.wildfly.bot.model.RuntimeConstants.BOT_MESSAGE_DELIMINER;
+import static org.wildfly.bot.model.RuntimeConstants.BOT_MESSAGE_DELIMITER;
 import static org.wildfly.bot.model.RuntimeConstants.BOT_MESSAGE_WARNING;
 import static org.wildfly.bot.model.RuntimeConstants.BOT_REPO_REF_FOOTER;
 import static org.wildfly.bot.util.Strings.blockQuoted;
@@ -50,7 +50,7 @@ class PRAppendingMessageTest {
 
             %%s""" // due to wildFlyBotConfig.githubName() not being available at this point
             .formatted(
-                    BOT_MESSAGE_DELIMINER,
+                    BOT_MESSAGE_DELIMITER,
                     blockQuoted(BOT_MESSAGE_WARNING),
                     blockQuoted(BOT_JIRA_LINKS_HEADER));
 

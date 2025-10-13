@@ -34,12 +34,12 @@ public class LifecycleProcessor {
     public static final String EMAIL_TEXT = """
             Hello,
 
-            The configuration file %s has some invalid rules in the following github repository: %s. The following problems were detected:
+            The configuration file %s has some invalid rules in the following GitHub repository: %s. The following problems were detected:
 
             %s
 
             ---
-            This is generated message, please do not respond.""";
+            This is a generated message, please do not respond.""";
 
     private static final Logger LOG = Logger.getLogger(LifecycleProcessor.class);
 
