@@ -63,7 +63,7 @@ public class PushEventTest {
 
     /**
      * First 2 Pull Requests have {@link RuntimeConstants#LABEL_NEEDS_REBASE} applied and
-     * other 2 do not. Also, every even Pull Request is not mergable.
+     * other 2 do not. Also, every even Pull Request is not mergeable.
      * Note: We are not mocking PushCommit, that's why we have exception thrown in the log of the tests
      */
     @Test
@@ -226,12 +226,12 @@ public class PushEventTest {
                 .then(mocks -> {
                     Assertions.assertEquals(1, inMemoryLogHandler.getRecords().stream().filter(
                             logRecord -> logRecord.getMessage()
-                                    .equals("Scheduling a mergable status update for open pull requests for new head [%s - \"%s\"]"))
+                                    .equals("Scheduling a mergeable status update for open pull requests for new head [%s - \"%s\"]"))
                             .count());
                     Thread.sleep(sleepTimeMillis);
                     Assertions.assertEquals(2, inMemoryLogHandler.getRecords().stream().filter(
                             logRecord -> logRecord.getMessage()
-                                    .equals("Scheduling a mergable status update for open pull requests for new head [%s - \"%s\"]"))
+                                    .equals("Scheduling a mergeable status update for open pull requests for new head [%s - \"%s\"]"))
                             .count());
                 });
     }

@@ -14,7 +14,7 @@ public class RuntimeConstants {
 
     public static final String LABEL_FIX_ME = "fix-me";
 
-    public static final String BOT_MESSAGE_DELIMINER = "\n____";
+    public static final String BOT_MESSAGE_DELIMITER = "\n____";
 
     public static final String BOT_MESSAGE_WARNING = "[!WARNING]\nThis **section** is automatically managed by the **WildFly Bot**. Manual modifications will be **overwritten**.";
 

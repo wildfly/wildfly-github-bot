@@ -37,7 +37,7 @@ public class PullRequestLabelProcessor {
         List<String> labelsToAdd = new ArrayList<>();
         List<String> labelsToRemove = new ArrayList<>(List.of(RuntimeConstants.LABEL_FIX_ME));
 
-        // By default, if we do not know the state, consider it mergable.
+        // By default, if we do not know the state, consider it mergeable.
         if (!Optional.ofNullable(pullRequest.getMergeable()).orElse(true)) {
             labelsToAdd.add(RuntimeConstants.LABEL_NEEDS_REBASE);
         } else {

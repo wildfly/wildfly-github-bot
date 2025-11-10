@@ -17,8 +17,8 @@ public class PushEventPreprocessor implements GitHubEventPreprocessor {
 
     /**
      * @implNote We simply copy the details of the latest head commit into a new field "head_commit". We do not
-     *           query the commit's details from GitHub, which would be done by repository.getCommit(sha). As we don't need
-     *           all the info and received info is sufficient.
+     *           query the commit's details from GitHub, which would be done by repository.getCommit(sha), as we don't need
+     *           all the info and the received info is sufficient.
      */
     @Override
     public GitHubEvent process(GitHubEvent gitHubEvent, GHRepository repository) throws JsonProcessingException {

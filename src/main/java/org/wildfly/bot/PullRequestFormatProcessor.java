@@ -81,7 +81,7 @@ public class PullRequestFormatProcessor {
         if (message != null) {
             String sha = pullRequest.getHead().getSha();
             for (GHCommitStatus commitStatus : pullRequest.getRepository().listCommitStatuses(sha)) {
-                // only update format check, if it was created
+                // Only update format check if it was created
                 if (CHECK_NAME.equals(commitStatus.getContext())
                         && commitStatus.getCreator().getLogin().equals(botContextProvider.getBotName())) {
                     githubProcessor.commitStatusSuccess(pullRequest, CHECK_NAME, "Valid [Skipped]");

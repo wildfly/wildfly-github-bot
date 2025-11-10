@@ -26,7 +26,7 @@ public class CommitMessagesCheck implements Check {
     @Override
     public String check(GHPullRequest pullRequest) throws IOException {
         if (pullRequest.getUser().getLogin().equals(DEPENDABOT)) {
-            // skip for dependabot for now
+            // Skip for Dependabot for now
             return null;
         }
 

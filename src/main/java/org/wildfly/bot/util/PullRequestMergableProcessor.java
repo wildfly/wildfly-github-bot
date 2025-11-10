@@ -22,11 +22,11 @@ import java.util.Queue;
 import java.util.function.Function;
 
 /**
- * This class was designed to retrieve mergable status for all pull
+ * This class was designed to retrieve mergeable status for all pull
  * requests in a repository upon {@code io.quarkiverse.githubapp.event.Push} event.
  * This results in querying and listing all repository's open pull requests.
  * After a certain timeout it will re-query the repository's pull requests
- * again and update these pull requests if GitHub has updated the mergable
+ * again and update these pull requests if GitHub has updated the mergeable
  * status for individual pull requests. To adjust the timeout time please
  * see {@see org.wildfly.bot.config.WildFlyBotConfig#timeout()}
  * <p>
@@ -56,7 +56,7 @@ public class PullRequestMergableProcessor {
                 try {
                     if (wildFlyBotConfig.isDryRun()) {
                         LOGGER.info(
-                                RuntimeConstants.DRY_RUN_PREPEND.formatted("Sending a request to GitHub for mergable status"));
+                                RuntimeConstants.DRY_RUN_PREPEND.formatted("Sending a request to GitHub for mergeable status"));
                     } else {
                         pullRequest1.getMergeable();
                     }
@@ -72,11 +72,11 @@ public class PullRequestMergableProcessor {
             List<String> labelsToRemove = new ArrayList<>();
             if (wildFlyBotConfig.isDryRun()) {
                 LOGGER.info(RuntimeConstants.DRY_RUN_PREPEND
-                        .formatted("Retrieving mergable status and then we would apply labels accordingly"));
+                        .formatted("Retrieving mergeable status and then we would apply labels accordingly"));
             } else {
-                Optional<Boolean> mergable = Optional.ofNullable(pullRequest.getMergeable());
-                if (mergable.isPresent()) {
-                    if (mergable.get()) {
+                Optional<Boolean> mergeable = Optional.ofNullable(pullRequest.getMergeable());
+                if (mergeable.isPresent()) {
+                    if (mergeable.get()) {
                         labelsToRemove.add(RuntimeConstants.LABEL_NEEDS_REBASE);
                     } else {
                         labelsToAdd.add(RuntimeConstants.LABEL_NEEDS_REBASE);
@@ -100,11 +100,11 @@ public class PullRequestMergableProcessor {
         GHRepository repository = pushPayload.getRepository();
         GHEventPayload.Push.PushCommit headCommit = pushPayload.getHeadCommit();
 
-        Uni<List<GHPullRequest>> mergableStatusUpdateUni = Uni.createFrom()
+        Uni<List<GHPullRequest>> mergeableStatusUpdateUni = Uni.createFrom()
                 // Collect all Pull Requests
                 .item(repository.queryPullRequests().state(GHIssueState.OPEN).base(RuntimeConstants.MAIN_BRANCH).list())
                 .invoke(() -> LOGGER.infof(
-                        "Scheduling a mergable status update for open pull requests for new head [%s - \"%s\"]",
+                        "Scheduling a mergeable status update for open pull requests for new head [%s - \"%s\"]",
                         headCommit.getSha(), headCommit.getMessage()))
                 .map(ghPullRequests -> {
                     try {
@@ -113,7 +113,7 @@ public class PullRequestMergableProcessor {
                         throw new RuntimeException(e);
                     }
                 })
-                // Prompt GitHub to recalculate mergable
+                // Prompt GitHub to recalculate mergeable status
                 .call(combineUnis(pollGitHub::apply)::apply)
                 // Give GitHub some time
                 .onItem().delayIt().by(Duration.ofSeconds(wildFlyBotConfig.timeout()))
@@ -122,7 +122,7 @@ public class PullRequestMergableProcessor {
                 // Filter failed Pull Requests
                 .call(combineUnis(applyLabels::apply)::apply);
 
-        pushPayloadsQueue.add(mergableStatusUpdateUni);
+        pushPayloadsQueue.add(mergeableStatusUpdateUni);
         subscription(null, headCommit);
     }
 
@@ -163,11 +163,11 @@ public class PullRequestMergableProcessor {
                     .toList();
             String concatenatedPRs = String.join(", ", missedPRs);
             LOGGER.warnf(
-                    "Unable to verify the mergable status for new %s branch head [%s - \"%s\"] for following pull requests: %s",
+                    "Unable to verify the mergeable status for new %s branch head [%s - \"%s\"] for following pull requests: %s",
                     RuntimeConstants.MAIN_BRANCH_REF, headCommit.getSha(), headCommit.getMessage(), concatenatedPRs);
         } else {
             LOGGER.infof(
-                    "Successfully scanned all pull requests for new %s branch head [%s - \"%s\"] and updated '%s' label accordingly. ",
+                    "Successfully scanned all pull requests for new %s branch head [%s - \"%s\"] and updated '%s' label accordingly.",
                     RuntimeConstants.MAIN_BRANCH_REF, headCommit.getSha(), headCommit.getMessage(),
                     RuntimeConstants.LABEL_NEEDS_REBASE);
         }
