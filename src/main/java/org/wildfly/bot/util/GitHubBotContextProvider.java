@@ -27,23 +27,22 @@ public class GitHubBotContextProvider {
     }
 
     private String initializeBotName(GitHubClientProvider clientProvider) {
-        String appName = null;
         try {
-            appName = clientProvider.getApplicationClient().getApp().getSlug();
-        } catch (IOException e) {
-            LOG.errorf(e, "Failed to retrieve GitHub App Name due to IOException. Using placeholder.");
-        } catch (Exception e) {
-            LOG.errorf(e, "An unexpected error occurred while retrieving GitHub App Name. Using placeholder.");
-        }
-
-        if (appName != null && !appName.isEmpty()) {
-            LOG.infof("Successfully fetched GitHub App Name: '%s'", appName);
-            return appName;
-        } else {
-            LOG.warnf("GitHub App Name was null, empty, or failed to fetch. Using placeholder '%s'.",
+            String appName = clientProvider.getApplicationClient().getApp().getSlug();
+            if (appName != null && !appName.isEmpty()) {
+                LOG.infof("Successfully fetched GitHub App Name: '%s'", appName);
+                return appName;
+            }
+            LOG.warnf("GitHub App Name was null or empty. Using placeholder '%s'.",
                     DEFAULT_APP_NAME_PLACEHOLDER);
-            return DEFAULT_APP_NAME_PLACEHOLDER;
+        } catch (IOException e) {
+            LOG.errorf("Failed to retrieve GitHub App Name due to IOException. Using placeholder '%s'.",
+                    DEFAULT_APP_NAME_PLACEHOLDER);
+        } catch (Exception e) {
+            LOG.errorf("An unexpected error occurred while retrieving GitHub App Name (%s). Using placeholder '%s'.",
+                    e.getMessage(), DEFAULT_APP_NAME_PLACEHOLDER);
         }
+        return DEFAULT_APP_NAME_PLACEHOLDER;
     }
 
     /**
