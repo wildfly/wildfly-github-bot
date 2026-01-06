@@ -12,6 +12,9 @@ import static org.wildfly.bot.model.RuntimeConstants.DEPENDABOT;
 
 public class CommitMessagesCheck implements Check {
 
+    private static final int MAX_COMMIT_MESSAGE_LENGTH = 75;
+    private static final String ELLIPSIS = "...";
+
     private final Pattern pattern;
     private final String message;
 
@@ -47,7 +50,7 @@ public class CommitMessagesCheck implements Check {
                 }
             }
             if (!oneMatched) {
-                return String.format(this.message, pattern.pattern());
+                return formatMessageWithDetailsIfNeeded(String.format(this.message, pattern.pattern()));
             }
         }
 
@@ -57,5 +60,20 @@ public class CommitMessagesCheck implements Check {
     @Override
     public String getName() {
         return "commit";
+    }
+
+    private String formatMessageWithDetailsIfNeeded(String message) {
+        if (message.length() > MAX_COMMIT_MESSAGE_LENGTH) {
+            return new StringBuilder()
+                    .append("<details>")
+                    .append("<summary>")
+                    .append(message.substring(0, MAX_COMMIT_MESSAGE_LENGTH - ELLIPSIS.length()))
+                    .append(ELLIPSIS)
+                    .append("</summary>")
+                    .append(message.substring(MAX_COMMIT_MESSAGE_LENGTH - ELLIPSIS.length()))
+                    .append("</details>")
+                    .toString();
+        }
+        return message;
     }
 }
