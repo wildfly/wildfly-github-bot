@@ -17,7 +17,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.wildfly.bot.model.RuntimeConstants.DEFAULT_COMMIT_MESSAGE;
+import static org.wildfly.bot.model.RuntimeConstants.DEFAULT_PROJECT_KEY;
 import static org.wildfly.bot.model.RuntimeConstants.PROJECT_PATTERN_REGEX;
+import static org.wildfly.bot.utils.TestConstants.INVALID_COMMIT_MESSAGE;
 
 /**
  * Tests for the WildFly -> Format -> Commit checks.
@@ -75,7 +77,7 @@ public class PRCommitCheckTest {
                     WildflyGitHubBotTesting.verifyFormatFailure(repo, pullRequestJson, "commit");
                     WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, pullRequestJson,
                             "- " + String.format(DEFAULT_COMMIT_MESSAGE,
-                                    PROJECT_PATTERN_REGEX.formatted("WFLY", "WFLY")));
+                                    PROJECT_PATTERN_REGEX.formatted(DEFAULT_PROJECT_KEY)));
                 });
     }
 
@@ -200,6 +202,30 @@ public class PRCommitCheckTest {
                     GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
                     Mockito.verify(repo, never()).createCommitStatus(anyString(), any(), anyString(), anyString());
                     Mockito.verify(repo, never()).createCommitStatus(anyString(), any(), anyString(), anyString(), anyString());
+                });
+    }
+
+    @Test
+    public void testLongErrorMessageTruncationInFailedCommitCheck() throws Throwable {
+        wildflyConfigFile = """
+                wildfly:
+                  format:
+                    commit:
+                      message: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+                """;
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
+                .commit(INVALID_COMMIT_MESSAGE);
+
+        TestModel.given(
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson,
+                        mockedContext))
+                .pullRequestEvent(pullRequestJson)
+                .then(mocks -> {
+                    GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
+                    WildflyGitHubBotTesting.verifyFormatFailure(repo, pullRequestJson, "commit");
+                    WildflyGitHubBotTesting.verifyFailedFormatComment(mocks, pullRequestJson,
+                            "- <details><summary>abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" +
+                                    "abcdefghij...</summary>klmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789</details>");
                 });
     }
 }
