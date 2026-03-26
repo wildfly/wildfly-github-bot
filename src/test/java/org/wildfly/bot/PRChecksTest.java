@@ -65,12 +65,12 @@ public class PRChecksTest {
                       title: "Title"
                       notify: [Tadpole]
                     - id: "Description"
-                      body: "issues.redhat.com"
+                      body: "redhat.atlassian.net"
                       notify: [Butterfly]
                   format:
                     description:
                          regexes:
-                           - pattern: "JIRA:\\\\s+https://issues.redhat.com/browse/WFLY-\\\\d+|https://issues.redhat.com/browse/WFLY-\\\\d+"
+                           - pattern: "JIRA:\\\\s+https://redhat.atlassian.net/browse/WFLY-\\\\d+|https://redhat.atlassian.net/browse/WFLY-\\\\d+"
                              message: "The PR description must contain a link to the JIRA issue"
                 """;
         pullRequestJson = TestModel.getPullRequestJson();
@@ -99,7 +99,7 @@ public class PRChecksTest {
                   format:
                     description:
                          regexes:
-                           - pattern: "JIRA:\\\\s+https://issues.redhat.com/browse/WFLY-\\\\d+|https://issues.redhat.com/browse/WFLY-\\\\d+"
+                           - pattern: "JIRA:\\\\s+https://redhat.atlassian.net/browse/WFLY-\\\\d+|https://redhat.atlassian.net/browse/WFLY-\\\\d+"
                              message: "The PR description must contain a link to the JIRA issue"
                 """;
         pullRequestJson = TestModel.setPullRequestJsonBuilder(

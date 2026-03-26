@@ -34,7 +34,7 @@ public class PRRuleDescriptionCheckTest {
                 wildfly:
                   rules:
                     - id: "Description"
-                      body: "issues.redhat.com"
+                      body: "redhat.atlassian.net"
                       notify: [Tadpole]
                 """;
 
@@ -56,7 +56,7 @@ public class PRRuleDescriptionCheckTest {
                 wildfly:
                   rules:
                     - id: "Description"
-                      body: "issues.redhat.com"
+                      body: "redhat.atlassian.net"
                       notify: [Tadpole]
                 """;
 
@@ -77,7 +77,7 @@ public class PRRuleDescriptionCheckTest {
                 wildfly:
                   rules:
                     - id: "Description"
-                      body: "ISSUES.REDHAT.COM"
+                      body: "REDHAT.ATLASSIAN.NET"
                       notify: [Tadpole]
                 """;
 

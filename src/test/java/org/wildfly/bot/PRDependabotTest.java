@@ -51,7 +51,7 @@ public class PRDependabotTest {
                       format:
                         description:
                           regexes:
-                            - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
+                            - pattern: "https://redhat.atlassian.net/browse/WFLY-\\\\d+"
                               message: "The PR description must contain a link to the JIRA issue"
                 """;
 
@@ -81,7 +81,7 @@ public class PRDependabotTest {
                       format:
                         description:
                           regexes:
-                            - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
+                            - pattern: "https://redhat.atlassian.net/browse/WFLY-\\\\d+"
                 """;
 
         pullRequestJson = TestModel.setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder
