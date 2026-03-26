@@ -33,7 +33,7 @@
       "type": "User",
       "site_admin": false
     },
-    "body": "JIRA: https://issues.redhat.com/browse/WFLY-123",
+    "body": "JIRA: https://redhat.atlassian.net/browse/WFLY-123",
     "created_at": "2023-05-31T07:51:01Z",
     "updated_at": "2023-05-31T07:51:01Z",
     "closed_at": null,

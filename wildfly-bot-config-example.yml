@@ -23,7 +23,7 @@ wildfly:
 
     description:
       regexes:            # List of objects, where the object is as follows:
-        - pattern: "JIRA:\\s+https://issues.redhat.com/browse/WFLY-\\d+|https://issues.redhat.com/browse/WFLY-\\d+"   # Regex pattern must be matched by the title
+        - pattern: "JIRA:\\s+https://redhat.atlassian.net/browse/WFLY-\\d+|https://redhat.atlassian.net/browse/WFLY-\\d+"   # Regex pattern must be matched by the title
           message: "The PR description must contain a link to the JIRA issue"                                         # Message to display if check does not succeed
       message: "The PR description is not correct"                                                                    # Default message to display if a object is missing message field
 

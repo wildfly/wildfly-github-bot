@@ -82,7 +82,7 @@ public class PRRuleNotifyTest {
                       title: "Title"
                       notify: [Tadpole,Duke]
                     - id: "Description"
-                      body: "issues.redhat.com"
+                      body: "redhat.atlassian.net"
                       notify: [Tadpole,Doggo]
                 """;
 

@@ -51,7 +51,7 @@ public class PRDescriptionCheckTest {
                     description:
                       message: Default fail message
                       regexes:
-                        - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
+                        - pattern: "https://redhat.atlassian.net/browse/WFLY-\\\\d+"
                           message: "The PR description must contain a link to the JIRA issue"
                 """;
 
@@ -75,7 +75,7 @@ public class PRDescriptionCheckTest {
                   format:
                     description:
                       regexes:
-                        - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
+                        - pattern: "https://redhat.atlassian.net/browse/WFLY-\\\\d+"
                 """;
 
         pullRequestJson = TestModel.setPullRequestJsonBuilder(
@@ -99,7 +99,7 @@ public class PRDescriptionCheckTest {
                     description:
                       message: Default fail message
                       regexes:
-                        - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
+                        - pattern: "https://redhat.atlassian.net/browse/WFLY-\\\\d+"
                           message: "The PR description must contain a link to the JIRA issue"
                 """;
 
@@ -139,14 +139,14 @@ public class PRDescriptionCheckTest {
                     description:
                       message: Default fail message
                       regexes:
-                        - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
+                        - pattern: "https://redhat.atlassian.net/browse/WFLY-\\\\d+"
                           message: "The PR description must contain a link to the JIRA issue"
                 """;
 
         pullRequestJson = TestModel.setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder
                 .description("""
                         First line of description
-                        Additional line of description - JIRA: https://issues.redhat.com/browse/WFLY-666
+                        Additional line of description - JIRA: https://redhat.atlassian.net/browse/WFLY-666
                         Another line with no JIRA link
                         """));
 
@@ -166,7 +166,7 @@ public class PRDescriptionCheckTest {
                     description:
                       message: Default fail message
                       regexes:
-                        - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
+                        - pattern: "https://redhat.atlassian.net/browse/WFLY-\\\\d+"
                           message: "The PR description must contain a link to the JIRA issue"
                         - pattern: "JIRA"
                 """;
@@ -192,13 +192,13 @@ public class PRDescriptionCheckTest {
                     description:
                       message: Lorem ipsum dolor sit amet
                       regexes:
-                        - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
+                        - pattern: "https://redhat.atlassian.net/browse/WFLY-\\\\d+"
                           message: "The PR description must contain a link to the JIRA issue"
                         - pattern: "JIRA"
                 """;
 
         pullRequestJson = TestModel.setPullRequestJsonBuilder(
-                pullRequestJsonBuilder -> pullRequestJsonBuilder.description("https://issues.redhat.com/browse/WFLY-123"));
+                pullRequestJsonBuilder -> pullRequestJsonBuilder.description("https://redhat.atlassian.net/browse/WFLY-123"));
 
         TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson))
                 .pullRequestEvent(pullRequestJson)
@@ -218,7 +218,7 @@ public class PRDescriptionCheckTest {
                     description:
                       message: Default fail message
                       regexes:
-                        - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
+                        - pattern: "https://redhat.atlassian.net/browse/WFLY-\\\\d+"
                           message: "The PR description must contain a link to the JIRA issue"
                         - pattern: "JIRA"
                 """;
@@ -244,7 +244,7 @@ public class PRDescriptionCheckTest {
                     description:
                       message: Default fail message
                       regexes:
-                        - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
+                        - pattern: "https://redhat.atlassian.net/browse/WFLY-\\\\d+"
                           message: "The PR description must contain a link to the JIRA issue"
                         - pattern: "JIRA"
                 """;
@@ -268,7 +268,7 @@ public class PRDescriptionCheckTest {
                     description:
                       message: Default fail message
                       regexes:
-                        - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
+                        - pattern: "https://redhat.atlassian.net/browse/WFLY-\\\\d+"
                           message: "The PR description must contain a link to the JIRA issue"
                         - pattern: "JIRA"
                 """;
@@ -292,7 +292,7 @@ public class PRDescriptionCheckTest {
                   format:
                     description:
                       regexes:
-                        - pattern: "https://issues.redhat.com/browse/WFLY-\\\\d+"
+                        - pattern: "https://redhat.atlassian.net/browse/WFLY-\\\\d+"
                 """;
 
         pullRequestJson = TestModel.setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder
