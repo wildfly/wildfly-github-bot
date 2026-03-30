@@ -129,8 +129,8 @@ class PRAppendingMessageTest {
                 should not be
 
                 cleared.
-                Here is one jira for you https://issues.redhat.com/browse/WFLY-00002
-                and here is another one https://issues.redhat.com/browse/WFLY-00003
+                Here is one jira for you https://redhat.atlassian.net/browse/WFLY-00002
+                and here is another one https://redhat.atlassian.net/browse/WFLY-00003
                 """;
 
         final String expectedDescriptionToBeChangedByBot = constructFullDescription(userBodySection,
@@ -164,9 +164,9 @@ class PRAppendingMessageTest {
                 cleared.
 
                 Listing all jiras:
-                https://issues.redhat.com/browse/WFLY-00001
-                https://issues.redhat.com/browse/WFLY-00002
-                https://issues.redhat.com/browse/WFLY-00003
+                https://redhat.atlassian.net/browse/WFLY-00001
+                https://redhat.atlassian.net/browse/WFLY-00002
+                https://redhat.atlassian.net/browse/WFLY-00003
                 """;
 
         pullRequestJson = TestModel.setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder
@@ -189,7 +189,7 @@ class PRAppendingMessageTest {
     void testBotChangingBotSectionUponUserCorrectedSomeIssueLinks() throws Throwable {
         final String userBodySection = """
                 This user body section has been corrected and here is the issue link:
-                https://issues.redhat.com/browse/WFLY-00002
+                https://redhat.atlassian.net/browse/WFLY-00002
                 """;
         final String descriptionToBeChangedByBot = constructFullDescription(userBodySection,
                 List.of("WFLY-00000", "WFLY-00001", "WFLY-00002",
@@ -220,14 +220,14 @@ class PRAppendingMessageTest {
     void testBotDeletingBotSectionUponUserCorrectedIssueLinks() throws Throwable {
         final String userBodySection = """
                 This user body section has been corrected and here are the issue links:
-                https://issues.redhat.com/browse/WFLY-00000
-                https://issues.redhat.com/browse/WFLY-00001
+                https://redhat.atlassian.net/browse/WFLY-00000
+                https://redhat.atlassian.net/browse/WFLY-00001
 
                 ____
 
-                https://issues.redhat.com/browse/WFLY-00002
-                https://issues.redhat.com/browse/WFLY-00003
-                https://issues.redhat.com/browse/WFLY-00004
+                https://redhat.atlassian.net/browse/WFLY-00002
+                https://redhat.atlassian.net/browse/WFLY-00003
+                https://redhat.atlassian.net/browse/WFLY-00004
                 """;
         final String descriptionToBeChangedByBot = constructFullDescription(userBodySection,
                 List.of("WFLY-00000", "WFLY-00001", "WFLY-00002",
@@ -258,8 +258,8 @@ class PRAppendingMessageTest {
     void testEditingTitleToContainMissingIssueLink() throws Throwable {
         final String userBodySection = """
                 This is my user section body with WFLY-00000 and WFLY-00001 issue links.
-                https://issues.redhat.com/browse/WFLY-00001
-                https://issues.redhat.com/browse/WFLY-00002
+                https://redhat.atlassian.net/browse/WFLY-00001
+                https://redhat.atlassian.net/browse/WFLY-00002
                 """;
 
         final String originalBodyBeforeTheEdit = constructFullDescription(userBodySection, List.of("WFLY-00003"));
@@ -333,7 +333,7 @@ class PRAppendingMessageTest {
     @Test
     void testNonBreakingChangesWithThePreviousAppendMessageFormat() throws Throwable {
         final String oldBody = """
-                https://issues.redhat.com/browse/WFLY-20743
+                https://redhat.atlassian.net/browse/WFLY-20743
 
                 ____
 
@@ -341,13 +341,13 @@ class PRAppendingMessageTest {
 
                 > WildFly issue links:
 
-                > * [WFLY-20730] (https://issues.redhat.com/browse/WFLY-20730)
+                > * [WFLY-20730] (https://redhat.atlassian.net/browse/WFLY-20730)
 
                 <--- END OF WILDFLY GITHUB BOT REPORT --->
 
                 More information about the [wildfly-bot](https://github.com/wildfly/wildfly-bot)""";
 
-        final String expectedNewBody = constructFullDescription("https://issues.redhat.com/browse/WFLY-20743",
+        final String expectedNewBody = constructFullDescription("https://redhat.atlassian.net/browse/WFLY-20743",
                 List.of("WFLY-20730"));
 
         pullRequestJson = TestModel.setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder
@@ -405,7 +405,7 @@ class PRAppendingMessageTest {
     void testBotChangingBotSectionUponUserFixupsCommitWithMissingIssueLink() throws Throwable {
         final String userBodySection = """
                     This is my user section body with one WFLY issue link:
-                    https://issues.redhat.com/browse/WFLY-00001
+                    https://redhat.atlassian.net/browse/WFLY-00001
                 """;
 
         final String fullDescriptionBeforeTheFixup = constructFullDescription(userBodySection, List.of("WFLY-00002"));
@@ -444,8 +444,8 @@ class PRAppendingMessageTest {
     void testBotChangingBotSectionUponUserRewordingCommit() throws Throwable {
         final String userBodySection = """
                 This is my user section body with two WFLY issue links:
-                https://issues.redhat.com/browse/WFLY-00001
-                https://issues.redhat.com/browse/WFLY-00003
+                https://redhat.atlassian.net/browse/WFLY-00001
+                https://redhat.atlassian.net/browse/WFLY-00003
                 """;
         final String fullDescriptionBeforeTheReword = constructFullDescription(userBodySection, List.of("WFLY-00002"));
 

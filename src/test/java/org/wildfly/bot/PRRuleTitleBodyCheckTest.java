@@ -60,7 +60,7 @@ public class PRRuleTitleBodyCheckTest {
                     - id: "TitleBody"
                       title: "NonTitle"
                       body: "NonBody"
-                      titleBody: "issues.redhat.com"
+                      titleBody: "redhat.atlassian.net"
                       notify: [Tadpole]
                 """;
 
@@ -83,7 +83,7 @@ public class PRRuleTitleBodyCheckTest {
                     - id: "TitleBody"
                       title: "NonTitle"
                       body: "NonBody"
-                      titleBody: "ISSUES.REDHAT.COM"
+                      titleBody: "REDHAT.ATLASSIAN.NET"
                       notify: [Tadpole]
                 """;
 

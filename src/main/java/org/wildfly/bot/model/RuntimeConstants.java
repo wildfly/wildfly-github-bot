@@ -22,7 +22,7 @@ public class RuntimeConstants {
 
     public static final String BOT_JIRA_LINKS_HEADER = "Additional WildFly Issue Links Found:\n";
 
-    public static final String BOT_JIRA_LINK_TEMPLATE = "https://issues.redhat.com/browse/%1$s";
+    public static final String BOT_JIRA_LINK_TEMPLATE = "https://redhat.atlassian.net/browse/%1$s";
 
     public static final String BOT_JIRA_LINK_COMMENT_TEMPLATE = String.format("* [%%1$s](%s)\n", BOT_JIRA_LINK_TEMPLATE);
 

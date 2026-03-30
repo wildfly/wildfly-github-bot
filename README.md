@@ -119,7 +119,7 @@ wildfly:
       message: Wrong content of the PR title
     description: # 3
       regexes:
-        - pattern: JIRA:\s+https://issues.redhat.com/browse/WFLY-\d+|https://issues.redhat.com/browse/WFLY-\d+
+        - pattern: JIRA:\s+https://redhat.atlassian.net/browse/WFLY-\d+|https://redhat.atlassian.net/browse/WFLY-\d+
           message: The PR description must contain a link to the JIRA issue # 4
   emails: # 5
     - foo@bar.baz
