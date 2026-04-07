@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.quarkiverse.githubapp.GitHubEvent;
+import io.quarkiverse.githubapp.runtime.SimpleGitHubEvent;
 import io.quarkus.arc.Arc;
 import io.quarkus.runtime.LaunchMode;
 import io.vertx.core.json.Json;
@@ -33,7 +34,7 @@ public interface GitHubEventPreprocessor {
 
     static GitHubEvent updatePayload(GitHubEvent event, JsonNode payload) {
         String payloadJson = payload.toPrettyString();
-        return new GitHubEvent(event.getInstallationId(),
+        return new SimpleGitHubEvent(event.getInstallationId(),
                 event.getAppName().orElse(null), event.getDeliveryId(), event.getRepositoryOrThrow(),
                 event.getEvent(), event.getAction(), payloadJson, (JsonObject) Json.decodeValue(payloadJson),
                 event.isReplayed());

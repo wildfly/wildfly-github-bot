@@ -1,6 +1,5 @@
 package org.wildfly.bot.utils.mocking;
 
-import com.thoughtworks.xstream.InitializationException;
 import io.quarkiverse.githubapp.testing.dsl.GitHubMockContext;
 import org.wildfly.bot.utils.TestConstants;
 import org.wildfly.bot.utils.model.SsePullRequestPayload;
@@ -40,13 +39,14 @@ public abstract class Mockable {
                     .build();
             requiredMockableCollector.add(MockedGHPullRequest.builder(ssePullRequestPayload.id()));
         } catch (IOException e) {
-            throw new InitializationException("Unable to initialize MockedGHPullRequest", e);
+            throw new RuntimeException("Unable to initialize MockedGHPullRequest", e);
         }
         requiredMockables = Collections.unmodifiableSet(requiredMockableCollector);
     }
     private static final Set<Mockable> executedMockables = new HashSet<>();
 
     public final void mock(GitHubMockContext mocks) throws IOException {
+        executedMockables.clear();
         this.mockNext(mocks, new AtomicLong());
     }
 

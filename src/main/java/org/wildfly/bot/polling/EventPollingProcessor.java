@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkiverse.githubapp.GitHubEvent;
+import io.quarkiverse.githubapp.runtime.SimpleGitHubEvent;
 import io.quarkiverse.githubapp.runtime.github.GitHubService;
 import io.quarkus.scheduler.Scheduled;
 import io.smallrye.mutiny.tuples.Tuple2;
@@ -67,7 +68,7 @@ public class EventPollingProcessor implements GitHubEventEmitter<Throwable> {
                             LOG.infof("Unable to determine the type of event with payload\n%s", payload);
                             continue;
                         }
-                        GitHubEvent gitHubEvent = new GitHubEvent(app.getId(),
+                        GitHubEvent gitHubEvent = new SimpleGitHubEvent(app.getId(),
                                 null, null, eventInfo.getRepository().getFullName(),
                                 type,
                                 eventTuple.getItem2(),

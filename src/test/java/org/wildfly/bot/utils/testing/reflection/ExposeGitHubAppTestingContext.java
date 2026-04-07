@@ -54,7 +54,7 @@ public class ExposeGitHubAppTestingContext {
 
     public static void initEventStubs(GitHubAppTestingContext testingContext, long installationId)
             throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        Method privateMethod = GitHubMockContextImpl.class.getDeclaredMethod("initEventStubs", long.class);
+        Method privateMethod = GitHubMockContextImpl.class.getDeclaredMethod("initEventStubs", Long.class);
 
         privateMethod.setAccessible(true);
         privateMethod.invoke(testingContext.mocks, installationId);

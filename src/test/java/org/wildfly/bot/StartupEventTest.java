@@ -11,7 +11,7 @@ import io.quarkus.runtime.StartupEvent;
 import io.quarkus.test.InMemoryLogHandler;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.QuarkusTestExtension;
+
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import org.jboss.logmanager.Level;
@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
+
 import org.kohsuke.github.GHApp;
 import org.kohsuke.github.GHAppInstallation;
 import org.kohsuke.github.GHAuthenticatedAppInstallation;
@@ -28,7 +28,6 @@ import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.HttpException;
 import org.kohsuke.github.PagedIterable;
-import org.kohsuke.github.PagedIterator;
 import org.kohsuke.github.PagedSearchIterable;
 import org.wildfly.bot.model.RuntimeConstants;
 import org.wildfly.bot.utils.TestConstants;
@@ -44,7 +43,7 @@ import java.util.function.Consumer;
 import java.util.logging.LogManager;
 
 import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
-import static org.mockito.ArgumentMatchers.anyInt;
+
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -85,9 +84,6 @@ public class StartupEventTest {
 
     private Mockable mockedContext;
 
-    @RegisterExtension
-    static QuarkusTestExtension TEST = new QuarkusTestExtension();
-
     @BeforeEach
     void setup() {
         mockedContext = MockedGHPullRequest.builder(1371642823);
@@ -120,13 +116,12 @@ public class StartupEventTest {
                     mocks.ghObject(GHAppInstallation.class, 0L));
             GHAppInstallation mockGHAppInstallation = mock(GHAppInstallation.class);
             GHAuthenticatedAppInstallation mockGHAuthenticatedAppInstallation = mock(GHAuthenticatedAppInstallation.class);
-            PagedSearchIterable<GHRepository> mockGHRepositories = mock(PagedSearchIterable.class);
-            PagedIterator<GHRepository> mockIterator = mock(PagedIterator.class);
             if (configFile != null) {
                 mocks.configFile(RuntimeConstants.CONFIG_FILE_NAME).fromString(configFile);
             }
 
             GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
+            PagedSearchIterable<GHRepository> mockGHRepositories = GitHubAppMockito.mockPagedIterable(repo);
 
             when(clientProvider.getApplicationClient()).thenReturn(mockGitHub);
             when(mockGitHub.getApp()).thenReturn(mockGHApp);
@@ -140,10 +135,6 @@ public class StartupEventTest {
             }
             when(mockGitHub.getInstallation()).thenReturn(mockGHAuthenticatedAppInstallation);
             when(mockGHAuthenticatedAppInstallation.listRepositories()).thenReturn(mockGHRepositories);
-
-            when(mockGHRepositories._iterator(anyInt())).thenReturn(mockIterator);
-            when(mockIterator.next()).thenReturn(repo);
-            when(mockIterator.hasNext()).thenReturn(true).thenReturn(false);
 
             mockedContext.mock(mocks);
 
