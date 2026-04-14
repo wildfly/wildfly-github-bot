@@ -50,6 +50,8 @@ public class TestModel implements QuarkusTestBeforeEachCallback, QuarkusTestAfte
     }
 
     public static PullRequestJson defaultBeforeEachJsons() throws Exception {
+        pullRequestJsonBuilderFunction = builder -> builder;
+        pullRequestJson = null;
         setJsons(
                 () -> SsePullRequestPayload.builder(TestConstants.VALID_PR_TEMPLATE_JSON),
                 PullRequestGitHubEventPayload::new);

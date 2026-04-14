@@ -3,7 +3,7 @@ package org.wildfly.bot;
 import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.GitHubClientProvider;
 import io.quarkiverse.githubapp.GitHubConfigFileProvider;
-import io.quarkiverse.githubapp.event.Installation;
+
 import io.quarkus.logging.Log;
 import io.quarkus.runtime.StartupEvent;
 import org.wildfly.bot.config.WildFlyBotConfig;
@@ -13,11 +13,10 @@ import org.wildfly.bot.util.GitHubBotContextProvider;
 import org.wildfly.bot.util.GithubProcessor;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
-import jakarta.enterprise.inject.Any;
+
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHAppInstallation;
-import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.HttpException;
@@ -56,7 +55,6 @@ public class LifecycleProcessor {
     GitHubBotContextProvider botContextProvider;
 
     @Inject
-    @Any
     ConfigFileChangeProcessor configFileChangeProcessor;
 
     @Inject
@@ -122,20 +120,6 @@ public class LifecycleProcessor {
             LOG.errorf(e, "Unable to correctly start %s for following installation id [%d]", botContextProvider.getBotName(),
                     installationId);
         }
-    }
-
-    void suspendedInstallation(@Installation.Suspend GHEventPayload.Installation installationPayload) {
-        GHAppInstallation installation = installationPayload.getInstallation();
-        LOG.infof(
-                "%s has been suspended for following installation id: %d and will not be able to listen for any incoming Events.",
-                botContextProvider.getBotName(), installation.getAppId());
-    }
-
-    void unsuspendedInstallation(@Installation.Unsuspend GHEventPayload.Installation installationPayload) {
-        GHAppInstallation installation = installationPayload.getInstallation();
-        LOG.infof(
-                "%s has been unsuspended for following installation id: %d and has started to listen for new incoming Events.",
-                botContextProvider.getBotName(), installation.getAppId());
     }
 
     private String prettyString(List<String> problems) {
