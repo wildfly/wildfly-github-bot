@@ -1,0 +1,28 @@
+version: 2
+updates:
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "08:00"
+      timezone: "Europe/Prague"
+    open-pull-requests-limit: 5
+    groups:
+      quarkus:
+        patterns:
+          - "io.quarkus*"
+          - "io.quarkiverse*"
+      plugins:
+        patterns:
+          - "org.apache.maven.plugins:*"
+          - "net.revelc.code.formatter:*"
+          - "org.wildfly.checkstyle:*"
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
