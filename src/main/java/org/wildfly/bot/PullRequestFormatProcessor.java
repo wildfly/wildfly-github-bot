@@ -5,7 +5,6 @@ import io.quarkiverse.githubapp.event.PullRequest;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 
-import org.jboss.logging.Logger;
 import org.kohsuke.github.GHCommitStatus;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHPullRequest;
@@ -18,16 +17,13 @@ import org.wildfly.bot.model.RegexDefinition;
 import org.wildfly.bot.model.WildFlyConfigFile;
 import org.wildfly.bot.util.GitHubBotContextProvider;
 import org.wildfly.bot.util.GithubProcessor;
-import org.wildfly.bot.util.PullRequestDescriptionHandler;
 import org.wildfly.bot.util.PullRequestLogger;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import static org.wildfly.bot.model.RuntimeConstants.CONFIG_FILE_NAME;
 import static org.wildfly.bot.model.RuntimeConstants.DEPENDABOT;
@@ -37,8 +33,7 @@ import static org.wildfly.bot.model.RuntimeConstants.FAILED_FORMAT_COMMENT;
 @RequestScoped
 public class PullRequestFormatProcessor {
 
-    private static final Logger LOG_DELEGATE = Logger.getLogger(PullRequestFormatProcessor.class);
-    private final PullRequestLogger LOG = new PullRequestLogger(LOG_DELEGATE);
+    private final PullRequestLogger logger = PullRequestLogger.getLogger(PullRequestFormatProcessor.class);
     private static final String CHECK_NAME = "Format";
 
     @Inject
@@ -53,16 +48,16 @@ public class PullRequestFormatProcessor {
     void postDependabotInfo(@PullRequest.Opened GHEventPayload.PullRequest pullRequestPayload,
             @ConfigFile(CONFIG_FILE_NAME) WildFlyConfigFile wildflyConfigFile) throws IOException {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
-        LOG.setPullRequest(pullRequest);
-        githubProcessor.LOG.setPullRequest(pullRequest);
+        logger.setPullRequest(pullRequest);
+        githubProcessor.logger.setPullRequest(pullRequest);
 
         if (pullRequest.getUser().getLogin().equals(DEPENDABOT)) {
-            LOG.infof("Dependabot detected.");
+            logger.infof("Dependabot detected.");
             String comment = ("WildFly Bot recognized this PR as dependabot dependency update. Please create a %s issue" +
                     " and add new comment containing this JIRA link please.")
                     .formatted(wildflyConfigFile.wildfly.projectKey);
             if (wildFlyBotConfig.isDryRun()) {
-                LOG.infof(DRY_RUN_PREPEND.formatted("Add new comment %s"), comment);
+                logger.infof(DRY_RUN_PREPEND.formatted("Add new comment %s"), comment);
             } else {
                 pullRequest.comment(comment);
             }
@@ -74,32 +69,18 @@ public class PullRequestFormatProcessor {
             @PullRequest.Edited @PullRequest.Opened @PullRequest.Synchronize @PullRequest.Reopened @PullRequest.ReadyForReview GHEventPayload.PullRequest pullRequestPayload,
             @ConfigFile(CONFIG_FILE_NAME) WildFlyConfigFile wildflyConfigFile) throws IOException {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
-        LOG.setPullRequest(pullRequest);
-        githubProcessor.LOG.setPullRequest(pullRequest);
+        logger.setPullRequest(pullRequest);
+        githubProcessor.logger.setPullRequest(pullRequest);
 
-        String message = githubProcessor.skipPullRequest(pullRequest, wildflyConfigFile);
-        if (message != null) {
+        if (shouldSkipFormatCheck(pullRequest, wildflyConfigFile, pullRequestPayload.getAction())) {
             String sha = pullRequest.getHead().getSha();
             for (GHCommitStatus commitStatus : pullRequest.getRepository().listCommitStatuses(sha)) {
-                // Only update format check if it was created
                 if (CHECK_NAME.equals(commitStatus.getContext())
                         && commitStatus.getCreator().getLogin().equals(botContextProvider.getBotName())) {
                     githubProcessor.commitStatusSuccess(pullRequest, CHECK_NAME, "Valid [Skipped]");
                 }
             }
             githubProcessor.deleteFormatComment(pullRequest, FAILED_FORMAT_COMMENT);
-            LOG.infof("Skipping format due to %s", message);
-            return;
-        }
-
-        if (pullRequest.getUser().getLogin().equals(DEPENDABOT)
-                && pullRequestPayload.getAction().equals(PullRequest.Opened.NAME)) {
-            LOG.info("Skipping format check on newly opened dependabot PRs.");
-            return;
-        }
-
-        if (!wildflyConfigFile.wildfly.format.enabled) {
-            LOG.info("Skipping format due to format being disabled");
             return;
         }
 
@@ -113,8 +94,6 @@ public class PullRequestFormatProcessor {
             }
         }
 
-        generateAppendedMessage(pullRequest, wildflyConfigFile.wildfly.getProjectPattern());
-
         if (errors.isEmpty()) {
             githubProcessor.commitStatusSuccess(pullRequest, CHECK_NAME, "Valid");
         } else {
@@ -123,22 +102,29 @@ public class PullRequestFormatProcessor {
         githubProcessor.formatComment(pullRequest, FAILED_FORMAT_COMMENT, errors.values());
     }
 
-    private void generateAppendedMessage(GHPullRequest pullRequest, Pattern projectPattern) {
-        new PullRequestDescriptionHandler(pullRequest, projectPattern, botContextProvider.getBotName())
-                .generateFullDescriptionBody()
-                .ifPresent(newBody -> {
-                    if (wildFlyBotConfig.isDryRun()) {
-                        LOG.infof("Pull Request #%s - Updated PR body:\n%s", pullRequest.getNumber(), newBody);
-                        return;
-                    }
-                    try {
-                        pullRequest.setBody(newBody);
-                    } catch (IOException e) {
-                        LOG.errorf(e, "Failed to set body for pull request #%s", pullRequest.getNumber());
-                        throw new UncheckedIOException(e);
-                    }
-
-                });
+    private boolean shouldSkipFormatCheck(GHPullRequest pullRequest, WildFlyConfigFile configFile,
+            String action) throws IOException {
+        if (configFile == null) {
+            logger.info("Skipping format check: no configuration file found");
+            return true;
+        }
+        if (pullRequest.isDraft()) {
+            logger.info("Skipping format check: pull request is a draft");
+            return true;
+        }
+        if (!configFile.wildfly.format.enabled) {
+            logger.info("Skipping format check: format checking is disabled");
+            return true;
+        }
+        if (configFile.wildfly.format.matchesSkipPattern(pullRequest.getBody())) {
+            logger.info("Skipping format check: skip pattern matched in PR description");
+            return true;
+        }
+        if (DEPENDABOT.equals(pullRequest.getUser().getLogin()) && "opened".equals(action)) {
+            logger.info("Skipping format check on newly opened dependabot PRs.");
+            return true;
+        }
+        return false;
     }
 
     private List<Check> initializeChecks(WildFlyConfigFile wildflyConfigFile) {
@@ -150,12 +136,12 @@ public class PullRequestFormatProcessor {
 
         if (wildflyConfigFile.wildfly.format.title.enabled) {
             checks.add(new TitleCheck(new RegexDefinition(wildflyConfigFile.wildfly.getProjectPattern(),
-                    wildflyConfigFile.wildfly.format.title.message)));
+                    wildflyConfigFile.wildfly.format.title.failMessage)));
         }
 
         if (wildflyConfigFile.wildfly.format.commit.enabled) {
             checks.add(new CommitMessagesCheck(new RegexDefinition(wildflyConfigFile.wildfly.getProjectPattern(),
-                    wildflyConfigFile.wildfly.format.commit.message)));
+                    wildflyConfigFile.wildfly.format.commit.failMessage)));
         }
 
         if (wildflyConfigFile.wildfly.format.description != null) {

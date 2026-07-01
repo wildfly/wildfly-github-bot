@@ -2,11 +2,8 @@ package org.wildfly.bot.util;
 
 import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.Mailer;
-import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.Dependent;
-import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
 import org.kohsuke.github.GHCommit;
 import org.kohsuke.github.GHCommitQueryBuilder;
 import org.kohsuke.github.GHCommitState;
@@ -22,8 +19,6 @@ import org.kohsuke.github.HttpException;
 import org.kohsuke.github.PagedIterable;
 import org.wildfly.bot.config.WildFlyBotConfig;
 import org.wildfly.bot.model.RuntimeConstants;
-import org.wildfly.bot.model.WildFlyConfigFile;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,7 +30,6 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.SequencedMap;
 import java.util.Set;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.LinkedHashMap;
 
@@ -43,7 +37,6 @@ import java.util.LinkedHashMap;
 public class GithubProcessor {
 
     public static final String COLLABORATOR_MISSING_SUBJECT = "Missing collaborator in the %s repository";
-
     public static final String COLLABORATOR_MISSING_BODY = """
             Hello,
 
@@ -54,33 +47,27 @@ public class GithubProcessor {
             ---
             This is generated message, please do not respond.""";
 
-    private static final Logger LOG_DELEGATE = Logger.getLogger(GithubProcessor.class);
-    public final PullRequestLogger LOG = new PullRequestLogger(LOG_DELEGATE);
-    private Pattern SKIP_FORMAT_COMMAND;
+    public final PullRequestLogger logger = PullRequestLogger.getLogger(GithubProcessor.class);
 
-    @Inject
-    WildFlyBotConfig wildFlyBotConfig;
-
-    @Inject
-    GitHubBotContextProvider botContextProvider;
-
-    @Inject
-    Mailer mailer;
+    private final WildFlyBotConfig wildFlyBotConfig;
+    private final GitHubBotContextProvider botContextProvider;
+    private final Mailer mailer;
 
     @ConfigProperty(name = "quarkus.mailer.username")
     Optional<String> username;
 
-    @PostConstruct
-    void construct() {
-        SKIP_FORMAT_COMMAND = Pattern.compile("@%s skip format".formatted(botContextProvider.getBotName()),
-                Pattern.DOTALL | Pattern.LITERAL);
+    public GithubProcessor(WildFlyBotConfig wildFlyBotConfig, GitHubBotContextProvider botContextProvider, Mailer mailer) {
+        // constructor injection
+        this.wildFlyBotConfig = wildFlyBotConfig;
+        this.botContextProvider = botContextProvider;
+        this.mailer = mailer;
     }
 
     public void commitStatusSuccess(GHPullRequest pullRequest, String checkName, String description) throws IOException {
         String sha = pullRequest.getHead().getSha();
 
         if (wildFlyBotConfig.isDryRun()) {
-            LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Commit status success {%s, %s, %s}"), sha, checkName,
+            logger.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Commit status success {%s, %s, %s}"), sha, checkName,
                     description);
         } else {
             pullRequest.getRepository().createCommitStatus(sha, GHCommitState.SUCCESS, "", description, checkName);
@@ -91,7 +78,7 @@ public class GithubProcessor {
         String sha = pullRequest.getHead().getSha();
 
         if (wildFlyBotConfig.isDryRun()) {
-            LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Commit status failure {%s, %s, %s}"), sha, checkName,
+            logger.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Commit status failure {%s, %s, %s}"), sha, checkName,
                     description);
         } else {
             pullRequest.getRepository().createCommitStatus(sha, GHCommitState.ERROR, "", description, checkName);
@@ -113,17 +100,17 @@ public class GithubProcessor {
                 .map(GHPerson::getLogin)
                 .toList();
 
-        LOG.infof("Current reviewers already added to the PR: %s", currentReviewers);
+        logger.infof("Current reviewers already added to the PR: %s", currentReviewers);
 
         currentReviewers.forEach(reviewers::remove);
 
-        LOG.infof("Reviewers to be added to the PR: %s", reviewers);
+        logger.infof("Reviewers to be added to the PR: %s", reviewers);
 
         updateCCMentions(pullRequest, ccMentionsWithRules);
 
         if (!reviewers.isEmpty()) {
             if (wildFlyBotConfig.isDryRun()) {
-                LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("PR review requested from \"%s\""),
+                logger.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("PR review requested from \"%s\""),
                         String.join(",", reviewers));
             } else {
                 List<String> failedReviewers = new ArrayList<>();
@@ -134,12 +121,12 @@ public class GithubProcessor {
                     } catch (HttpException e) {
                         String responseMessage = e.getResponseMessage() != null ? e.getResponseMessage()
                                 : "No response message available.";
-                        LOG.warnf(
+                        logger.warnf(
                                 "Failed to add reviewer '%s'. Error: %s, Response: %s",
                                 requestedReviewer, e.getMessage(), responseMessage);
                         failedReviewers.add(requestedReviewer);
                     } catch (RuntimeException e) {
-                        LOG.warnf(
+                        logger.warnf(
                                 "Unexpected error while adding reviewer '%s'. Error: %s",
                                 requestedReviewer, e.getMessage());
                         failedReviewers.add(requestedReviewer);
@@ -152,7 +139,8 @@ public class GithubProcessor {
                     // Check if actually failedReviewers are not collaborators
                     for (String failedReviewer : failedReviewers) {
                         if (repository.isCollaborator(gitHub.getUser(failedReviewer))) {
-                            LOG.warnf("Reviewer '%s' failed to be added, but they are a collaborator in the '%s' repository.",
+                            logger.warnf(
+                                    "Reviewer '%s' failed to be added, but they are a collaborator in the '%s' repository.",
                                     failedReviewer, repository.getFullName());
                         }
                     }
@@ -161,14 +149,14 @@ public class GithubProcessor {
                             .map(GHPerson::getLogin)
                             .toList();
 
-                    LOG.infof("Final reviewers added to the PR: %s", finalRequestedReviewers);
+                    logger.infof("Final reviewers added to the PR: %s", finalRequestedReviewers);
 
                     // Remove successfully added reviewers from the failed list
                     failedReviewers.removeAll(finalRequestedReviewers);
 
                     // Log the actual failed reviewers that were not added
                     if (!failedReviewers.isEmpty()) {
-                        LOG.warnf("Bot failed to request PR review from the following people: %s", failedReviewers);
+                        logger.warnf("Bot failed to request PR review from the following people: %s", failedReviewers);
 
                         sendEmail(
                                 COLLABORATOR_MISSING_SUBJECT.formatted(repository.getFullName()),
@@ -176,7 +164,7 @@ public class GithubProcessor {
                                         failedReviewers),
                                 emails);
                     } else {
-                        LOG.info("All initially failed reviewers were successfully added to the PR after verification.");
+                        logger.info("All initially failed reviewers were successfully added to the PR after verification.");
                     }
                 }
             }
@@ -190,7 +178,7 @@ public class GithubProcessor {
                     && comment.getBody().startsWith("/cc")) {
                 if (newMentionsWithRules.isEmpty()) {
                     if (wildFlyBotConfig.isDryRun()) {
-                        LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Delete comment %s"), comment);
+                        logger.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Delete comment %s"), comment);
                     } else {
                         comment.delete();
                     }
@@ -220,7 +208,8 @@ public class GithubProcessor {
 
                         String updatedBody = createCCMentionComment(commentMentionsAndRules);
                         if (wildFlyBotConfig.isDryRun()) {
-                            LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Update comment %s to %s"), comment.getBody(),
+                            logger.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Update comment %s to %s"),
+                                    comment.getBody(),
                                     updatedBody);
                         } else {
                             comment.update(updatedBody);
@@ -237,7 +226,7 @@ public class GithubProcessor {
 
         String updatedBody = createCCMentionComment(newMentionsWithRules);
         if (wildFlyBotConfig.isDryRun()) {
-            LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Add new comment %s"), updatedBody);
+            logger.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Add new comment %s"), updatedBody);
         } else {
             pullRequest.comment(updatedBody);
         }
@@ -254,7 +243,8 @@ public class GithubProcessor {
                 .toList();
 
         if (!missingLabels.isEmpty()) {
-            LOG.debugf("The following labels will be created as they are not in the repository [%s] %s.", repository.getName(),
+            logger.debugf("The following labels will be created as they are not in the repository [%s] %s.",
+                    repository.getName(),
                     missingLabels);
             for (String name : missingLabels) {
                 String color = String.format("%06x", new Random().nextInt(0xffffff + 1));
@@ -265,36 +255,15 @@ public class GithubProcessor {
 
     public void sendEmail(String subject, String body, List<String> emails) {
         if (username.isPresent() && emails != null && !emails.isEmpty()) {
-            LOG.infof("Sending email to the following emails [%s].", String.join(", ", emails));
+            logger.infof("Sending email to the following emails [%s].", String.join(", ", emails));
             mailer.send(
                     new Mail()
                             .setSubject(subject)
                             .setText(body)
                             .setTo(emails));
         } else {
-            LOG.debug("No emails setup to receive warnings or no email address setup to send emails from.");
+            logger.debug("No emails setup to receive warnings or no email address setup to send emails from.");
         }
-    }
-
-    public String skipPullRequest(GHPullRequest pullRequest) throws IOException {
-        String body = pullRequest.getBody();
-        if (body != null && SKIP_FORMAT_COMMAND.matcher(body).find()) {
-            return "skip format command found";
-        }
-
-        if (pullRequest.isDraft()) {
-            return "pull request being a draft";
-        }
-
-        return null;
-    }
-
-    public String skipPullRequest(GHPullRequest pullRequest, WildFlyConfigFile wildFlyConfigFile) throws IOException {
-        if (wildFlyConfigFile == null) {
-            return "no configuration file found";
-        }
-
-        return skipPullRequest(pullRequest);
     }
 
     /**
@@ -314,12 +283,12 @@ public class GithubProcessor {
 
         if (!labelsToAdd.isEmpty()) {
             String logMessage = "Adding the following labels: %s".formatted(labelsToAdd);
-            if (!LOG.isPullRequestSet()) {
+            if (!logger.isPullRequestSet()) {
                 logMessage = "Pull Request [#%d] - %s".formatted(pullRequest.getNumber(), logMessage);
             }
-            LOG.info(logMessage);
+            logger.info(logMessage);
             if (wildFlyBotConfig.isDryRun()) {
-                LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Added the following labels: %s"), labelsToAdd);
+                logger.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Added the following labels: %s"), labelsToAdd);
             } else {
                 pullRequest.addLabels(labelsToAdd.toArray(String[]::new));
             }
@@ -327,12 +296,13 @@ public class GithubProcessor {
 
         if (!labelsToRemove.isEmpty()) {
             String logMessage = "Removing the following labels: %s".formatted(labelsToRemove);
-            if (!LOG.isPullRequestSet()) {
+            if (!logger.isPullRequestSet()) {
                 logMessage = "Pull Request [#%d] - %s".formatted(pullRequest.getNumber(), logMessage);
             }
-            LOG.info(logMessage);
+            logger.info(logMessage);
             if (wildFlyBotConfig.isDryRun()) {
-                LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Removed the following labels: %s"), labelsToRemove);
+                logger.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Removed the following labels: %s"),
+                        labelsToRemove);
             } else {
                 pullRequest.removeLabels(labelsToRemove.toArray(String[]::new));
             }
@@ -343,7 +313,8 @@ public class GithubProcessor {
         formatComment(pullRequest, commentBody, null);
     }
 
-    public void formatComment(GHPullRequest pullRequest, String commentBody, Collection<String> errors) throws IOException {
+    public void formatComment(GHPullRequest pullRequest, String commentBody, Collection<String> errors)
+            throws IOException {
         boolean update = false;
         String firstLine = commentBody.split("\n")[0];
         for (GHIssueComment comment : pullRequest.listComments()) {
@@ -351,7 +322,7 @@ public class GithubProcessor {
                     && comment.getBody().startsWith(firstLine)) {
                 if (errors == null || errors.isEmpty()) {
                     if (wildFlyBotConfig.isDryRun()) {
-                        LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Delete comment %s"), comment);
+                        logger.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Delete comment %s"), comment);
                     } else {
                         comment.delete();
                     }
@@ -364,8 +335,8 @@ public class GithubProcessor {
                         .collect(Collectors.joining("\n\n")));
 
                 if (wildFlyBotConfig.isDryRun()) {
-                    LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Update comment \"%s\" to \"%s\""), comment.getBody(),
-                            updatedBody);
+                    logger.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Update comment \"%s\" to \"%s\""),
+                            comment.getBody(), updatedBody);
                 } else {
                     comment.update(updatedBody);
                 }
@@ -379,7 +350,7 @@ public class GithubProcessor {
                     .map("- %s"::formatted)
                     .collect(Collectors.joining("\n\n")));
             if (wildFlyBotConfig.isDryRun()) {
-                LOG.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Add new comment %s"), updatedBody);
+                logger.infof(RuntimeConstants.DRY_RUN_PREPEND.formatted("Add new comment %s"), updatedBody);
             } else {
                 pullRequest.comment(updatedBody);
             }
@@ -413,7 +384,7 @@ public class GithubProcessor {
         for (GHPullRequestCommitDetail prCommit : pullRequest.listCommits()) {
             String prSha = prCommit.getSha();
             if (baseCommitSHAs.contains(prSha)) {
-                LOG.infof("Skipping rules due to incorrect rebase detected: commit %s is already in the base branch %s",
+                logger.infof("Skipping rules due to incorrect rebase detected: commit %s is already in the base branch %s",
                         prSha,
                         baseBranch);
                 return true;

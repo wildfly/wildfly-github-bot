@@ -2,7 +2,6 @@ package org.wildfly.bot.util; // Or a suitable package like org.wildfly.bot.conf
 
 import io.quarkiverse.githubapp.GitHubClientProvider;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
 import java.io.IOException;
@@ -20,7 +19,6 @@ public class GitHubBotContextProvider {
 
     private final String botName;
 
-    @Inject
     public GitHubBotContextProvider(GitHubClientProvider clientProvider) {
         this.botName = initializeBotName(clientProvider) + BOT_SUFFIX;
         LOG.infof("GitHub Bot name initialized to: %s", this.botName);

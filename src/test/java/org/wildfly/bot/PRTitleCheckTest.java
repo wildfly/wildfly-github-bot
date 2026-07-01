@@ -302,7 +302,7 @@ public class PRTitleCheckTest {
                 wildfly:
                   format:
                     title:
-                      message: "Custom title message"
+                      failMessage: "Custom title message"
                 """;
         pullRequestJson = TestModel.setPullRequestJsonBuilder(
                 pullRequestJsonBuilder -> pullRequestJsonBuilder.title(TestConstants.INVALID_TITLE));

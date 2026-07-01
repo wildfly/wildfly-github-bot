@@ -12,8 +12,6 @@ import org.wildfly.bot.util.GitHubBotContextProvider;
 import org.wildfly.bot.utils.WildflyGitHubBotTesting;
 import org.wildfly.bot.utils.mocking.Mockable;
 import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
-import org.wildfly.bot.utils.mocking.MockedGHRepository;
-import org.wildfly.bot.utils.model.Action;
 import org.wildfly.bot.utils.testing.PullRequestJson;
 import org.wildfly.bot.utils.testing.internal.TestModel;
 
@@ -76,34 +74,4 @@ public class PRUpdateCommentOnEditTest {
                 });
     }
 
-    @Test
-    void testRemoveCommentAndUpdateCommitStatusOnEditToSkipFormatCheck() throws Throwable {
-        wildflyConfigFile = """
-                wildfly:
-                  format:
-                """;
-        pullRequestJson = TestModel
-                .setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder.title(INVALID_TITLE)
-                        .description("@%s skip format".formatted(botContextProvider.getBotName()))
-                        .action(Action.EDITED));
-        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
-                .comment(FAILED_FORMAT_COMMENT.formatted(Stream.of(
-                        DEFAULT_COMMIT_MESSAGE.formatted(PROJECT_PATTERN_REGEX.formatted("WFLY")),
-                        DEFAULT_TITLE_MESSAGE.formatted(PROJECT_PATTERN_REGEX.formatted("WFLY")),
-                        "The PR description must contain a link to the JIRA issue")
-                        .map("- %s"::formatted)
-                        .collect(Collectors.joining("\n\n"))), botContextProvider.getBotName())
-                .mockNext(MockedGHRepository.builder())
-                .commitStatuses(pullRequestJson.commitSHA(), "Format")
-                .commitStatusCreator(botContextProvider.getBotName());
-
-        TestModel.given(
-                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .pullRequestEvent(pullRequestJson)
-                .then(mocks -> {
-                    GHIssueComment comment = mocks.issueComment(0);
-                    Mockito.verify(comment).delete();
-                    WildflyGitHubBotTesting.verifyFormatSkipped(mocks.repository(TEST_REPO), pullRequestJson);
-                });
-    }
 }

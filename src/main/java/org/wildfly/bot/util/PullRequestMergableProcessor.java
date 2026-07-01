@@ -2,7 +2,6 @@ package org.wildfly.bot.util;
 
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
-import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
@@ -32,7 +31,7 @@ import java.util.function.Function;
  * <p>
  * In case a re-queried pull request fails, it will be only logged.
  * <p>
- * Note: Do not call githubProcessor.LOG.setPullRequest inside parallel
+ * Note: Do not call githubProcessor.logger.setPullRequest inside parallel
  * Uni-s, i.e. inside the parameter `uniToExecute` in method
  * {@code combineUnis(Function<GHPullRequest, Uni<?>> uniToExecute)}
  * due to possible race condition of the {@code org.wildfly.bot.util.PullRequestLogger}.
@@ -40,48 +39,83 @@ import java.util.function.Function;
 @Singleton
 public class PullRequestMergableProcessor {
 
-    private static final Logger LOGGER = Logger.getLogger(PullRequestMergableProcessor.class);
+    private static final Logger logger = Logger.getLogger(PullRequestMergableProcessor.class);
     private static final Queue<Uni<List<GHPullRequest>>> pushPayloadsQueue = new LinkedList<>();
+
     private boolean currentlyExecuting = false;
 
-    @Inject
-    GithubProcessor githubProcessor;
+    private final GithubProcessor githubProcessor;
+    private final WildFlyBotConfig wildFlyBotConfig;
 
-    @Inject
-    WildFlyBotConfig wildFlyBotConfig;
+    public PullRequestMergableProcessor(WildFlyBotConfig wildFlyBotConfig, GithubProcessor githubProcessor) {
+        this.wildFlyBotConfig = wildFlyBotConfig;
+        this.githubProcessor = githubProcessor;
+    }
 
-    private final Function<GHPullRequest, Uni<GHPullRequest>> pollGitHub = pullRequest -> Uni.createFrom()
-            .item(pullRequest)
-            .invoke(pullRequest1 -> {
-                try {
-                    if (wildFlyBotConfig.isDryRun()) {
-                        LOGGER.info(
-                                RuntimeConstants.DRY_RUN_PREPEND.formatted("Sending a request to GitHub for mergeable status"));
-                    } else {
-                        pullRequest1.getMergeable();
+    public void addPushPayload(GHEventPayload.Push pushPayload) {
+        GHRepository repository = pushPayload.getRepository();
+        GHEventPayload.Push.PushCommit headCommit = pushPayload.getHeadCommit();
+
+        Uni<List<GHPullRequest>> mergeableStatusUpdateUni = Uni.createFrom()
+                // Collect all Pull Requests
+                .item(repository.queryPullRequests().state(GHIssueState.OPEN).base(RuntimeConstants.MAIN_BRANCH).list())
+                .invoke(() -> logger.infof(
+                        "Scheduling a mergeable status update for open pull requests for new head [%s - \"%s\"]",
+                        headCommit.getSha(), headCommit.getMessage()))
+                .map(ghPullRequests -> {
+                    try {
+                        return ghPullRequests.toList();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
                     }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            })
-            .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
+                })
+                // Prompt GitHub to recalculate mergeable status
+                .call(combineUnis(this::pollGitHub)::apply)
+                // Give GitHub some time
+                .onItem().delayIt().by(Duration.ofSeconds(wildFlyBotConfig.timeout()))
+                // Retrieve the results from GitHub and apply labels accordingly
+                .call(combineUnis(this::pollGitHub)::apply)
+                // Filter failed Pull Requests
+                .call(combineUnis(this::applyLabels)::apply);
 
-    private final Function<GHPullRequest, Uni<Void>> applyLabels = pullRequest -> {
+        pushPayloadsQueue.add(mergeableStatusUpdateUni);
+        subscription(null, headCommit);
+    }
+
+    private Uni<GHPullRequest> pollGitHub(GHPullRequest pullRequest) {
+        return Uni.createFrom()
+                .item(pullRequest)
+                .invoke(pr -> {
+                    try {
+                        if (wildFlyBotConfig.isDryRun()) {
+                            logger.info(
+                                    RuntimeConstants.DRY_RUN_PREPEND
+                                            .formatted("Sending a request to GitHub for mergeable status"));
+                        } else {
+                            pr.getMergeable();
+                        }
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
+    }
+
+    private Uni<Void> applyLabels(GHPullRequest pullRequest) {
         try {
             List<String> labelsToAdd = new ArrayList<>();
             List<String> labelsToRemove = new ArrayList<>();
             if (wildFlyBotConfig.isDryRun()) {
-                LOGGER.info(RuntimeConstants.DRY_RUN_PREPEND
+                logger.info(RuntimeConstants.DRY_RUN_PREPEND
                         .formatted("Retrieving mergeable status and then we would apply labels accordingly"));
             } else {
-                Optional<Boolean> mergeable = Optional.ofNullable(pullRequest.getMergeable());
-                if (mergeable.isPresent()) {
-                    if (mergeable.get()) {
+                Optional.ofNullable(pullRequest.getMergeable()).ifPresent(mergeable -> {
+                    if (mergeable) {
                         labelsToRemove.add(RuntimeConstants.LABEL_NEEDS_REBASE);
-                    } else {
-                        labelsToAdd.add(RuntimeConstants.LABEL_NEEDS_REBASE);
+                        return;
                     }
-                }
+                    labelsToAdd.add(RuntimeConstants.LABEL_NEEDS_REBASE);
+                });
             }
 
             return Uni.createFrom().voidItem().invoke(() -> {
@@ -94,36 +128,6 @@ public class PullRequestMergableProcessor {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    };
-
-    public void addPushPayload(GHEventPayload.Push pushPayload) {
-        GHRepository repository = pushPayload.getRepository();
-        GHEventPayload.Push.PushCommit headCommit = pushPayload.getHeadCommit();
-
-        Uni<List<GHPullRequest>> mergeableStatusUpdateUni = Uni.createFrom()
-                // Collect all Pull Requests
-                .item(repository.queryPullRequests().state(GHIssueState.OPEN).base(RuntimeConstants.MAIN_BRANCH).list())
-                .invoke(() -> LOGGER.infof(
-                        "Scheduling a mergeable status update for open pull requests for new head [%s - \"%s\"]",
-                        headCommit.getSha(), headCommit.getMessage()))
-                .map(ghPullRequests -> {
-                    try {
-                        return ghPullRequests.toList();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
-                // Prompt GitHub to recalculate mergeable status
-                .call(combineUnis(pollGitHub::apply)::apply)
-                // Give GitHub some time
-                .onItem().delayIt().by(Duration.ofSeconds(wildFlyBotConfig.timeout()))
-                // Retrieve the results from GitHub and apply labels accordingly
-                .call(combineUnis(pollGitHub::apply)::apply)
-                // Filter failed Pull Requests
-                .call(combineUnis(applyLabels::apply)::apply);
-
-        pushPayloadsQueue.add(mergeableStatusUpdateUni);
-        subscription(null, headCommit);
     }
 
     /**
@@ -162,11 +166,11 @@ public class PullRequestMergableProcessor {
                     .map(String::valueOf)
                     .toList();
             String concatenatedPRs = String.join(", ", missedPRs);
-            LOGGER.warnf(
+            logger.warnf(
                     "Unable to verify the mergeable status for new %s branch head [%s - \"%s\"] for following pull requests: %s",
                     RuntimeConstants.MAIN_BRANCH_REF, headCommit.getSha(), headCommit.getMessage(), concatenatedPRs);
         } else {
-            LOGGER.infof(
+            logger.infof(
                     "Successfully scanned all pull requests for new %s branch head [%s - \"%s\"] and updated '%s' label accordingly.",
                     RuntimeConstants.MAIN_BRANCH_REF, headCommit.getSha(), headCommit.getMessage(),
                     RuntimeConstants.LABEL_NEEDS_REBASE);

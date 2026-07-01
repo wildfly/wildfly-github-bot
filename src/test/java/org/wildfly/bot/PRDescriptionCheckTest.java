@@ -49,10 +49,10 @@ public class PRDescriptionCheckTest {
                 wildfly:
                   format:
                     description:
-                      message: Default fail message
+                      failMessage: Default fail message
                       regexes:
                         - pattern: "https://redhat.atlassian.net/browse/WFLY-\\\\d+"
-                          message: "The PR description must contain a link to the JIRA issue"
+                          failMessage: "The PR description must contain a link to the JIRA issue"
                 """;
 
         pullRequestJson = TestModel.setPullRequestJsonBuilder(
@@ -97,10 +97,10 @@ public class PRDescriptionCheckTest {
                 wildfly:
                   format:
                     description:
-                      message: Default fail message
+                      failMessage: Default fail message
                       regexes:
                         - pattern: "https://redhat.atlassian.net/browse/WFLY-\\\\d+"
-                          message: "The PR description must contain a link to the JIRA issue"
+                          failMessage: "The PR description must contain a link to the JIRA issue"
                 """;
 
         pullRequestJson = TestModel.getPullRequestJson();
@@ -137,10 +137,10 @@ public class PRDescriptionCheckTest {
                 wildfly:
                   format:
                     description:
-                      message: Default fail message
+                      failMessage: Default fail message
                       regexes:
                         - pattern: "https://redhat.atlassian.net/browse/WFLY-\\\\d+"
-                          message: "The PR description must contain a link to the JIRA issue"
+                          failMessage: "The PR description must contain a link to the JIRA issue"
                 """;
 
         pullRequestJson = TestModel.setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder
@@ -164,10 +164,10 @@ public class PRDescriptionCheckTest {
                 wildfly:
                   format:
                     description:
-                      message: Default fail message
+                      failMessage: Default fail message
                       regexes:
                         - pattern: "https://redhat.atlassian.net/browse/WFLY-\\\\d+"
-                          message: "The PR description must contain a link to the JIRA issue"
+                          failMessage: "The PR description must contain a link to the JIRA issue"
                         - pattern: "JIRA"
                 """;
 
@@ -190,10 +190,10 @@ public class PRDescriptionCheckTest {
                 wildfly:
                   format:
                     description:
-                      message: Lorem ipsum dolor sit amet
+                      failMessage: Lorem ipsum dolor sit amet
                       regexes:
                         - pattern: "https://redhat.atlassian.net/browse/WFLY-\\\\d+"
-                          message: "The PR description must contain a link to the JIRA issue"
+                          failMessage: "The PR description must contain a link to the JIRA issue"
                         - pattern: "JIRA"
                 """;
 
@@ -216,10 +216,10 @@ public class PRDescriptionCheckTest {
                 wildfly:
                   format:
                     description:
-                      message: Default fail message
+                      failMessage: Default fail message
                       regexes:
                         - pattern: "https://redhat.atlassian.net/browse/WFLY-\\\\d+"
-                          message: "The PR description must contain a link to the JIRA issue"
+                          failMessage: "The PR description must contain a link to the JIRA issue"
                         - pattern: "JIRA"
                 """;
 
@@ -242,10 +242,10 @@ public class PRDescriptionCheckTest {
                 wildfly:
                   format:
                     description:
-                      message: Default fail message
+                      failMessage: Default fail message
                       regexes:
                         - pattern: "https://redhat.atlassian.net/browse/WFLY-\\\\d+"
-                          message: "The PR description must contain a link to the JIRA issue"
+                          failMessage: "The PR description must contain a link to the JIRA issue"
                         - pattern: "JIRA"
                 """;
 
@@ -266,10 +266,10 @@ public class PRDescriptionCheckTest {
                   format:
                     enabled: false
                     description:
-                      message: Default fail message
+                      failMessage: Default fail message
                       regexes:
                         - pattern: "https://redhat.atlassian.net/browse/WFLY-\\\\d+"
-                          message: "The PR description must contain a link to the JIRA issue"
+                          failMessage: "The PR description must contain a link to the JIRA issue"
                         - pattern: "JIRA"
                 """;
 

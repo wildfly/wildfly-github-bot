@@ -4,10 +4,11 @@ WildFly GitHub Bot helps you to keep your pull requests in the correct format.
 This project is built with usage of Quarkus GitHub App: https://quarkiverse.github.io/quarkiverse-docs/quarkus-github-app/dev/index.html
 
 ## Functionality
-* Expected format for Pull Requests - Defined in config file:
-  * Title - Regex, we expect to match for title of the Pull Request.
-  * Commit - Regex, we expect to match for at least one commit in the Pull Request.
-  * Description - Regexes, we expect to match for description of the Pull Request.
+* _Format_ checks for Pull Requests - Defined in config file under `format`:
+  * _Title_ - Checks the title of the Pull Request against the `projectKey` pattern.
+  * _Commit_ - Checks at least one commit message against the `projectKey` pattern.
+  * _Description_ - Checks the description of the Pull Request against configured regexes.
+  * _Skip_ - Regex pattern(s) matched against PR description to skip format checks.
 * _Activation Rules_ for matching on Pull Requests and applying __functionality__ - Defined in config file:
   * __Notify__ - List of people to request Pull Request review. People, we can't request review from, we only cc notify them - Rule functionality.
   * __Labels__ - Labels to apply on the Pull Request - Rule functionality.
@@ -15,7 +16,6 @@ This project is built with usage of Quarkus GitHub App: https://quarkiverse.gith
   * _Body_ - Regex, used on body of the Pull Request - Rule activation.
   * _TitleBody_ - Regex, used on either title or body of the Pull Request - Rule activation.
   * _Directories_ - List of directories, if corresponding files are changed in the Pull Request - Rule activation.
-* Option to disable format checks on Pull Request by adding message `@<github-app-name>[bot] skip format` in the description.
 * Automatically append JIRA links into description of the Pull Request, if issue tracker number is detected in Title, Description or Commit.
 * Automatically applies/removes labels on a Pull Request:
   * `rebase-this` - depending on conflicts with `main` branch.
@@ -115,8 +115,9 @@ wildfly:
         - github-user-handle1
         - github-user-handle2
   format:
+    skip: "\\[skip format\\]"
     title:
-      message: Wrong content of the PR title
+      failMessage: Wrong content of the PR title
     description: # 3
       regexes:
         - pattern: JIRA:\s+https://redhat.atlassian.net/browse/WFLY-\d+|https://redhat.atlassian.net/browse/WFLY-\d+
@@ -129,7 +130,7 @@ wildfly:
 2. `title` - Checks the title of a PR by using a regular expression generated from `projectKey` field, which is by default "WFLY". You can find more information in [wildfly-bot-config-example.yml](wildfly-bot-config-example.yml)
 3. `description` - Checks comments of a PR by using individual regular expressions in the `pattern` fields under `regexes`.
     > For example, the correct format is "https://issues.jboss.org/browse/WFLY-11".
-4. `message` - The text of an error message in the respective check.
+4. `failMessage` - The message displayed when the respective check fails.
 5. `emails` - List of emails to receive notifications.
 
 > [!IMPORTANT]  
@@ -149,7 +150,7 @@ wildfly:
         - github-user-handle2
   format:
     title:
-      message: Wrong content of the PR title
+      failMessage: Wrong content of the PR title
   emails:
     - nonexistingemail@whatever.com
     - whoever@nonexistingmailingservice.com

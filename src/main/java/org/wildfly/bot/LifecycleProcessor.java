@@ -4,7 +4,6 @@ import io.quarkiverse.githubapp.ConfigFile;
 import io.quarkiverse.githubapp.GitHubClientProvider;
 import io.quarkiverse.githubapp.GitHubConfigFileProvider;
 
-import io.quarkus.logging.Log;
 import io.quarkus.runtime.StartupEvent;
 import org.wildfly.bot.config.WildFlyBotConfig;
 import org.wildfly.bot.model.RuntimeConstants;
@@ -14,7 +13,6 @@ import org.wildfly.bot.util.GithubProcessor;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 
-import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 import org.kohsuke.github.GHAppInstallation;
 import org.kohsuke.github.GHRepository;
@@ -40,29 +38,30 @@ public class LifecycleProcessor {
             ---
             This is a generated message, please do not respond.""";
 
-    private static final Logger LOG = Logger.getLogger(LifecycleProcessor.class);
+    private static final Logger logger = Logger.getLogger(LifecycleProcessor.class);
 
-    @Inject
-    WildFlyBotConfig wildFlyBotConfig;
+    private final WildFlyBotConfig wildFlyBotConfig;
+    private final GitHubClientProvider clientProvider;
+    private final GitHubConfigFileProvider fileProvider;
+    private final GitHubBotContextProvider botContextProvider;
+    private final ConfigFileChangeProcessor configFileChangeProcessor;
+    private final GithubProcessor githubProcessor;
 
-    @Inject
-    GitHubClientProvider clientProvider;
-
-    @Inject
-    GitHubConfigFileProvider fileProvider;
-
-    @Inject
-    GitHubBotContextProvider botContextProvider;
-
-    @Inject
-    ConfigFileChangeProcessor configFileChangeProcessor;
-
-    @Inject
-    GithubProcessor githubProcessor;
+    public LifecycleProcessor(WildFlyBotConfig wildFlyBotConfig, GitHubClientProvider clientProvider,
+            GitHubConfigFileProvider fileProvider, GitHubBotContextProvider botContextProvider,
+            ConfigFileChangeProcessor configFileChangeProcessor, GithubProcessor githubProcessor) {
+        // constructor injection
+        this.wildFlyBotConfig = wildFlyBotConfig;
+        this.clientProvider = clientProvider;
+        this.fileProvider = fileProvider;
+        this.botContextProvider = botContextProvider;
+        this.configFileChangeProcessor = configFileChangeProcessor;
+        this.githubProcessor = githubProcessor;
+    }
 
     void onStart(@Observes StartupEvent event) {
         if (wildFlyBotConfig.isDryRun()) {
-            Log.info(RuntimeConstants.DRY_RUN_PREPEND
+            logger.info(RuntimeConstants.DRY_RUN_PREPEND
                     .formatted("GitHub requests will only log statements and not send actual requests to GitHub."));
         }
 
@@ -87,10 +86,10 @@ public class LifecycleProcessor {
                                 Set.of(RuntimeConstants.LABEL_NEEDS_REBASE, RuntimeConstants.LABEL_FIX_ME));
 
                         if (problems.isEmpty()) {
-                            LOG.infof("The configuration file from the repository %s was parsed successfully.",
+                            logger.infof("The configuration file from the repository %s was parsed successfully.",
                                     repository.getFullName());
                         } else {
-                            LOG.errorf(
+                            logger.errorf(
                                     "The configuration file from the repository %s was not parsed successfully due to following problems: %s",
                                     repository.getFullName(), problems);
                             githubProcessor.sendEmail(
@@ -100,25 +99,25 @@ public class LifecycleProcessor {
                                     emailAddresses);
                         }
                     } catch (IllegalStateException e) {
-                        LOG.errorf(e, "Unable to retrieve or parse the configuration file from the repository %s",
+                        logger.errorf(e, "Unable to retrieve or parse the configuration file from the repository %s",
                                 repository.getFullName());
                     }
                 }
             }
         } catch (IOException | IllegalStateException e) {
             if (e instanceof IOException) {
-                LOG.warnf(e, "Unable to verify rules in repository.");
+                logger.warnf(e, "Unable to verify rules in repository.");
             } else {
                 if (e.getCause() instanceof HttpException && e.getCause() != null
                         && e.getCause().getMessage().contains("suspended")) {
-                    LOG.warnf(
+                    logger.warnf(
                             "Your installation has been suspended. No events will be received until you unsuspend the github app installation.");
                 } else {
-                    LOG.errorf(e, "%s is unable to start.", botContextProvider.getBotName());
+                    logger.errorf(e, "%s is unable to start.", botContextProvider.getBotName());
                 }
             }
-            LOG.errorf(e, "Unable to correctly start %s for following installation id [%d]", botContextProvider.getBotName(),
-                    installationId);
+            logger.errorf(e, "Unable to correctly start %s for following installation id [%d]",
+                    botContextProvider.getBotName(), installationId);
         }
     }
 

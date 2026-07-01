@@ -11,7 +11,7 @@ public class DescriptionCheck implements Check {
     static final String DEFAULT_MESSAGE = "Invalid description content";
 
     private Description description;
-    private String message = DEFAULT_MESSAGE;
+    private String failMessage = DEFAULT_MESSAGE;
 
     public DescriptionCheck(Description description) {
         if (description == null) {
@@ -23,8 +23,8 @@ public class DescriptionCheck implements Check {
             throw new IllegalArgumentException("Input argument cannot be null");
         }
 
-        if (description.message != null) {
-            message = description.message;
+        if (description.failMessage != null) {
+            failMessage = description.failMessage;
         }
     }
 
@@ -47,11 +47,11 @@ public class DescriptionCheck implements Check {
                 }
 
                 if (!regexMatched) {
-                    return regexDefinition.message != null ? regexDefinition.message : message;
+                    return regexDefinition.failMessage != null ? regexDefinition.failMessage : failMessage;
                 }
             }
         } catch (NullPointerException e) {
-            return message;
+            return failMessage;
         }
 
         return null;
