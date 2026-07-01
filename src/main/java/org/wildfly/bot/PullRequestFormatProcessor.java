@@ -150,12 +150,12 @@ public class PullRequestFormatProcessor {
 
         if (wildflyConfigFile.wildfly.format.title.enabled) {
             checks.add(new TitleCheck(new RegexDefinition(wildflyConfigFile.wildfly.getProjectPattern(),
-                    wildflyConfigFile.wildfly.format.title.message)));
+                    wildflyConfigFile.wildfly.format.title.failMessage)));
         }
 
         if (wildflyConfigFile.wildfly.format.commit.enabled) {
             checks.add(new CommitMessagesCheck(new RegexDefinition(wildflyConfigFile.wildfly.getProjectPattern(),
-                    wildflyConfigFile.wildfly.format.commit.message)));
+                    wildflyConfigFile.wildfly.format.commit.failMessage)));
         }
 
         if (wildflyConfigFile.wildfly.format.description != null) {

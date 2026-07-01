@@ -17,11 +17,11 @@ public final class Format {
     public CommitPattern commit = new CommitPattern();
 
     public abstract static class RegexPattern {
-        public String message;
+        public String failMessage;
         public boolean enabled = true;
 
-        public RegexPattern(String message) {
-            this.message = message;
+        public RegexPattern(String failMessage) {
+            this.failMessage = failMessage;
         }
     }
 

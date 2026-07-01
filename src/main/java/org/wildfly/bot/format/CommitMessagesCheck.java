@@ -16,14 +16,14 @@ public class CommitMessagesCheck implements Check {
     private static final String ELLIPSIS = "...";
 
     private final Pattern pattern;
-    private final String message;
+    private final String failMessage;
 
     public CommitMessagesCheck(RegexDefinition description) {
         if (description.pattern == null) {
             throw new IllegalArgumentException("Input argument cannot be null");
         }
         pattern = description.pattern;
-        message = description.message;
+        failMessage = description.failMessage;
     }
 
     @Override
@@ -50,7 +50,7 @@ public class CommitMessagesCheck implements Check {
                 }
             }
             if (!oneMatched) {
-                return formatMessageWithDetailsIfNeeded(String.format(this.message, pattern.pattern()));
+                return formatMessageWithDetailsIfNeeded(String.format(this.failMessage, pattern.pattern()));
             }
         }
 

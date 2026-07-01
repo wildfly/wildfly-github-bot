@@ -5,13 +5,13 @@ import java.util.regex.Pattern;
 public class RegexDefinition {
 
     public Pattern pattern;
-    public String message;
+    public String failMessage;
 
     public RegexDefinition() {
     }
 
-    public RegexDefinition(Pattern pattern, String message) {
+    public RegexDefinition(Pattern pattern, String failMessage) {
         this.pattern = pattern;
-        this.message = message;
+        this.failMessage = failMessage;
     }
 }

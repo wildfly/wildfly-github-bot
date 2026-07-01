@@ -169,7 +169,7 @@ public class PRCommitCheckTest {
                 wildfly:
                   format:
                     commit:
-                      message: "Lorem ipsum dolor sit amet"
+                      failMessage: "Lorem ipsum dolor sit amet"
                 """;
 
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
@@ -211,7 +211,7 @@ public class PRCommitCheckTest {
                 wildfly:
                   format:
                     commit:
-                      message: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+                      failMessage: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
                 """;
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id())
                 .commit(INVALID_COMMIT_MESSAGE);
