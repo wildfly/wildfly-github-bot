@@ -62,34 +62,6 @@ public class PRSkipPullRequestTest {
     }
 
     @Test
-    void testSkippingFormatCheck() throws Throwable {
-        pullRequestJson = TestModel.setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder
-                .title(TestConstants.INVALID_TITLE)
-                .description("""
-                        Hi
-
-
-                        line start @wildfly-bot[bot] skip format random things
-
-                        to pass on my local env @wildfly-github-bot-fork[bot] skip format thanks
-
-                        finished"""));
-        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id()).commit(TestConstants.INVALID_COMMIT_MESSAGE);
-
-        TestModel.given(mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
-                .pullRequestEvent(pullRequestJson)
-                .then(mocks -> {
-                    verify(mocks.pullRequest(pullRequestJson.id()), times(2)).getBody();
-                    verify(mocks.pullRequest(pullRequestJson.id())).listFiles();
-                    verify(mocks.pullRequest(pullRequestJson.id())).listComments();
-                    // Following invocations are used for logging
-                    verify(mocks.pullRequest(pullRequestJson.id()), times(2)).getNumber();
-                    // commit status should not be set
-                    verifyNoMoreInteractions(mocks.pullRequest(pullRequestJson.id()));
-                });
-    }
-
-    @Test
     void testSkippingFormatCheckOnDraft() throws Throwable {
         pullRequestJson = TestModel.setPullRequestJsonBuilder(
                 pullRequestJsonBuilder -> pullRequestJsonBuilder.title(TestConstants.INVALID_TITLE));
@@ -99,7 +71,6 @@ public class PRSkipPullRequestTest {
                 mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFile, pullRequestJson, mockedContext))
                 .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
-                    verify(mocks.pullRequest(pullRequestJson.id()), times(2)).getBody();
                     verify(mocks.pullRequest(pullRequestJson.id())).listFiles();
                     verify(mocks.pullRequest(pullRequestJson.id()), times(2)).isDraft();
                     verify(mocks.pullRequest(pullRequestJson.id())).listComments();

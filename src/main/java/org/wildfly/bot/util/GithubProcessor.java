@@ -2,7 +2,6 @@ package org.wildfly.bot.util;
 
 import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.Mailer;
-import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -35,7 +34,6 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.SequencedMap;
 import java.util.Set;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.LinkedHashMap;
 
@@ -56,7 +54,6 @@ public class GithubProcessor {
 
     private static final Logger LOG_DELEGATE = Logger.getLogger(GithubProcessor.class);
     public final PullRequestLogger LOG = new PullRequestLogger(LOG_DELEGATE);
-    private Pattern SKIP_FORMAT_COMMAND;
 
     @Inject
     WildFlyBotConfig wildFlyBotConfig;
@@ -69,12 +66,6 @@ public class GithubProcessor {
 
     @ConfigProperty(name = "quarkus.mailer.username")
     Optional<String> username;
-
-    @PostConstruct
-    void construct() {
-        SKIP_FORMAT_COMMAND = Pattern.compile("@%s skip format".formatted(botContextProvider.getBotName()),
-                Pattern.DOTALL | Pattern.LITERAL);
-    }
 
     public void commitStatusSuccess(GHPullRequest pullRequest, String checkName, String description) throws IOException {
         String sha = pullRequest.getHead().getSha();
@@ -277,11 +268,6 @@ public class GithubProcessor {
     }
 
     public String skipPullRequest(GHPullRequest pullRequest) throws IOException {
-        String body = pullRequest.getBody();
-        if (body != null && SKIP_FORMAT_COMMAND.matcher(body).find()) {
-            return "skip format command found";
-        }
-
         if (pullRequest.isDraft()) {
             return "pull request being a draft";
         }
