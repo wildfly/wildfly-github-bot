@@ -3,8 +3,9 @@ package org.wildfly.bot;
 import io.quarkiverse.githubapp.event.PullRequest;
 import org.wildfly.bot.util.GithubProcessor;
 import org.wildfly.bot.util.PullRequestLogger;
+
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
-import org.jboss.logging.Logger;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHPullRequest;
 import org.wildfly.bot.model.RuntimeConstants;
@@ -14,10 +15,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@RequestScoped
 public class PullRequestLabelProcessor {
 
-    private static final Logger LOG_DELEGATE = Logger.getLogger(PullRequestFormatProcessor.class);
-    private final PullRequestLogger LOG = new PullRequestLogger(LOG_DELEGATE);
+    private final PullRequestLogger logger = PullRequestLogger.getLogger(PullRequestLabelProcessor.class);
 
     @Inject
     GithubProcessor githubProcessor;
@@ -25,12 +26,10 @@ public class PullRequestLabelProcessor {
     void pullRequestLabelCheck(@PullRequest.Synchronize @PullRequest.Reopened GHEventPayload.PullRequest pullRequestPayload)
             throws IOException {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
-        LOG.setPullRequest(pullRequest);
-        githubProcessor.LOG.setPullRequest(pullRequest);
+        logger.setPullRequest(pullRequest);
+        githubProcessor.logger.setPullRequest(pullRequest);
 
-        String message = githubProcessor.skipPullRequest(pullRequest);
-        if (message != null) {
-            LOG.infof("Skipping labelling due to %s", message);
+        if (shouldSkipLabelCheck(pullRequest)) {
             return;
         }
 
@@ -45,5 +44,13 @@ public class PullRequestLabelProcessor {
         }
 
         githubProcessor.updateLabels(pullRequest, labelsToAdd, labelsToRemove);
+    }
+
+    private boolean shouldSkipLabelCheck(GHPullRequest pullRequest) throws IOException {
+        if (pullRequest.isDraft()) {
+            logger.info("Skipping label check due to pull request being a draft");
+            return true;
+        }
+        return false;
     }
 }

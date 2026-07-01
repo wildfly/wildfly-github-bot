@@ -6,9 +6,12 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.kohsuke.github.GHCommit;
 import org.kohsuke.github.GHCommitQueryBuilder;
+import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHPullRequestCommitDetail;
+import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.PagedIterable;
 import org.kohsuke.github.PagedIterator;
+import org.mockito.Mockito;
 import org.wildfly.bot.utils.TestConstants;
 import org.wildfly.bot.utils.WildflyGitHubBotTesting;
 import org.wildfly.bot.utils.mocking.Mockable;
@@ -37,6 +40,31 @@ public class PRSkipPullRequestTest {
     private static final String wildflyConfigFile = """
             wildfly:
               format:
+                title:
+                  enabled: true
+                commit:
+                  enabled: true
+            """;
+    private static final String wildflyConfigFileWithSkipPattern = """
+            wildfly:
+              format:
+                skip: "No JIRA required"
+                title:
+                  enabled: true
+                commit:
+                  enabled: true
+            """;
+    private static final String wildflyConfigFileWithSkipPatternAndRules = """
+            wildfly:
+              rules:
+                - id: "test-rule"
+                  title: "WFLY"
+                  notify: [Tadpole]
+                  labels: [label1]
+              format:
+                skip:
+                  - "No JIRA required"
+                  - "No Issue (Required|Needed)"
                 title:
                   enabled: true
                 commit:
@@ -72,10 +100,101 @@ public class PRSkipPullRequestTest {
                 .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {
                     verify(mocks.pullRequest(pullRequestJson.id())).listFiles();
-                    verify(mocks.pullRequest(pullRequestJson.id()), times(2)).isDraft();
+                    verify(mocks.pullRequest(pullRequestJson.id()), times(3)).isDraft();
                     verify(mocks.pullRequest(pullRequestJson.id())).listComments();
                     // commit status should not be set
                     verifyNoMoreInteractions(mocks.pullRequest(pullRequestJson.id()));
+                });
+    }
+
+    @Test
+    void testSkippingFormatCheckOnSkipPattern() throws Throwable {
+        pullRequestJson = TestModel.setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder
+                .title(TestConstants.INVALID_TITLE)
+                .description("No JIRA required"));
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id()).commit(TestConstants.INVALID_COMMIT_MESSAGE);
+
+        TestModel.given(
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFileWithSkipPattern, pullRequestJson,
+                        mockedContext))
+                .pullRequestEvent(pullRequestJson)
+                .then(mocks -> {
+                    GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
+                    Mockito.verify(repo, never()).createCommitStatus(eq(pullRequestJson.commitSHA()),
+                            eq(org.kohsuke.github.GHCommitState.ERROR), Mockito.anyString(), Mockito.anyString(),
+                            Mockito.anyString());
+                });
+    }
+
+    @Test
+    void testSkipPatternCaseInsensitive() throws Throwable {
+        pullRequestJson = TestModel.setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder
+                .title(TestConstants.INVALID_TITLE)
+                .description("NO JIRA REQUIRED"));
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id()).commit(TestConstants.INVALID_COMMIT_MESSAGE);
+
+        TestModel.given(
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFileWithSkipPattern, pullRequestJson,
+                        mockedContext))
+                .pullRequestEvent(pullRequestJson)
+                .then(mocks -> {
+                    GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
+                    Mockito.verify(repo, never()).createCommitStatus(eq(pullRequestJson.commitSHA()),
+                            eq(org.kohsuke.github.GHCommitState.ERROR), Mockito.anyString(), Mockito.anyString(),
+                            Mockito.anyString());
+                });
+    }
+
+    @Test
+    void testSkipPatternRegexAlternation() throws Throwable {
+        pullRequestJson = TestModel.setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder
+                .title(TestConstants.INVALID_TITLE)
+                .description("No Issue Needed"));
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id()).commit(TestConstants.INVALID_COMMIT_MESSAGE);
+
+        TestModel.given(
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFileWithSkipPatternAndRules, pullRequestJson,
+                        mockedContext))
+                .pullRequestEvent(pullRequestJson)
+                .then(mocks -> {
+                    GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
+                    Mockito.verify(repo, never()).createCommitStatus(eq(pullRequestJson.commitSHA()),
+                            eq(org.kohsuke.github.GHCommitState.ERROR), Mockito.anyString(), Mockito.anyString(),
+                            Mockito.anyString());
+                });
+    }
+
+    @Test
+    void testSkipPatternDoesNotSkipRuleActivation() throws Throwable {
+        pullRequestJson = TestModel.setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder
+                .title("[WFLY-123] Valid title")
+                .description("No JIRA required"));
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id()).commit(TestConstants.INVALID_COMMIT_MESSAGE);
+
+        TestModel.given(
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFileWithSkipPatternAndRules, pullRequestJson,
+                        mockedContext))
+                .pullRequestEvent(pullRequestJson)
+                .then(mocks -> {
+                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
+                    Mockito.verify(mockedPR).comment(startsWith("/cc"));
+                });
+    }
+
+    @Test
+    void testNoSkipPatternMatchRunsFormatChecks() throws Throwable {
+        pullRequestJson = TestModel.setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder
+                .title(TestConstants.INVALID_TITLE)
+                .description("Some random description"));
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id()).commit(TestConstants.INVALID_COMMIT_MESSAGE);
+
+        TestModel.given(
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFileWithSkipPattern, pullRequestJson,
+                        mockedContext))
+                .pullRequestEvent(pullRequestJson)
+                .then(mocks -> {
+                    GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
+                    WildflyGitHubBotTesting.verifyFormatFailure(repo, pullRequestJson, "commit, title");
                 });
     }
 
