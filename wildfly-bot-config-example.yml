@@ -17,9 +17,12 @@ wildfly:
       notify: [ another-random-person ]
 
   format:                 # Validation check for a correct format of the Pull Request
+    skip:                                       # Regex pattern(s) matched against PR description to skip format checks. Accepts a single value or a list
+      - "\\[skip format\\]"
+      - "^Revert \".+\"$"
     title:                                      # Enabled by default. You have to disable explicitly.
-      enabled: false                            # If check enabled. By default, this setting is set true
-      message: "Wrong content of the title"    # Override default message. Message is display if check does not succeed
+      enabled: false                            # If check enabled. By default, this setting is set to true
+      failMessage: "Wrong content of the title" # Message displayed when the check fails
 
     description:
       regexes:            # List of objects, where the object is as follows:
@@ -28,8 +31,8 @@ wildfly:
       message: "The PR description is not correct"                                                                    # Default message to display if a object is missing message field
 
     commit:                                     # Enabled by default. You have to disable explicitly.
-      enabled: true                             # If check enabled. By default, this setting is set true
-      message: "Wrong commit message!"          # Override default message. Message is display if check does not succeed
+      enabled: true                             # If check enabled. By default, this setting is set to true
+      failMessage: "Wrong commit message!"      # Message displayed when the check fails
 
   emails:     # List of email addresses, which will receive updates from this app
     - random-person@bar.baz
