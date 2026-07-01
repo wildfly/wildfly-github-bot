@@ -11,7 +11,6 @@ import org.wildfly.bot.util.GithubProcessor;
 import org.wildfly.bot.util.PullRequestLogger;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
-import org.jboss.logging.Logger;
 import org.kohsuke.github.GHContent;
 import org.kohsuke.github.GHEventPayload;
 import org.kohsuke.github.GHFileNotFoundException;
@@ -33,10 +32,10 @@ import java.util.stream.Collectors;
 public class ConfigFileChangeProcessor {
 
     private static final String CHECK_NAME = "Configuration File";
-    private static final Logger LOG_DELEGATE = Logger.getLogger(ConfigFileChangeProcessor.class);
-    private final PullRequestLogger LOG = new PullRequestLogger(LOG_DELEGATE);
     private static final String WARN_RULE = "[WARN] - %s";
     private static final String ERROR_RULE = "[ERROR] - %s";
+
+    private final PullRequestLogger logger = PullRequestLogger.getLogger(ConfigFileChangeProcessor.class);
 
     @Inject
     GitHubConfigFileProviderImpl fileProvider;
@@ -52,7 +51,7 @@ public class ConfigFileChangeProcessor {
             @PullRequest.Opened @PullRequest.Edited @PullRequest.Synchronize @PullRequest.Reopened @PullRequest.ReadyForReview GHEventPayload.PullRequest pullRequestPayload,
             GitHub gitHub) throws IOException {
         GHPullRequest pullRequest = pullRequestPayload.getPullRequest();
-        LOG.setPullRequest(pullRequest);
+        logger.setPullRequest(pullRequest);
 
         GHRepository repository = pullRequest.getRepository();
         for (GHPullRequestFileDetail changedFile : pullRequest.listFiles()) {
@@ -69,20 +68,20 @@ public class ConfigFileChangeProcessor {
                         List<String> problems = validateFile(file.get(), repository);
                         if (problems.isEmpty()) {
                             githubProcessor.commitStatusSuccess(pullRequest, CHECK_NAME, "Valid");
-                            LOG.info("Configuration File check successful");
+                            logger.info("Configuration File check successful");
                         } else {
                             githubProcessor.commitStatusError(pullRequest, CHECK_NAME,
                                     "One or multiple rules are invalid, please see the comment stating the problems");
-                            LOG.warnf("Configuration File check unsuccessful. %s", String.join(",", problems));
+                            logger.warnf("Configuration File check unsuccessful. %s", String.join(",", problems));
                         }
                         githubProcessor.formatComment(pullRequest, RuntimeConstants.FAILED_CONFIGFILE_COMMENT, problems);
                     } else {
                         String message = "Configuration File check unsuccessful. Unable to correctly map loaded file to YAML.";
                         githubProcessor.commitStatusError(pullRequest, CHECK_NAME, message);
-                        LOG.debugf(message);
+                        logger.debugf(message);
                     }
                 } catch (JsonProcessingException e) {
-                    LOG.errorf(e, "Unable to parse the configuration file from the repository %s",
+                    logger.errorf(e, "Unable to parse the configuration file from the repository %s",
                             pullRequest.getHead().getRepository().getFullName());
                     githubProcessor.commitStatusError(pullRequest, CHECK_NAME, "Unable to parse the configuration file. " +
                             "Make sure it can be loaded to model at https://github.com/wildfly/wildfly-github-bot/blob/main/CONFIGURATION.yml");
@@ -131,7 +130,7 @@ public class ConfigFileChangeProcessor {
                                         "Server returned HTTP response code: 200, message: 'null' for URL: https://api.github.com/repos/"))) {
                             problems.add(ERROR_RULE.formatted("Rule [" + rule.toPrettyString()
                                     + "] has the following non-existing directory specified: " + directory));
-                            LOG.debugf(e, "Exception on directories check caught");
+                            logger.debugf(e, "Exception on directories check caught");
                         }
                     }
                 }

@@ -7,7 +7,11 @@ public class PullRequestLogger {
     private final Logger delegate;
     private GHPullRequest pullRequest;
 
-    public PullRequestLogger(Logger delegate) {
+    public static PullRequestLogger getLogger(Class<?> clazz) {
+        return new PullRequestLogger(Logger.getLogger(clazz));
+    }
+
+    private PullRequestLogger(Logger delegate) {
         this.delegate = delegate;
     }
 
