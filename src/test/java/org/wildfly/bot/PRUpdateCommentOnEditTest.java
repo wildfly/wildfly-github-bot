@@ -81,8 +81,9 @@ public class PRUpdateCommentOnEditTest {
         // Config with a skip pattern that will bypass format checks
         wildflyConfigFile = """
                 wildfly:
-                  format:
-                    skip: "JIRA not needed"
+                  skip:
+                    format:
+                      body: "JIRA not needed"
                 """;
 
         // PR has invalid title but description matches the skip pattern, simulating an edit
