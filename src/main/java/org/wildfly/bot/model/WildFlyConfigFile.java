@@ -22,6 +22,9 @@ public class WildFlyConfigFile {
                 .formatted(RuntimeConstants.DEFAULT_PROJECT_KEY), Pattern.DOTALL);
 
         @JsonSetter(nulls = Nulls.SKIP)
+        public Skip skip = new Skip();
+
+        @JsonSetter(nulls = Nulls.SKIP)
         public List<WildFlyRule> rules = new ArrayList<>();
 
         @JsonSetter(nulls = Nulls.SKIP)

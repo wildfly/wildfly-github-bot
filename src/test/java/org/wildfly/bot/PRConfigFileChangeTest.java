@@ -157,4 +157,75 @@ public class PRConfigFileChangeTest {
                             "Configuration File");
                 });
     }
+
+    @Test
+    void testUpdateWithValidSkipBlock() throws Throwable {
+        TestModel.given(mocks -> {
+            GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
+            GHContent mockGHContent = mock(GHContent.class);
+            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, pullRequestJson.commitSHA()))
+                    .thenReturn(mockGHContent);
+            when(mockGHContent.read()).thenReturn(IOUtils.toInputStream("""
+                    wildfly:
+                      skip:
+                        format:
+                          title: "^Next\\\\s+is\\\\b"
+                          body: "(?i)no\\\\s+jira"
+                        rules:
+                          title: "^Aggregate\\\\b"
+                      format:
+                        title:
+                          enabled: true""",
+                    "UTF-8"));
+
+            MockedGHPullRequest.builder(pullRequestJson.id())
+                    .files(".github/wildfly-bot.yml")
+                    .mock(mocks);
+        })
+                .pullRequestEvent(pullRequestJson)
+                .then(mocks -> {
+                    verify(mocks.pullRequest(pullRequestJson.id())).listFiles();
+                    verify(mocks.pullRequest(pullRequestJson.id()), times(2)).listComments();
+                    GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
+                    verify(repo).getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME,
+                            pullRequestJson.commitSHA());
+                    Mockito.verify(repo).createCommitStatus(pullRequestJson.commitSHA(),
+                            GHCommitState.SUCCESS, "", "Valid", "Configuration File");
+                });
+    }
+
+    @Test
+    void testUpdateWithInvalidSkipRegex() throws Throwable {
+        TestModel.given(mocks -> {
+            GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
+            GHContent mockGHContent = mock(GHContent.class);
+            when(repo.getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME, pullRequestJson.commitSHA()))
+                    .thenReturn(mockGHContent);
+            when(mockGHContent.read()).thenReturn(IOUtils.toInputStream("""
+                    wildfly:
+                      skip:
+                        format:
+                          body: "[invalid(regex"
+                      format:
+                        title:
+                          enabled: true""",
+                    "UTF-8"));
+
+            MockedGHPullRequest.builder(pullRequestJson.id())
+                    .files(".github/wildfly-bot.yml")
+                    .mock(mocks);
+        })
+                .pullRequestEvent(pullRequestJson)
+                .then(mocks -> {
+                    verify(mocks.pullRequest(pullRequestJson.id())).listFiles();
+                    verify(mocks.pullRequest(pullRequestJson.id())).listComments();
+                    GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
+                    verify(repo).getFileContent(".github/" + RuntimeConstants.CONFIG_FILE_NAME,
+                            pullRequestJson.commitSHA());
+                    Mockito.verify(repo).createCommitStatus(pullRequestJson.commitSHA(),
+                            GHCommitState.ERROR, "", "Unable to parse the configuration file. " +
+                                    "Make sure it can be loaded to model at https://github.com/wildfly/wildfly-github-bot/blob/main/CONFIGURATION.yml",
+                            "Configuration File");
+                });
+    }
 }

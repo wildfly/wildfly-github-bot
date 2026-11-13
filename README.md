@@ -8,7 +8,6 @@ This project is built with usage of Quarkus GitHub App: https://quarkiverse.gith
   * _Title_ - Checks the title of the Pull Request against the `projectKey` pattern.
   * _Commit_ - Checks at least one commit message against the `projectKey` pattern.
   * _Description_ - Checks the description of the Pull Request against configured regexes.
-  * _Skip_ - Regex pattern(s) matched against PR description to skip format checks (case insensitive).
 * _Activation Rules_ for matching on Pull Requests and applying __functionality__ - Defined in config file:
   * __Notify__ - List of people to request Pull Request review. People, we can't request review from, we only cc notify them - Rule functionality.
   * __Labels__ - Labels to apply on the Pull Request - Rule functionality.
@@ -16,6 +15,7 @@ This project is built with usage of Quarkus GitHub App: https://quarkiverse.gith
   * _Body_ - Regex, used on body of the Pull Request - Rule activation.
   * _TitleBody_ - Regex, used on either title or body of the Pull Request - Rule activation.
   * _Directories_ - List of directories, if corresponding files are changed in the Pull Request - Rule activation.
+* _Skip_ - Regex pattern(s) to bypass format checks and/or rule activation (case insensitive) - Defined in config file under `skip`.
 * Automatically append JIRA links into description of the Pull Request, if issue tracker number is detected in Title, Description or Commit.
 * Automatically applies/removes labels on a Pull Request:
   * `rebase-this` - depending on conflicts with `main` branch.
@@ -107,6 +107,12 @@ is Gmail. To change this behavior or to override predefined parameters in `appli
 #### Structure of the `wildfly-bot.yml` file:
 ```yaml
 wildfly:
+  skip:
+    format:
+      title: "^(?:Next\\s+is|Aggregate)\\b"
+      body: "(?i)no\\s+(?:jira|issue)\\s+(?:required|needed)"
+    rules:
+      title: "^(?:Next\\s+is|Aggregate)\\b"
   rules:
     - id: id-1 # 1
       title: test # 2
@@ -115,7 +121,6 @@ wildfly:
         - github-user-handle1
         - github-user-handle2
   format:
-    skip: "\\[skip format\\]"
     title:
       failMessage: Wrong content of the PR title
     description: # 3
@@ -132,6 +137,36 @@ wildfly:
     > For example, the correct format is "https://issues.jboss.org/browse/WFLY-11".
 4. `failMessage` - The message displayed when the respective check fails.
 5. `emails` - List of emails to receive notifications.
+
+### Skipping Checks (`skip`)
+
+You can configure the bot to bypass format checks (`skip.format`) and/or rules activation (`skip.rules`) when a Pull Request's title or body matches one or more regular expressions (matched case-insensitively).
+
+Both `title` and `body` accept either a single regular expression string or a list of regular expression strings:
+
+- **`skip.format`**: When matched against the PR's title or body, all format and commit checks under `format:` are skipped.
+- **`skip.rules`**: When matched against the PR's title or body, all rule activations under `rules:` (such as requesting reviews, /cc mentions, and applying labels) are skipped.
+
+#### Example:
+```yaml
+wildfly:
+  skip:
+    format:
+      title: "^(?:Next\\s+is|Aggregate)\\b"
+      body: "(?i)no\\s+(?:jira|issue)\\s+(?:required|needed)"
+    rules:
+      title: "^(?:Next\\s+is|Aggregate)\\b"
+      body: "(?i)no\\s+review\\s+(?:required|needed)"
+  rules:
+    - id: "Test Rule"
+      directories: [ "src" ]
+      notify: [ "user1" ]
+  format:
+    description:
+      regexes:
+        - pattern: "https://redhat.atlassian.net/browse/WFLY-\\d+"
+          failMessage: "The description must contain a link to the JIRA issue"
+```
 
 > [!IMPORTANT]  
 > `title` and `commit` are enabled by default. More [here](wildfly-bot-config-example.yml).
