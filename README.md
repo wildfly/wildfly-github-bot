@@ -247,7 +247,7 @@ oc create secret generic wildfly-bot \
    - Go to the application home directory and run:
        ```sh
        ./mvnw clean install \
-       -Dquarkus.kubernetes.deploy=true \
+       -Dquarkus.openshift.deploy=true \
        -Dquarkus.openshift.env.vars.quarkus-github-app-app-id=<your-GitHub-app-id>
        ```
    - You can also put the config properties to the `application.properties`
@@ -281,7 +281,7 @@ We run WildFly GitHub Bot on Openshift in production. To save resources we also 
 3. Deploy the bot:
     ```sh
     ./mvnw clean install \
-    -Dquarkus.kubernetes.deploy=true \
+    -Dquarkus.openshift.deploy=true \
     -Dquarkus.openshift.env.vars.quarkus-github-app-app-id=<your-GitHub-app-id> \
     -Dquarkus.native.container-build=true \
     -Dnative
