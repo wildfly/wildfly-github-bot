@@ -95,6 +95,10 @@ public class PullRequestRuleActivationProcessor {
             logger.info("Skipping rule activation: pull request is a draft");
             return true;
         }
+        if (configFile.wildfly.skip.rules.matches(pullRequest.getTitle(), pullRequest.getBody())) {
+            logger.infof("Skipping rules evaluation for PR #%d due to matching skip.rules pattern", pullRequest.getNumber());
+            return true;
+        }
         if (githubProcessor.hasDuplicateCommitInBase(pullRequest, pullRequestPayload.getRepository())) {
             logger.info("Skipping rule activation: pull request has duplicate commits in base");
             return true;

@@ -1,6 +1,19 @@
 wildfly:
   projectKey: "WFCORE"    # Abbreviation for project, used for title, commit check. By default, this setting is set to "WFLY"
 
+  skip:                   # Regex patterns to skip format checks and/or rule activation (case insensitive)
+    format:               # Patterns to skip format checks
+      title:              # Patterns matched against PR title. Accepts a single value or a list
+        - "\\[skip format\\]"
+        - "^Revert \".+\"$"
+      body:               # Patterns matched against PR body. Accepts a single value or a list
+        - "(?i)no\\s+(?:jira|issue)\\s+(?:required|needed)"
+    rules:                # Patterns to skip rule activation
+      title:              # Patterns matched against PR title. Accepts a single value or a list
+        - "^Pulls$"
+      body:               # Patterns matched against PR body. Accepts a single value or a list
+        - "(?i)no\\s+review\\s+(?:required|needed)"
+
   rules:                  # List of objects with no mandatory fields. The rule is fired if at least one check is satisfied. The object is as follows
     - id: id-1            # Each rule should have unique id
       title: "resteasy"   # String looked-up in the title of the Pull Request
@@ -17,9 +30,6 @@ wildfly:
       notify: [ another-random-person ]
 
   format:                 # Validation check for a correct format of the Pull Request
-    skip:                                       # Regex pattern(s) matched against PR description to skip format checks (case insensitive). Accepts a single value or a list
-      - "\\[skip format\\]"
-      - "^Revert \".+\"$"
     title:                                      # Enabled by default. You have to disable explicitly.
       enabled: false                            # If check enabled. By default, this setting is set to true
       failMessage: "Wrong content of the title" # Message displayed when the check fails

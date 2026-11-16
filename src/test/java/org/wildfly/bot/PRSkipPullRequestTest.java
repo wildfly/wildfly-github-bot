@@ -48,8 +48,10 @@ public class PRSkipPullRequestTest {
             """;
     private static final String wildflyConfigFileWithSkipPattern = """
             wildfly:
+              skip:
+                format:
+                  body: "No JIRA required"
               format:
-                skip: "No JIRA required"
                 title:
                   enabled: true
                 commit:
@@ -57,15 +59,17 @@ public class PRSkipPullRequestTest {
             """;
     private static final String wildflyConfigFileWithSkipPatternAndRules = """
             wildfly:
+              skip:
+                format:
+                  body:
+                    - "No JIRA required"
+                    - "No Issue (Required|Needed)"
               rules:
                 - id: "test-rule"
                   title: "WFLY"
                   notify: [Tadpole]
                   labels: [label1]
               format:
-                skip:
-                  - "No JIRA required"
-                  - "No Issue (Required|Needed)"
                 title:
                   enabled: true
                 commit:
@@ -251,6 +255,259 @@ public class PRSkipPullRequestTest {
                     verify(mocks.pullRequest(pullRequestJson.id()), never()).addLabels(nullable(String[].class));
                     verify(mocks.pullRequest(pullRequestJson.id()), never()).requestReviewers(any());
                     verify(mocks.pullRequest(pullRequestJson.id()), never()).comment(startsWith("/cc"));
+                });
+    }
+
+    @Test
+    void testSkipFormatTitleMatch() throws Throwable {
+        final String configWithSkipFormatTitle = """
+                wildfly:
+                  skip:
+                    format:
+                      title:
+                        - "Next\\\\s+is"
+                        - "^Pulls$"
+                        - "^Aggregate\\\\s+PR$"
+                  format:
+                    title:
+                      enabled: true
+                    commit:
+                      enabled: true
+                """;
+        pullRequestJson = TestModel.setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder
+                .title("[39.x] Next is 39.0.1.Final")
+                .description("PR description"));
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id()).commit(TestConstants.INVALID_COMMIT_MESSAGE);
+
+        TestModel.given(
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, configWithSkipFormatTitle, pullRequestJson,
+                        mockedContext))
+                .pullRequestEvent(pullRequestJson)
+                .then(mocks -> {
+                    GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
+                    Mockito.verify(repo, never()).createCommitStatus(eq(pullRequestJson.commitSHA()),
+                            eq(GHCommitState.ERROR), Mockito.anyString(), Mockito.anyString(),
+                            Mockito.anyString());
+                });
+    }
+
+    @Test
+    void testSkipFormatBodyMatch() throws Throwable {
+        final String configWithSkipFormatBody = """
+                wildfly:
+                  skip:
+                    format:
+                      body: "(?i)no\\\\s+(?:jira|issue)\\\\s+(?:required|needed)"
+                  format:
+                    title:
+                      enabled: true
+                    commit:
+                      enabled: true
+                """;
+        pullRequestJson = TestModel.setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder
+                .title(TestConstants.INVALID_TITLE)
+                .description("Minor fix, no jira needed"));
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id()).commit(TestConstants.INVALID_COMMIT_MESSAGE);
+
+        TestModel.given(
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, configWithSkipFormatBody, pullRequestJson,
+                        mockedContext))
+                .pullRequestEvent(pullRequestJson)
+                .then(mocks -> {
+                    GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
+                    Mockito.verify(repo, never()).createCommitStatus(eq(pullRequestJson.commitSHA()),
+                            eq(GHCommitState.ERROR), Mockito.anyString(), Mockito.anyString(),
+                            Mockito.anyString());
+                });
+    }
+
+    @Test
+    void testSkipRulesTitleMatch() throws Throwable {
+        final String configWithSkipRulesTitle = """
+                wildfly:
+                  skip:
+                    rules:
+                      title:
+                        - "Next\\\\s+is"
+                        - "^Pulls$"
+                        - "^Aggregate\\\\s+PR$"
+                  rules:
+                    - id: "test-rule"
+                      title: ".*"
+                      notify: [Tadpole]
+                      labels: [label1]
+                  format:
+                    title:
+                      enabled: true
+                """;
+        pullRequestJson = TestModel.setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder
+                .title("Aggregate PR")
+                .description("PR description"));
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id());
+
+        TestModel.given(
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, configWithSkipRulesTitle, pullRequestJson,
+                        mockedContext))
+                .pullRequestEvent(pullRequestJson)
+                .then(mocks -> {
+                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
+                    Mockito.verify(mockedPR, never()).comment(startsWith("/cc"));
+                    Mockito.verify(mockedPR, never()).addLabels(nullable(String[].class));
+                });
+    }
+
+    @Test
+    void testSkipRulesBodyMatch() throws Throwable {
+        final String configWithSkipRulesBody = """
+                wildfly:
+                  skip:
+                    rules:
+                      body: "(?i)no\\\\s+reviews?\\\\s+(?:required|needed)"
+                  rules:
+                    - id: "test-rule"
+                      title: "WFLY"
+                      notify: [Tadpole]
+                      labels: [label1]
+                  format:
+                    title:
+                      enabled: true
+                """;
+        pullRequestJson = TestModel.setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder
+                .title("[WFLY-123] Fix")
+                .description("Automated update, no reviews needed"));
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id());
+
+        TestModel.given(
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, configWithSkipRulesBody, pullRequestJson,
+                        mockedContext))
+                .pullRequestEvent(pullRequestJson)
+                .then(mocks -> {
+                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
+                    Mockito.verify(mockedPR, never()).comment(startsWith("/cc"));
+                    Mockito.verify(mockedPR, never()).addLabels(nullable(String[].class));
+                });
+    }
+
+    @Test
+    void testBothSkipFormatAndSkipRulesMatch() throws Throwable {
+        final String configWithBothSkips = """
+                wildfly:
+                  skip:
+                    format:
+                      title: "^Pulls$"
+                    rules:
+                      title: "^Pulls$"
+                  rules:
+                    - id: "test-rule"
+                      title: ".*"
+                      notify: [Tadpole]
+                      labels: [label1]
+                  format:
+                    title:
+                      enabled: true
+                    commit:
+                      enabled: true
+                """;
+        pullRequestJson = TestModel.setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder
+                .title("Pulls")
+                .description("Release PR"));
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id()).commit(TestConstants.INVALID_COMMIT_MESSAGE);
+
+        TestModel.given(
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, configWithBothSkips, pullRequestJson,
+                        mockedContext))
+                .pullRequestEvent(pullRequestJson)
+                .then(mocks -> {
+                    GHRepository repo = mocks.repository(TestConstants.TEST_REPO);
+                    Mockito.verify(repo, never()).createCommitStatus(eq(pullRequestJson.commitSHA()),
+                            eq(GHCommitState.ERROR), Mockito.anyString(), Mockito.anyString(),
+                            Mockito.anyString());
+                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
+                    Mockito.verify(mockedPR, never()).comment(startsWith("/cc"));
+                    Mockito.verify(mockedPR, never()).addLabels(nullable(String[].class));
+                });
+    }
+
+    @Test
+    void testSkipWithListSyntax() throws Throwable {
+        final String configWithListSkip = """
+                wildfly:
+                  skip:
+                    rules:
+                      title:
+                        - "Next\\\\s+is"
+                        - "^Pulls$"
+                        - "^Aggregate\\\\s+PR$"
+                  rules:
+                    - id: "test-rule"
+                      title: ".*"
+                      notify: [Tadpole]
+                      labels: [label1]
+                  format:
+                    title:
+                      enabled: true
+                """;
+
+        // Test PR 1 - matches "Next\\s+is" pattern (requires whitespace, can be anywhere in title)
+        pullRequestJson = TestModel.setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder
+                .title("[35.x] Next is 35.0.0.Final")
+                .description("PR description"));
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id());
+
+        TestModel.given(
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, configWithListSkip, pullRequestJson,
+                        mockedContext))
+                .pullRequestEvent(pullRequestJson)
+                .then(mocks -> {
+                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
+                    Mockito.verify(mockedPR, never()).comment(startsWith("/cc"));
+                });
+
+        // Test PR 2 - matches "^Aggregate\\s+PR$" pattern (exact match with whitespace)
+        pullRequestJson = TestModel.setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder
+                .title("Aggregate PR")
+                .description("PR description"));
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id());
+
+        TestModel.given(
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, configWithListSkip, pullRequestJson,
+                        mockedContext))
+                .pullRequestEvent(pullRequestJson)
+                .then(mocks -> {
+                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
+                    Mockito.verify(mockedPR, never()).comment(startsWith("/cc"));
+                });
+    }
+
+    @Test
+    void testSkipWithNullBody() throws Throwable {
+        final String configWithSkipRulesBody = """
+                wildfly:
+                  skip:
+                    rules:
+                      body: "no review"
+                  rules:
+                    - id: "test-rule"
+                      title: "WFLY"
+                      notify: [Tadpole]
+                      labels: [label1]
+                  format:
+                    title:
+                      enabled: true
+                """;
+        pullRequestJson = TestModel.setPullRequestJsonBuilder(pullRequestJsonBuilder -> pullRequestJsonBuilder
+                .title("[WFLY-123] Fix")
+                .description(null));
+        mockedContext = MockedGHPullRequest.builder(pullRequestJson.id());
+
+        TestModel.given(
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, configWithSkipRulesBody, pullRequestJson,
+                        mockedContext))
+                .pullRequestEvent(pullRequestJson)
+                .then(mocks -> {
+                    // Should not throw NullPointerException, rules should evaluate normally
+                    GHPullRequest mockedPR = mocks.pullRequest(pullRequestJson.id());
+                    Mockito.verify(mockedPR).comment(startsWith("/cc"));
                 });
     }
 }

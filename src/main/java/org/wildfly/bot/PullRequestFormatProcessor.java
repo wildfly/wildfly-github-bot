@@ -117,8 +117,8 @@ public class PullRequestFormatProcessor {
             logger.info("Skipping format check: format checking is disabled");
             return true;
         }
-        if (configFile.wildfly.format.matchesSkipPattern(pullRequest.getBody())) {
-            logger.info("Skipping format check: skip pattern matched in PR description");
+        if (configFile.wildfly.skip.format.matches(pullRequest.getTitle(), pullRequest.getBody())) {
+            logger.info("Skipping format check: skip pattern matched in PR title or description");
             return true;
         }
         if (DEPENDABOT.equals(pullRequest.getUser().getLogin()) && "opened".equals(action)) {
