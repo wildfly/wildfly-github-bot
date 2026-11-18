@@ -12,6 +12,12 @@ public class EventHandlingResponseImpl implements EventHandlingResponse {
     }
 
     @Override
+    public int statusCode() {
+        // Events are dispatched in-process, bypassing the HTTP layer, so there is no status code to report.
+        return -1;
+    }
+
+    @Override
     public ValidatableEventHandling then() {
         return new ValidatableEventHandlingImpl(testingContext);
     }
