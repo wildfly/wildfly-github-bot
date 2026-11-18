@@ -20,11 +20,11 @@ import org.wildfly.bot.utils.mocking.MockedGHPullRequest;
 import org.wildfly.bot.utils.testing.PullRequestJson;
 import org.wildfly.bot.utils.testing.internal.TestModel;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.ArgumentMatchers.startsWith;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyInt;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -51,6 +51,17 @@ public class PRSkipPullRequestTest {
               skip:
                 format:
                   body: "No JIRA required"
+              format:
+                title:
+                  enabled: true
+                commit:
+                  enabled: true
+            """;
+    private static final String wildflyConfigFileWithCaseInsensitiveSkipPattern = """
+            wildfly:
+              skip:
+                format:
+                  body: "(?i)No JIRA required"
               format:
                 title:
                   enabled: true
@@ -139,7 +150,8 @@ public class PRSkipPullRequestTest {
         mockedContext = MockedGHPullRequest.builder(pullRequestJson.id()).commit(TestConstants.INVALID_COMMIT_MESSAGE);
 
         TestModel.given(
-                mocks -> WildflyGitHubBotTesting.mockRepo(mocks, wildflyConfigFileWithSkipPattern, pullRequestJson,
+                mocks -> WildflyGitHubBotTesting.mockRepo(mocks,
+                        wildflyConfigFileWithCaseInsensitiveSkipPattern, pullRequestJson,
                         mockedContext))
                 .pullRequestEvent(pullRequestJson)
                 .then(mocks -> {

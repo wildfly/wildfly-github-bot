@@ -1,7 +1,7 @@
 wildfly:
   projectKey: "WFCORE"    # Abbreviation for project, used for title, commit check. By default, this setting is set to "WFLY"
 
-  skip:                   # Regex patterns to skip format checks and/or rule activation (case insensitive)
+  skip:                   # Regex patterns to skip format checks and/or rule activation
     format:               # Patterns to skip format checks
       title:              # Patterns matched against PR title. Accepts a single value or a list
         - "\\[skip format\\]"
