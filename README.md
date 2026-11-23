@@ -15,7 +15,7 @@ This project is built with usage of Quarkus GitHub App: https://quarkiverse.gith
   * _Body_ - Regex, used on body of the Pull Request - Rule activation.
   * _TitleBody_ - Regex, used on either title or body of the Pull Request - Rule activation.
   * _Directories_ - List of directories, if corresponding files are changed in the Pull Request - Rule activation.
-* _Skip_ - Regex pattern(s) to bypass format checks and/or rule activation (case insensitive) - Defined in config file under `skip`.
+* _Skip_ - Regex pattern(s) to bypass format checks and/or rule activation - Defined in config file under `skip`.
 * Automatically append JIRA links into description of the Pull Request, if issue tracker number is detected in Title, Description or Commit.
 * Automatically applies/removes labels on a Pull Request:
   * `rebase-this` - depending on conflicts with `main` branch.
@@ -140,7 +140,7 @@ wildfly:
 
 ### Skipping Checks (`skip`)
 
-You can configure the bot to bypass format checks (`skip.format`) and/or rules activation (`skip.rules`) when a Pull Request's title or body matches one or more regular expressions (matched case-insensitively).
+You can configure the bot to bypass format checks (`skip.format`) and/or rules activation (`skip.rules`) when a Pull Request's title or body matches one or more regular expressions.
 
 Both `title` and `body` accept either a single regular expression string or a list of regular expression strings:
 

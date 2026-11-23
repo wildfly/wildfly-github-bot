@@ -45,7 +45,7 @@ public final class Skip {
                 this.patterns = Collections.emptyList();
             } else {
                 this.patterns = regexes.stream()
-                        .map(r -> Pattern.compile(r, Pattern.CASE_INSENSITIVE))
+                        .map(Pattern::compile)
                         .toList();
             }
         }
